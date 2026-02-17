@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍷 Wine Tracker</title>
+<style>
+  :root {
+    --bg: #1a0a0f;
+    --surface: #2a1520;
+    --surface2: #3a1f2c;
+    --border: #5a2a3a;
+    --accent: #c0392b;
+    --accent2: #8b1a2a;
+    --gold: #d4a843;
+    --text: #f0e0e5;
+    --muted: #9a7a82;
+    --empty: #3a2a30;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,.5);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, var(--accent2), var(--surface));
+    padding: 1.2rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  header h1 { font-size: 1.4rem; font-weight: 700; flex: 1; }
+  .stats-pill {
+    background: rgba(0,0,0,.3);
+    border: 1px solid var(--border);
+    padding: .3rem .8rem; border-radius: 20px;
+    font-size: .8rem; color: var(--gold);
+  }
+
+  /* Toolbar */
+  .toolbar {
+    padding: 1rem 1.5rem;
+    display: flex; gap: .75rem; flex-wrap: wrap; align-items: center;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .search-wrap { position: relative; flex: 1; min-width: 180px; }
+  .search-wrap input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: .5rem .75rem .5rem 2rem;
+    color: var(--text); font-size: .9rem;
+  }
+  .search-wrap::before { content: '🔍'; position: absolute; left: .6rem; top: .45rem; font-size: .85rem; }
+
+  .filter-tabs { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .tab {
+    padding: .35rem .75rem; border-radius: 20px; font-size: .8rem; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg); color: var(--muted);
+    text-decoration: none; transition: all .2s;
+  }
+  .tab:hover, .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .toggle-empty {
+    font-size: .8rem; color: var(--muted); cursor: pointer; display: flex;
+    align-items: center; gap: .4rem; padding: .35rem .75rem;
+    border: 1px solid var(--border); border-radius: 20px; background: var(--bg);
+    text-decoration: none; white-space: nowrap;
+  }
+  .toggle-empty:hover { color: var(--text); }
+
+  /* Add button */
+  .btn-add {
+    background: var(--accent); color: white; border: none;
+    padding: .45rem 1.1rem; border-radius: 8px; font-size: .9rem;
+    cursor: pointer; font-weight: 600; white-space: nowrap;
+    transition: background .2s;
+  }
+  .btn-add:hover { background: #e74c3c; }
+
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem; padding: 1.25rem 1.5rem;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    transition: transform .2s, box-shadow .2s; cursor: pointer;
+    position: relative;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+  .card.empty { opacity: .5; background: var(--empty); border-style: dashed; }
+  .card.empty:hover { opacity: .75; }
+
+  .card-img {
+    width: 100%; height: 160px; object-fit: cover;
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem; color: var(--muted);
+  }
+  .card-img img { width: 100%; height: 100%; object-fit: cover; }
+
+  .qty-badge {
+    position: absolute; top: .6rem; right: .6rem;
+    background: rgba(0,0,0,.75); backdrop-filter: blur(4px);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: .2rem .6rem; font-size: .8rem; font-weight: 700;
+    color: {% raw %}{{ 'var(--muted)' }}{% endraw %};
+  }
+  .qty-badge.has { color: var(--gold); }
+
+  .card-body { padding: .75rem 1rem; }
+  .card-name { font-weight: 700; font-size: 1rem; margin-bottom: .2rem;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-meta { font-size: .8rem; color: var(--muted); display: flex; gap: .5rem; flex-wrap: wrap; }
+  .card-meta span { background: var(--bg); padding: .1rem .4rem; border-radius: 4px; }
+
+  .stars { color: var(--gold); font-size: .85rem; margin-top: .35rem; letter-spacing: 1px; }
+  .card-notes { font-size: .78rem; color: var(--muted); margin-top: .4rem;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-extra { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .4rem; }
+  .card-extra span { font-size: .75rem; padding: .15rem .45rem; border-radius: 4px;
+                     background: var(--bg); color: var(--muted); }
+  .card-extra .price { color: var(--gold); }
+  .card-extra .drink-window { color: #7ab8a0; }
+
+  .card-actions {
+    display: flex; border-top: 1px solid var(--border);
+  }
+  .card-actions button {
+    flex: 1; background: none; border: none; color: var(--muted);
+    padding: .5rem; cursor: pointer; font-size: .8rem; transition: all .2s;
+  }
+  .card-actions button:hover { background: var(--surface2); color: var(--text); }
+  .card-actions button.danger:hover { background: #5a1010; color: #e74c3c; }
+  .card-actions button + button { border-left: 1px solid var(--border); }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 4rem 2rem; color: var(--muted);
+  }
+  .empty-state div { font-size: 4rem; margin-bottom: 1rem; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.75); z-index: 200;
+    align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); width: 100%; max-width: 480px;
+    max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow);
+  }
+  .modal-header {
+    padding: 1rem 1.25rem; font-weight: 700; font-size: 1.1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
+  }
+  .modal-close { background: none; border: none; color: var(--muted);
+                 font-size: 1.3rem; cursor: pointer; line-height: 1; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: .9rem; }
+
+  /* Form elements */
+  label { font-size: .8rem; color: var(--muted); display: block; margin-bottom: .25rem; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: .55rem .75rem; color: var(--text); font-size: .9rem;
+    transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  select option { background: var(--bg); }
+  textarea { resize: vertical; min-height: 70px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+  /* Star rating input */
+  .star-input { display: flex; gap: .25rem; flex-direction: row-reverse;
+                justify-content: flex-end; }
+  .star-input input { display: none; }
+  .star-input label {
+    font-size: 1.5rem; cursor: pointer; color: var(--border);
+    margin: 0; padding: 0; transition: color .15s;
+  }
+  .star-input input:checked ~ label,
+  .star-input label:hover,
+  .star-input label:hover ~ label { color: var(--gold); }
+
+  /* Image preview */
+  .img-preview {
+    width: 100%; height: 140px; background: var(--bg);
+    border: 1px dashed var(--border); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; cursor: pointer; overflow: hidden; position: relative;
+  }
+  .img-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .img-preview input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; padding: 0;
+  }
+
+  /* Submit button */
+  .btn-submit {
+    background: var(--accent); color: white; border: none;
+    padding: .65rem 1.5rem; border-radius: 8px; font-size: .95rem;
+    font-weight: 700; cursor: pointer; width: 100%; margin-top: .25rem;
+    transition: background .2s;
+  }
+  .btn-submit:hover { background: #e74c3c; }
+
+  /* Duplicate modal extras */
+  .dup-hint { font-size: .82rem; color: var(--muted); background: var(--bg);
+              border-radius: 8px; padding: .75rem; line-height: 1.5; }
+
+  /* Qty controls in card */
+  .qty-controls { display: flex; align-items: center; gap: .5rem; }
+  .qty-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); width: 26px; height: 26px; border-radius: 6px;
+    cursor: pointer; font-size: 1rem; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .qty-btn:hover { background: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:1.5rem">🍷</span>
+  <h1>Wine Tracker</h1>
+  {% if stats %}
+  <div class="stats-pill">🍾 {{ stats['total'] or 0 }} Flaschen · {{ wines|length }} Einträge</div>
+  {% endif %}
+</header>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <form method="get" style="display:contents">
+    <div class="search-wrap">
+      <input type="text" name="q" value="{{ query }}" placeholder="Suchen…" autocomplete="off">
+    </div>
+
+    <div class="filter-tabs">
+      <a class="tab {% if not active_type %}active{% endif %}"
+         href="?q={{ query }}&show_empty={{ show_empty }}">Alle</a>
+      {% for t in wine_types %}
+      <a class="tab {% if active_type == t %}active{% endif %}"
+         href="?q={{ query }}&type={{ t }}&show_empty={{ show_empty }}">{{ t }}</a>
+      {% endfor %}
+    </div>
+
+    {% if show_empty == '1' %}
+    <a class="toggle-empty" href="?q={{ query }}&type={{ active_type }}&show_empty=0">⊘ Leere ausblenden</a>
+    {% else %}
+    <a class="toggle-empty" href="?q={{ query }}&type={{ active_type }}&show_empty=1">◎ Leere anzeigen</a>
+    {% endif %}
+  </form>
+
+  <button class="btn-add" onclick="openModal('addModal')">+ Wein hinzufügen</button>
+</div>
+
+<!-- Wine Grid -->
+<div class="grid">
+  {% if not wines %}
+  <div class="empty-state" style="grid-column: 1/-1">
+    <div>🍷</div>
+    <p>Noch keine Weine erfasst.<br>Füge deinen ersten Wein hinzu!</p>
+  </div>
+  {% endif %}
+
+  {% for w in wines %}
+  <div class="card {% if w['quantity'] == 0 %}empty{% endif %}">
+
+    <div class="card-img" onclick="openEditModal({{ w['id'] }}, {{ w|tojson }})">
+      {% if w['image'] %}
+        <img src="/uploads/{{ w['image'] }}" alt="{{ w['name'] }}" loading="lazy">
+      {% else %}
+        {{ '🍷' if w['type'] == 'Rotwein' else ('🥂' if w['type'] == 'Schaumwein' else '🍾') }}
+      {% endif %}
+    </div>
+
+    <!-- Quantity badge -->
+    <div class="qty-badge {% if w['quantity'] > 0 %}has{% endif %}">
+      {{ w['quantity'] }} Fl.
+    </div>
+
+    <div class="card-body" onclick="openEditModal({{ w['id'] }}, {{ w|tojson }})">
+      <div class="card-name" title="{{ w['name'] }}">{{ w['name'] }}</div>
+      <div class="card-meta">
+        {% if w['year'] %}<span>{{ w['year'] }}</span>{% endif %}
+        {% if w['type'] %}<span>{{ w['type'] }}</span>{% endif %}
+        {% if w['region'] %}<span>{{ w['region'] }}</span>{% endif %}
+      </div>
+      {% if w['rating'] %}
+      <div class="stars">{{ '★' * w['rating'] }}{{ '☆' * (5 - w['rating']) }}</div>
+      {% endif %}
+      <div class="card-extra">
+        {% if w['price'] %}<span class="price">CHF {{ "%.2f"|format(w['price']) }}</span>{% endif %}
+        {% if w['drink_from'] or w['drink_until'] %}<span class="drink-window">🗓 {{ w['drink_from'] or '?' }}–{{ w['drink_until'] or '?' }}</span>{% endif %}
+        {% if w['location'] %}<span>📍 {{ w['location'] }}</span>{% endif %}
+      </div>
+      {% if w['notes'] %}
+      <div class="card-notes">{{ w['notes'] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="card-actions">
+      <!-- Quick qty controls -->
+      <form method="post" action="/edit/{{ w['id'] }}" style="flex:0">
+        <input type="hidden" name="name" value="{{ w['name'] }}">
+        <input type="hidden" name="year" value="{{ w['year'] or '' }}">
+        <input type="hidden" name="type" value="{{ w['type'] or '' }}">
+        <input type="hidden" name="region" value="{{ w['region'] or '' }}">
+        <input type="hidden" name="rating" value="{{ w['rating'] }}">
+        <input type="hidden" name="notes" value="{{ w['notes'] or '' }}">
+        <input type="hidden" name="purchased_at" value="{{ w['purchased_at'] or '' }}">
+        <input type="hidden" name="price" value="{{ w['price'] or '' }}">
+        <input type="hidden" name="drink_from" value="{{ w['drink_from'] or '' }}">
+        <input type="hidden" name="drink_until" value="{{ w['drink_until'] or '' }}">
+        <input type="hidden" name="location" value="{{ w['location'] or '' }}">
+        <input type="hidden" name="quantity" value="{{ [w['quantity'] - 1, 0]|max }}">
+        <button type="submit" title="Eine Flasche weniger" style="padding:.5rem .65rem">−</button>
+      </form>
+      <span style="flex:1; display:flex; align-items:center; justify-content:center;
+                   font-size:.85rem; color: var(--gold); font-weight:700;">
+        {{ w['quantity'] }}
+      </span>
+      <form method="post" action="/edit/{{ w['id'] }}" style="flex:0">
+        <input type="hidden" name="name" value="{{ w['name'] }}">
+        <input type="hidden" name="year" value="{{ w['year'] or '' }}">
+        <input type="hidden" name="type" value="{{ w['type'] or '' }}">
+        <input type="hidden" name="region" value="{{ w['region'] or '' }}">
+        <input type="hidden" name="rating" value="{{ w['rating'] }}">
+        <input type="hidden" name="notes" value="{{ w['notes'] or '' }}">
+        <input type="hidden" name="purchased_at" value="{{ w['purchased_at'] or '' }}">
+        <input type="hidden" name="price" value="{{ w['price'] or '' }}">
+        <input type="hidden" name="drink_from" value="{{ w['drink_from'] or '' }}">
+        <input type="hidden" name="drink_until" value="{{ w['drink_until'] or '' }}">
+        <input type="hidden" name="location" value="{{ w['location'] or '' }}">
+        <input type="hidden" name="quantity" value="{{ w['quantity'] + 1 }}">
+        <button type="submit" title="Eine Flasche mehr" style="padding:.5rem .65rem">+</button>
+      </form>
+      <button onclick="openDupModal({{ w['id'] }}, '{{ w['name']|replace("'","\\'")|e }}', {{ w['year'] or 'null' }}, {{ w['quantity'] }})"
+              title="Duplizieren" style="border-left:1px solid var(--border)">⎘</button>
+      <form method="post" action="/delete/{{ w['id'] }}"
+            onsubmit="return confirm('{{ w['name'] }} wirklich löschen?')" style="flex:0">
+        <button type="submit" class="danger" title="Löschen">🗑</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+
+<!-- ═══════════════ ADD MODAL ═══════════════ -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      🍷 Wein hinzufügen
+      <button class="modal-close" onclick="closeModal('addModal')">×</button>
+    </div>
+    <form method="post" action="/add" enctype="multipart/form-data">
+      <div class="modal-body">
+
+        <!-- Image upload -->
+        <div>
+          <label>Foto (Etikett)</label>
+          <div class="img-preview" id="addPreview">
+            📷
+            <input type="file" name="image" accept="image/*"
+                   onchange="previewImg(this,'addPreview')">
+          </div>
+        </div>
+
+        <div>
+          <label>Name *</label>
+          <input type="text" name="name" required placeholder="z.B. Barolo Riserva">
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Jahrgang</label>
+            <input type="number" name="year" min="1900" max="2099" placeholder="2020">
+          </div>
+          <div>
+            <label>Anzahl Flaschen</label>
+            <input type="number" name="quantity" min="0" value="1">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Typ</label>
+            <select name="type">
+              <option value="">— wählen —</option>
+              {% for t in wine_types %}
+              <option>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label>Region / Herkunft</label>
+            <input type="text" name="region" placeholder="z.B. Piemont, IT">
+          </div>
+        </div>
+
+        <div>
+          <label>Bewertung</label>
+          <div class="star-input">
+            {% for i in [5,4,3,2,1] %}
+            <input type="radio" name="rating" id="add_star{{ i }}" value="{{ i }}">
+            <label for="add_star{{ i }}">★</label>
+            {% endfor %}
+          </div>
+        </div>
+
+
+        <div class="row2">
+          <div>
+            <label>Gekauft bei</label>
+            <input type="text" name="purchased_at" placeholder="z.B. Martel, Flaschenpost">
+          </div>
+          <div>
+            <label>Kaufpreis (CHF)</label>
+            <input type="number" name="price" min="0" step="0.01" placeholder="24.90">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Trinkfenster von</label>
+            <input type="number" name="drink_from" min="2000" max="2099" placeholder="2025">
+          </div>
+          <div>
+            <label>Trinkfenster bis</label>
+            <input type="number" name="drink_until" min="2000" max="2099" placeholder="2030">
+          </div>
+        </div>
+
+        <div>
+          <label>Lagerort</label>
+          <input type="text" name="location" placeholder="z.B. Regal 2, Fach oben">
+        </div>
+
+        <div>
+          <label>Notizen</label>
+          <textarea name="notes" placeholder="Aromen, Anlass…"></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">Wein speichern</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ═══════════════ EDIT MODAL ═══════════════ -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      ✏️ Wein bearbeiten
+      <button class="modal-close" onclick="closeModal('editModal')">×</button>
+    </div>
+    <form method="post" id="editForm" enctype="multipart/form-data">
+      <div class="modal-body">
+
+        <div>
+          <label>Foto (Etikett)</label>
+          <div class="img-preview" id="editPreview">
+            📷
+            <input type="file" name="image" accept="image/*"
+                   onchange="previewImg(this,'editPreview')">
+          </div>
+        </div>
+
+        <div>
+          <label>Name *</label>
+          <input type="text" name="name" id="edit_name" required>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Jahrgang</label>
+            <input type="number" name="year" id="edit_year" min="1900" max="2099">
+          </div>
+          <div>
+            <label>Anzahl Flaschen</label>
+            <input type="number" name="quantity" id="edit_qty" min="0">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Typ</label>
+            <select name="type" id="edit_type">
+              <option value="">— wählen —</option>
+              {% for t in wine_types %}
+              <option>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label>Region / Herkunft</label>
+            <input type="text" name="region" id="edit_region">
+          </div>
+        </div>
+
+        <div>
+          <label>Bewertung</label>
+          <div class="star-input" id="edit_stars">
+            {% for i in [5,4,3,2,1] %}
+            <input type="radio" name="rating" id="edit_star{{ i }}" value="{{ i }}">
+            <label for="edit_star{{ i }}">★</label>
+            {% endfor %}
+          </div>
+        </div>
+
+
+        <div class="row2">
+          <div>
+            <label>Gekauft bei</label>
+            <input type="text" name="purchased_at" id="edit_purchased_at" placeholder="z.B. Martel">
+          </div>
+          <div>
+            <label>Kaufpreis (CHF)</label>
+            <input type="number" name="price" id="edit_price" min="0" step="0.01">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Trinkfenster von</label>
+            <input type="number" name="drink_from" id="edit_drink_from" min="2000" max="2099">
+          </div>
+          <div>
+            <label>Trinkfenster bis</label>
+            <input type="number" name="drink_until" id="edit_drink_until" min="2000" max="2099">
+          </div>
+        </div>
+
+        <div>
+          <label>Lagerort</label>
+          <input type="text" name="location" id="edit_location">
+        </div>
+
+        <div>
+          <label>Notizen</label>
+          <textarea name="notes" id="edit_notes"></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">Änderungen speichern</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ═══════════════ DUPLICATE MODAL ═══════════════ -->
+<div class="modal-overlay" id="dupModal">
+  <div class="modal">
+    <div class="modal-header">
+      ⎘ Wein duplizieren
+      <button class="modal-close" onclick="closeModal('dupModal')">×</button>
+    </div>
+    <form method="post" id="dupForm">
+      <div class="modal-body">
+        <div class="dup-hint" id="dupHint"></div>
+
+        <div class="row2">
+          <div>
+            <label>Neuer Jahrgang</label>
+            <input type="number" name="new_year" id="dup_year" min="1900" max="2099">
+          </div>
+          <div>
+            <label>Anzahl Flaschen</label>
+            <input type="number" name="quantity" id="dup_qty" min="0" value="1">
+          </div>
+        </div>
+
+        <p style="font-size:.8rem; color: var(--muted)">
+          Alle anderen Felder (Typ, Region, Bewertung, Notizen, Foto) werden übernommen.
+        </p>
+
+        <button type="submit" class="btn-submit">Duplikat anlegen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ESC closes modals
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open')
+    .forEach(el => el.classList.remove('open'));
+});
+
+function previewImg(input, previewId) {
+  const preview = document.getElementById(previewId);
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    let img = preview.querySelector('img');
+    if (!img) { img = document.createElement('img'); preview.prepend(img); }
+    img.src = e.target.result;
+    preview.childNodes.forEach(n => { if (n.nodeType === 3) n.remove(); }); // remove emoji text
+  };
+  reader.readAsDataURL(file);
+}
+
+function openEditModal(id, wine) {
+  document.getElementById('editForm').action = '/edit/' + id;
+  document.getElementById('edit_name').value = wine.name || '';
+  document.getElementById('edit_year').value = wine.year || '';
+  document.getElementById('edit_qty').value = wine.quantity !== undefined ? wine.quantity : 1;
+  document.getElementById('edit_type').value = wine.type || '';
+  document.getElementById('edit_region').value = wine.region || '';
+  document.getElementById('edit_notes').value = wine.notes || '';
+  document.getElementById('edit_purchased_at').value = wine.purchased_at || '';
+  document.getElementById('edit_price').value = wine.price || '';
+  document.getElementById('edit_drink_from').value = wine.drink_from || '';
+  document.getElementById('edit_drink_until').value = wine.drink_until || '';
+  document.getElementById('edit_location').value = wine.location || '';
+
+  // Stars
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('edit_star' + i);
+    if (el) el.checked = (wine.rating == i);
+  }
+
+  // Image preview
+  const preview = document.getElementById('editPreview');
+  let img = preview.querySelector('img');
+  if (wine.image) {
+    if (!img) { img = document.createElement('img'); preview.prepend(img); }
+    img.src = '/uploads/' + wine.image;
+  } else {
+    if (img) img.remove();
+  }
+
+  openModal('editModal');
+}
+
+function openDupModal(id, name, year, qty) {
+  document.getElementById('dupForm').action = '/duplicate/' + id;
+  document.getElementById('dupHint').textContent =
+    '📋 Vorlage: ' + name + (year ? ' · ' + year : '');
+  document.getElementById('dup_year').value = year || '';
+  document.getElementById('dup_qty').value = qty || 1;
+  openModal('dupModal');
+}
+</script>
+
+</body>
+</html>
