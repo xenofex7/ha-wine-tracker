@@ -1,53 +1,33 @@
-# 🍷 Wine Tracker – Home Assistant Add-on
+# Wine Tracker – Home Assistant App
 
-Ein schlanker, eleganter Weinkeller-Tracker als lokales Home Assistant Add-on.
-
-![Dark wine-themed UI with card grid]
+Ein schlanker, eleganter Weinkeller-Tracker als Home Assistant App.
 
 ## Features
 
-- 🍾 **Weinliste als Karten** mit Foto, Jahrgang, Typ, Region, Bewertung & Notizen
-- 📷 **Foto-Upload** direkt vom Handy (Etikett fotografieren)
-- ⭐ **Sternebewertung** (1–5)
-- ➕/➖ **Schnelle Mengen-Buttons** direkt auf der Karte
-- ⎘ **Duplizieren** – perfekt wenn sich nur der Jahrgang ändert
-- ⊘ **Quantity = 0** bleibt sichtbar als Platzhalter (ausblendbar per Toggle)
-- 🔍 **Suche & Filter** nach Weintyp
-- 🏠 **HA Ingress** – direkt in der HA-Sidebar eingebettet, kein extra Port nötig
-- 📡 **REST API** unter `/api/summary` für HA-Sensoren
+- Weinliste als Karten mit Foto, Jahrgang, Typ, Region, Bewertung & Notizen
+- Foto-Upload direkt vom Handy (Etikett fotografieren)
+- Sternebewertung (1-5)
+- Schnelle Mengen-Buttons direkt auf der Karte
+- Duplizieren - perfekt wenn sich nur der Jahrgang aendert
+- Quantity = 0 bleibt sichtbar als Platzhalter (ausblendbar per Toggle)
+- Suche & Filter nach Weintyp
+- HA Ingress - direkt in der HA-Sidebar eingebettet
+- REST API unter `/api/summary` fuer HA-Sensoren
 
-## Installation
+## Installation als GitHub-Repository
 
-### 1. Repository als lokales Add-on einbinden
+1. **Einstellungen > Apps > App Store**
+2. Oben rechts: **drei Punkte > Repositories**
+3. Repository-URL eingeben: `https://github.com/xenofex7/ha-wine-tracker`
+4. **Wine Tracker** erscheint im Store
+5. **Installieren > Starten**
 
-```
-/addons/
-└── wine_tracker/
-    ├── config.yaml
-    ├── Dockerfile
-    └── app/
-        ├── app.py
-        ├── templates/
-        │   └── index.html
-        └── uploads/      ← wird automatisch angelegt
-```
-
-Dateien ins Verzeichnis `/addons/wine_tracker/` auf deinem HA-System kopieren  
-(z.B. via **Studio Code Server** oder **Samba Share**).
-
-### 2. Add-on installieren
-
-1. **Einstellungen → Add-ons → Add-on Store**
-2. Oben rechts: **⋮ → Lokale Add-ons neu laden**
-3. „Wine Tracker" erscheint unter **Lokale Add-ons**
-4. **Installieren → Starten**
-
-Das war's. Die App öffnet sich in der HA-Sidebar unter 🍷 **Wine Tracker**.
+Die App oeffnet sich in der HA-Sidebar unter **Wine Tracker**.
 
 ## Datenpersistenz
 
-Alle Daten (SQLite-DB + Fotos) werden unter `/share/wine-tracker/` gespeichert –  
-bleiben also bei Add-on-Updates, Neustarts und HA-Updates erhalten.
+Alle Daten (SQLite-DB + Fotos) werden unter `/share/wine-tracker/` gespeichert -
+bleiben also bei App-Updates, Neustarts und HA-Updates erhalten.
 
 ## Home Assistant Sensor (optional)
 
@@ -64,7 +44,7 @@ sensor:
     scan_interval: 3600
 ```
 
-Damit hast du einen HA-Sensor `sensor.weinbestand` den du auf dem Dashboard  
+Damit hast du einen HA-Sensor `sensor.weinbestand` den du auf dem Dashboard
 oder in Automationen nutzen kannst.
 
 ## Datenbank-Felder
@@ -73,13 +53,18 @@ oder in Automationen nutzen kannst.
 |------|-----|-------------|
 | `name` | Text | Weinname (Pflichtfeld) |
 | `year` | Integer | Jahrgang |
-| `type` | Text | Rotwein / Weisswein / Rosé / Schaumwein / Dessertwein |
-| `region` | Text | Herkunft (z.B. „Piemont, IT") |
+| `type` | Text | Rotwein / Weisswein / Rose / Schaumwein / Dessertwein |
+| `region` | Text | Herkunft (z.B. Piemont, IT) |
 | `quantity` | Integer | Anzahl Flaschen (0 = Platzhalter) |
-| `rating` | Integer | 1–5 Sterne |
-| `notes` | Text | Freitext (Trinkfenster, Aromen, …) |
+| `rating` | Integer | 1-5 Sterne |
+| `notes` | Text | Freitext |
 | `image` | Text | Dateiname des Etikettfotos |
 | `added` | Date | Erfassungsdatum |
+| `purchased_at` | Text | Bezugsquelle |
+| `price` | Real | Kaufpreis (CHF) |
+| `drink_from` | Integer | Trinkfenster von (Jahr) |
+| `drink_until` | Integer | Trinkfenster bis (Jahr) |
+| `location` | Text | Lagerort |
 
 ## Technologie
 

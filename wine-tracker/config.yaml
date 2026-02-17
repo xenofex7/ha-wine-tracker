@@ -2,6 +2,7 @@ name: "Wine Tracker"
 description: "Einfacher Weinkeller-Tracker mit Fotoverwaltung"
 version: "1.0.0"
 slug: "wine_tracker"
+url: "https://github.com/xenofex7/ha-wine-tracker"
 init: false
 arch:
   - aarch64
@@ -22,5 +23,4 @@ panel_title: "Wine Tracker"
 options: {}
 schema: {}
 map:
-  - type: share
-    path: /share
+  - share:rw
