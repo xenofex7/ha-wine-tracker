@@ -1,6 +1,6 @@
 name: "Wine Tracker"
 description: "Einfacher Weinkeller-Tracker mit Fotoverwaltung"
-version: "1.0.0"
+version: "0.1.0"
 slug: "wine_tracker"
 url: "https://github.com/xenofex7/ha-wine-tracker"
 init: false

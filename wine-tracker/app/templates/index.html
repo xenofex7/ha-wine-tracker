@@ -282,7 +282,7 @@
 
     <div class="card-img" onclick="openEditModal({{ w['id'] }}, {{ w|tojson }})">
       {% if w['image'] %}
-        <img src="/uploads/{{ w['image'] }}" alt="{{ w['name'] }}" loading="lazy">
+        <img src="{{ ingress }}/uploads/{{ w['image'] }}" alt="{{ w['name'] }}" loading="lazy">
       {% else %}
         {{ '🍷' if w['type'] == 'Rotwein' else ('🥂' if w['type'] == 'Schaumwein' else '🍾') }}
       {% endif %}
@@ -315,7 +315,7 @@
 
     <div class="card-actions">
       <!-- Quick qty controls -->
-      <form method="post" action="/edit/{{ w['id'] }}" style="flex:0">
+      <form method="post" action="{{ ingress }}/edit/{{ w['id'] }}" style="flex:0">
         <input type="hidden" name="name" value="{{ w['name'] }}">
         <input type="hidden" name="year" value="{{ w['year'] or '' }}">
         <input type="hidden" name="type" value="{{ w['type'] or '' }}">
@@ -334,7 +334,7 @@
                    font-size:.85rem; color: var(--gold); font-weight:700;">
         {{ w['quantity'] }}
       </span>
-      <form method="post" action="/edit/{{ w['id'] }}" style="flex:0">
+      <form method="post" action="{{ ingress }}/edit/{{ w['id'] }}" style="flex:0">
         <input type="hidden" name="name" value="{{ w['name'] }}">
         <input type="hidden" name="year" value="{{ w['year'] or '' }}">
         <input type="hidden" name="type" value="{{ w['type'] or '' }}">
@@ -351,7 +351,7 @@
       </form>
       <button onclick="openDupModal({{ w['id'] }}, '{{ w['name']|replace("'","\\'")|e }}', {{ w['year'] or 'null' }}, {{ w['quantity'] }})"
               title="Duplizieren" style="border-left:1px solid var(--border)">⎘</button>
-      <form method="post" action="/delete/{{ w['id'] }}"
+      <form method="post" action="{{ ingress }}/delete/{{ w['id'] }}"
             onsubmit="return confirm('{{ w['name'] }} wirklich löschen?')" style="flex:0">
         <button type="submit" class="danger" title="Löschen">🗑</button>
       </form>
@@ -368,7 +368,7 @@
       🍷 Wein hinzufügen
       <button class="modal-close" onclick="closeModal('addModal')">×</button>
     </div>
-    <form method="post" action="/add" enctype="multipart/form-data">
+    <form method="post" action="{{ ingress }}/add" enctype="multipart/form-data">
       <div class="modal-body">
 
         <!-- Image upload -->
@@ -598,6 +598,8 @@
 
 
 <script>
+const INGRESS = '{{ ingress }}';
+
 function openModal(id) {
   document.getElementById(id).classList.add('open');
 }
@@ -631,7 +633,7 @@ function previewImg(input, previewId) {
 }
 
 function openEditModal(id, wine) {
-  document.getElementById('editForm').action = '/edit/' + id;
+  document.getElementById('editForm').action = INGRESS + '/edit/' + id;
   document.getElementById('edit_name').value = wine.name || '';
   document.getElementById('edit_year').value = wine.year || '';
   document.getElementById('edit_qty').value = wine.quantity !== undefined ? wine.quantity : 1;
@@ -655,7 +657,7 @@ function openEditModal(id, wine) {
   let img = preview.querySelector('img');
   if (wine.image) {
     if (!img) { img = document.createElement('img'); preview.prepend(img); }
-    img.src = '/uploads/' + wine.image;
+    img.src = INGRESS + '/uploads/' + wine.image;
   } else {
     if (img) img.remove();
   }
@@ -664,7 +666,7 @@ function openEditModal(id, wine) {
 }
 
 function openDupModal(id, name, year, qty) {
-  document.getElementById('dupForm').action = '/duplicate/' + id;
+  document.getElementById('dupForm').action = INGRESS + '/duplicate/' + id;
   document.getElementById('dupHint').textContent =
     '📋 Vorlage: ' + name + (year ? ' · ' + year : '');
   document.getElementById('dup_year').value = year || '';

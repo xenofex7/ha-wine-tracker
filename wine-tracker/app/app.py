@@ -6,7 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 
 app = Flask(__name__)
 
-# Persist data in /share so it survives add-on restarts/updates
+# Persist data in /share so it survives app restarts/updates
 DATA_DIR = "/share/wine-tracker"
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 DB_PATH = os.path.join(DATA_DIR, "wine.db")
@@ -15,6 +15,26 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ALLOWED_EXT = {"jpg", "jpeg", "png", "webp", "gif"}
 WINE_TYPES = ["Rotwein", "Weisswein", "Rosé", "Schaumwein", "Dessertwein", "Anderes"]
+
+
+# ── Ingress support ──────────────────────────────────────────────────────────
+# HA Ingress proxies the app under /api/hassio_ingress/<token>/
+# The header X-Ingress-Path tells us the prefix to use for all URLs.
+
+@app.before_request
+def set_ingress_path():
+    g.ingress = request.headers.get("X-Ingress-Path", "")
+
+
+@app.context_processor
+def inject_ingress():
+    return {"ingress": g.get("ingress", "")}
+
+
+def ingress_redirect(endpoint, **kwargs):
+    """Redirect using the ingress-aware path."""
+    path = g.get("ingress", "") + url_for(endpoint, **kwargs)
+    return redirect(path)
 
 
 # ── Database ──────────────────────────────────────────────────────────────────
@@ -151,7 +171,7 @@ def add():
         ),
     )
     db.commit()
-    return redirect(url_for("index"))
+    return ingress_redirect("index")
 
 
 @app.route("/edit/<int:wine_id>", methods=["POST"])
@@ -159,7 +179,7 @@ def edit(wine_id):
     db = get_db()
     wine = db.execute("SELECT * FROM wines WHERE id=?", (wine_id,)).fetchone()
     if not wine:
-        return redirect(url_for("index"))
+        return ingress_redirect("index")
 
     image = wine["image"]
     new_image = save_image(request.files.get("image"))
@@ -195,7 +215,7 @@ def edit(wine_id):
         ),
     )
     db.commit()
-    return redirect(url_for("index"))
+    return ingress_redirect("index")
 
 
 @app.route("/duplicate/<int:wine_id>", methods=["POST"])
@@ -203,7 +223,7 @@ def duplicate(wine_id):
     db = get_db()
     wine = db.execute("SELECT * FROM wines WHERE id=?", (wine_id,)).fetchone()
     if not wine:
-        return redirect(url_for("index"))
+        return ingress_redirect("index")
 
     new_year = request.form.get("new_year") or wine["year"]
 
@@ -222,7 +242,7 @@ def duplicate(wine_id):
         ),
     )
     db.commit()
-    return redirect(url_for("index"))
+    return ingress_redirect("index")
 
 
 @app.route("/delete/<int:wine_id>", methods=["POST"])
@@ -241,7 +261,7 @@ def delete(wine_id):
                 pass
     db.execute("DELETE FROM wines WHERE id=?", (wine_id,))
     db.commit()
-    return redirect(url_for("index"))
+    return ingress_redirect("index")
 
 
 @app.route("/uploads/<filename>")
