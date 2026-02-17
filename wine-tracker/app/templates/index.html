@@ -72,10 +72,9 @@
   .search-wrap { position: relative; flex: 1; min-width: 180px; }
   .search-wrap input {
     width: 100%; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 8px; padding: .5rem 2rem .5rem 2rem;
+    border-radius: 8px; padding: .5rem 2rem .5rem .75rem;
     color: var(--text); font-size: .9rem; height: 35px;
   }
-  .search-wrap::before { content: '🔍'; position: absolute; left: .6rem; top: 50%; transform: translateY(-50%); font-size: .85rem; pointer-events: none; }
   .search-clear {
     position: absolute; right: .5rem; top: 50%; transform: translateY(-50%);
     background: none; border: none; color: var(--muted); font-size: 1.1rem;
@@ -88,7 +87,7 @@
   .tab {
     padding: 0 .75rem; border-radius: 20px; font-size: .8rem; cursor: pointer;
     border: 1px solid var(--border); background: var(--bg); color: var(--muted);
-    text-decoration: none; transition: all .2s; height: 35px;
+    text-decoration: none; transition: all .2s; height: 27px;
     display: inline-flex; align-items: center;
   }
   .tab:hover, .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
@@ -247,6 +246,28 @@
   }
   .btn-submit:hover { background: #e74c3c; }
 
+  /* Delete confirm modal */
+  .delete-confirm-body { text-align: center; padding: 1.5rem 1.25rem; }
+  .delete-confirm-icon { font-size: 3rem; margin-bottom: .75rem; }
+  .delete-confirm-msg { font-size: .95rem; color: var(--text); margin-bottom: .25rem; }
+  .delete-confirm-name { font-weight: 700; color: var(--gold); }
+  .delete-confirm-sub { font-size: .8rem; color: var(--muted); margin-top: .35rem; }
+  .delete-confirm-actions {
+    display: flex; gap: .75rem; padding: 0 1.25rem 1.25rem;
+  }
+  .btn-cancel {
+    flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    padding: .6rem 1rem; border-radius: 8px; font-size: .9rem;
+    cursor: pointer; font-weight: 600; transition: all .2s;
+  }
+  .btn-cancel:hover { background: var(--surface2); border-color: var(--text); }
+  .btn-delete {
+    flex: 1; background: #c0392b; color: white; border: none;
+    padding: .6rem 1rem; border-radius: 8px; font-size: .9rem;
+    cursor: pointer; font-weight: 600; transition: background .2s;
+  }
+  .btn-delete:hover { background: #e74c3c; }
+
   /* Duplicate modal extras */
   .dup-hint { font-size: .82rem; color: var(--muted); background: var(--bg);
               border-radius: 8px; padding: .75rem; line-height: 1.5; }
@@ -387,10 +408,8 @@
               title="Bearbeiten" style="border-left:1px solid var(--border)">✏️</button>
       <button onclick="openDupModal({{ w['id'] }}, '{{ w['name']|replace("'","\\'")|e }}', {{ w['year'] or 'null' }}, {{ w['quantity'] }})"
               title="Duplizieren">📋</button>
-      <form method="post" action="{{ ingress }}/delete/{{ w['id'] }}"
-            onsubmit="return confirm('{{ w['name'] }} wirklich löschen?')" style="flex:0">
-        <button type="submit" class="danger" title="Löschen">🗑</button>
-      </form>
+      <button class="danger" title="Löschen"
+              onclick="openDeleteModal('{{ w['name']|replace("'","\\'")|e }}', '{{ ingress }}/delete/{{ w['id'] }}')">🗑</button>
     </div>
   </div>
   {% endfor %}
@@ -633,6 +652,31 @@
 </div>
 
 
+<!-- ═══════════════ DELETE CONFIRM MODAL ═══════════════ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      🗑 Wein löschen
+      <button class="modal-close" onclick="closeModal('deleteModal')">×</button>
+    </div>
+    <div class="delete-confirm-body">
+      <div class="delete-confirm-icon">🍷</div>
+      <div class="delete-confirm-msg">
+        <span class="delete-confirm-name" id="deleteWineName"></span><br>
+        wirklich löschen?
+      </div>
+      <div class="delete-confirm-sub">Dieser Vorgang kann nicht rückgängig gemacht werden.</div>
+    </div>
+    <div class="delete-confirm-actions">
+      <button class="btn-cancel" onclick="closeModal('deleteModal')">Abbrechen</button>
+      <form method="post" id="deleteForm" style="flex:1; display:contents">
+        <button type="submit" class="btn-delete">Löschen</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
 <script>
 const INGRESS = '{{ ingress }}';
 
@@ -738,6 +782,12 @@ function openEditModal(id, wine) {
   }
 
   openModal('editModal');
+}
+
+function openDeleteModal(name, action) {
+  document.getElementById('deleteWineName').textContent = name;
+  document.getElementById('deleteForm').action = action;
+  openModal('deleteModal');
 }
 
 function openDupModal(id, name, year, qty) {
