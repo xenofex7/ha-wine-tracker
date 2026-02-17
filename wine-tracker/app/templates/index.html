@@ -69,7 +69,7 @@
     background: var(--surface);
     border-bottom: 1px solid var(--border);
   }
-  .search-wrap { position: relative; flex: 1; min-width: 180px; }
+  .search-wrap { position: relative; width: 220px; flex-shrink: 0; }
   .search-wrap input {
     width: 100%; background: var(--bg); border: 1px solid var(--border);
     border-radius: 8px; padding: .5rem 2rem .5rem .75rem;
@@ -94,7 +94,7 @@
 
   .toggle-empty {
     font-size: .8rem; color: var(--muted); cursor: pointer; display: inline-flex;
-    align-items: center; gap: .4rem; padding: 0 .75rem; height: 35px;
+    align-items: center; gap: .4rem; padding: 0 .75rem; height: 27px;
     border: 1px solid var(--border); border-radius: 20px; background: var(--bg);
     text-decoration: none; white-space: nowrap;
   }
@@ -106,6 +106,7 @@
     padding: 0 1.1rem; height: 35px; border-radius: 8px; font-size: .9rem;
     cursor: pointer; font-weight: 600; white-space: nowrap;
     transition: background .2s; display: inline-flex; align-items: center;
+    margin-left: auto;
   }
   .btn-add:hover { background: #e74c3c; }
 
@@ -122,6 +123,7 @@
     border-radius: var(--radius); overflow: hidden;
     transition: transform .2s, box-shadow .2s; cursor: pointer;
     position: relative;
+    display: flex; flex-direction: column;
   }
   .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
   .card.empty { opacity: .5; background: var(--empty); border-style: dashed; }
@@ -161,6 +163,7 @@
 
   .card-actions {
     display: flex; border-top: 1px solid var(--border);
+    margin-top: auto;
   }
   .card-actions button {
     flex: 1; background: none; border: none; color: var(--muted);
@@ -304,14 +307,16 @@
       <button type="button" class="search-clear" onclick="clearSearch()" title="Suche leeren">×</button>
     </div>
 
+    {% if used_types|length > 1 %}
     <div class="filter-tabs">
       <a class="tab {% if not active_type %}active{% endif %}"
          href="?q={{ query }}&show_empty={{ show_empty }}">Alle</a>
-      {% for t in wine_types %}
+      {% for t in used_types %}
       <a class="tab {% if active_type == t %}active{% endif %}"
          href="?q={{ query }}&type={{ t }}&show_empty={{ show_empty }}">{{ t }}</a>
       {% endfor %}
     </div>
+    {% endif %}
 
     {% if show_empty == '1' %}
     <a class="toggle-empty" href="?q={{ query }}&type={{ active_type }}&show_empty=0">⊘ Leere ausblenden</a>
@@ -333,9 +338,9 @@
   {% endif %}
 
   {% for w in wines %}
-  <div class="card {% if w['quantity'] == 0 %}empty{% endif %}">
+  <div class="card {% if w['quantity'] == 0 %}empty{% endif %}" data-id="{{ w['id'] }}" data-wine="{{ w|tojson|e }}">
 
-    <div class="card-img" onclick="openEditModal({{ w['id'] }}, {{ w|tojson }})">
+    <div class="card-img" onclick="editFromCard(this)">
       {% if w['image'] %}
         <img src="{{ ingress }}/uploads/{{ w['image'] }}" alt="{{ w['name'] }}" loading="lazy">
       {% else %}
@@ -348,7 +353,7 @@
       {{ w['quantity'] }} Fl.
     </div>
 
-    <div class="card-body" onclick="openEditModal({{ w['id'] }}, {{ w|tojson }})">
+    <div class="card-body" onclick="editFromCard(this)">
       <div class="card-name" title="{{ w['name'] }}">{{ w['name'] }}</div>
       <div class="card-meta">
         {% if w['year'] %}<span>{{ w['year'] }}</span>{% endif %}
@@ -404,12 +409,12 @@
         <input type="hidden" name="quantity" value="{{ w['quantity'] + 1 }}">
         <button type="submit" title="Eine Flasche mehr" style="padding:.5rem .65rem">+</button>
       </form>
-      <button onclick="openEditModal({{ w['id'] }}, {{ w|tojson }})"
+      <button onclick="editFromCard(this)"
               title="Bearbeiten" style="border-left:1px solid var(--border)">✏️</button>
-      <button onclick="openDupModal({{ w['id'] }}, '{{ w['name']|replace("'","\\'")|e }}', {{ w['year'] or 'null' }}, {{ w['quantity'] }})"
+      <button onclick="dupFromCard(this)"
               title="Duplizieren">📋</button>
       <button class="danger" title="Löschen"
-              onclick="openDeleteModal('{{ w['name']|replace("'","\\'")|e }}', '{{ ingress }}/delete/{{ w['id'] }}')">🗑</button>
+              onclick="deleteFromCard(this)">🗑</button>
     </div>
   </div>
   {% endfor %}
@@ -623,7 +628,7 @@
 <div class="modal-overlay" id="dupModal">
   <div class="modal">
     <div class="modal-header">
-      ⎘ Wein duplizieren
+      📋 Wein duplizieren
       <button class="modal-close" onclick="closeModal('dupModal')">×</button>
     </div>
     <form method="post" id="dupForm">
@@ -782,6 +787,27 @@ function openEditModal(id, wine) {
   }
 
   openModal('editModal');
+}
+
+// Helper: get wine data from closest .card element
+function getCardData(el) {
+  const card = el.closest('.card');
+  return { id: card.dataset.id, wine: JSON.parse(card.dataset.wine) };
+}
+
+function editFromCard(el) {
+  const { id, wine } = getCardData(el);
+  openEditModal(id, wine);
+}
+
+function dupFromCard(el) {
+  const { id, wine } = getCardData(el);
+  openDupModal(id, wine.name, wine.year, wine.quantity);
+}
+
+function deleteFromCard(el) {
+  const { id, wine } = getCardData(el);
+  openDeleteModal(wine.name, INGRESS + '/delete/' + id);
 }
 
 function openDeleteModal(name, action) {

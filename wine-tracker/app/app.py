@@ -129,13 +129,21 @@ def index():
     wines = [dict(row) for row in db.execute(sql, params).fetchall()]
 
     stats = db.execute(
-        "SELECT SUM(quantity) as total, COUNT(DISTINCT NULLIF(type, '')) as types FROM wines WHERE quantity > 0"
+        "SELECT SUM(quantity) as total, COUNT(DISTINCT name) as types FROM wines WHERE quantity > 0"
     ).fetchone()
+
+    # Only show filter tabs for types that actually exist in the DB
+    used_types = [
+        row[0] for row in db.execute(
+            "SELECT DISTINCT type FROM wines WHERE type IS NOT NULL AND type != '' ORDER BY type"
+        ).fetchall()
+    ]
 
     return render_template(
         "index.html",
         wines=wines,
         wine_types=WINE_TYPES,
+        used_types=used_types,
         query=q,
         active_type=t,
         show_empty=show_empty,
