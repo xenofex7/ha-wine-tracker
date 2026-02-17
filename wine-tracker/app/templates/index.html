@@ -128,6 +128,12 @@
   .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
   .card.empty { opacity: .5; background: var(--empty); border-style: dashed; }
   .card.empty:hover { opacity: .75; }
+  .card.highlight { animation: glow 2s ease-out forwards; }
+  @keyframes glow {
+    0%   { box-shadow: 0 0 20px 6px rgba(212,168,67,.7); }
+    70%  { box-shadow: 0 0 15px 4px rgba(212,168,67,.4); }
+    100% { box-shadow: none; }
+  }
 
   .card-img {
     width: 100%; height: 160px; object-fit: cover;
@@ -307,7 +313,7 @@
       <button type="button" class="search-clear" onclick="clearSearch()" title="Suche leeren">×</button>
     </div>
 
-    {% if used_types|length > 1 %}
+    {% if used_types|length > 0 %}
     <div class="filter-tabs">
       <a class="tab {% if not active_type %}active{% endif %}"
          href="?q={{ query }}&show_empty={{ show_empty }}">Alle</a>
@@ -338,7 +344,14 @@
   {% endif %}
 
   {% for w in wines %}
-  <div class="card {% if w['quantity'] == 0 %}empty{% endif %}" data-id="{{ w['id'] }}" data-wine="{{ w|tojson|e }}">
+  <div class="card {% if w['quantity'] == 0 %}empty{% endif %}" data-id="{{ w['id'] }}"
+       data-name="{{ w['name'] }}" data-year="{{ w['year'] or '' }}"
+       data-type="{{ w['type'] or '' }}" data-region="{{ w['region'] or '' }}"
+       data-quantity="{{ w['quantity'] }}" data-rating="{{ w['rating'] }}"
+       data-notes="{{ w['notes'] or '' }}" data-image="{{ w['image'] or '' }}"
+       data-purchased_at="{{ w['purchased_at'] or '' }}" data-price="{{ w['price'] or '' }}"
+       data-drink_from="{{ w['drink_from'] or '' }}" data-drink_until="{{ w['drink_until'] or '' }}"
+       data-location="{{ w['location'] or '' }}">
 
     <div class="card-img" onclick="editFromCard(this)">
       {% if w['image'] %}
@@ -792,7 +805,17 @@ function openEditModal(id, wine) {
 // Helper: get wine data from closest .card element
 function getCardData(el) {
   const card = el.closest('.card');
-  return { id: card.dataset.id, wine: JSON.parse(card.dataset.wine) };
+  const d = card.dataset;
+  return { id: d.id, wine: {
+    name: d.name, year: d.year ? parseInt(d.year) : null,
+    type: d.type || null, region: d.region || null,
+    quantity: parseInt(d.quantity) || 0, rating: parseInt(d.rating) || 0,
+    notes: d.notes || '', image: d.image || null,
+    purchased_at: d.purchased_at || null, price: d.price ? parseFloat(d.price) : null,
+    drink_from: d.drink_from ? parseInt(d.drink_from) : null,
+    drink_until: d.drink_until ? parseInt(d.drink_until) : null,
+    location: d.location || null
+  }};
 }
 
 function editFromCard(el) {
@@ -824,6 +847,23 @@ function openDupModal(id, name, year, qty) {
   document.getElementById('dup_qty').value = qty || 1;
   openModal('dupModal');
 }
+
+// Highlight newly added wine & scroll to it
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const newId = params.get('new');
+  if (!newId) return;
+  const card = document.querySelector('.card[data-id="' + newId + '"]');
+  if (!card) return;
+  card.classList.add('highlight');
+  setTimeout(function() {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+  // Clean URL
+  params.delete('new');
+  const clean = params.toString();
+  history.replaceState(null, '', window.location.pathname + (clean ? '?' + clean : ''));
+})();
 </script>
 
 </body>

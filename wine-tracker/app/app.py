@@ -156,7 +156,7 @@ def add():
     db = get_db()
     image = save_image(request.files.get("image"))
     price_raw = request.form.get("price", "").strip()
-    db.execute(
+    cur = db.execute(
         """INSERT INTO wines
            (name, year, type, region, quantity, rating, notes, image, added,
             purchased_at, price, drink_from, drink_until, location)
@@ -179,7 +179,9 @@ def add():
         ),
     )
     db.commit()
-    return ingress_redirect("index")
+    new_id = cur.lastrowid
+    path = g.get("ingress", "") + url_for("index") + f"?new={new_id}"
+    return redirect(path)
 
 
 @app.route("/edit/<int:wine_id>", methods=["POST"])
