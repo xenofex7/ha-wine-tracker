@@ -129,7 +129,7 @@ def index():
     wines = [dict(row) for row in db.execute(sql, params).fetchall()]
 
     stats = db.execute(
-        "SELECT COUNT(*) as cnt, SUM(quantity) as total FROM wines WHERE quantity > 0"
+        "SELECT SUM(quantity) as total, COUNT(DISTINCT type) as types FROM wines WHERE quantity > 0"
     ).fetchone()
 
     return render_template(

@@ -1,5 +1,9 @@
 # Wine Tracker – Home Assistant App
 
+<p align="center">
+  <img src="logo.png" alt="Wine Tracker Logo" width="128">
+</p>
+
 Ein schlanker, eleganter Weinkeller-Tracker als Home Assistant App.
 
 ## Features
