@@ -225,7 +225,8 @@ def edit(wine_id):
         ),
     )
     db.commit()
-    return ingress_redirect("index")
+    path = g.get("ingress", "") + url_for("index") + f"?new={wine_id}"
+    return redirect(path)
 
 
 @app.route("/duplicate/<int:wine_id>", methods=["POST"])

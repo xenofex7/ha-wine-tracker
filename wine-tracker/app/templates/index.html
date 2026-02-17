@@ -331,7 +331,7 @@
     {% endif %}
   </form>
 
-  <button class="btn-add" onclick="openModal('addModal')">+ Wein hinzufügen</button>
+  <button class="btn-add" onclick="openWineModal()">+ Wein hinzufügen</button>
 </div>
 
 <!-- Wine Grid -->
@@ -434,46 +434,45 @@
 </div>
 
 
-<!-- ═══════════════ ADD MODAL ═══════════════ -->
-<div class="modal-overlay" id="addModal">
+<!-- ═══════════════ WINE MODAL (Add + Edit) ═══════════════ -->
+<div class="modal-overlay" id="wineModal">
   <div class="modal">
     <div class="modal-header">
-      🍷 Wein hinzufügen
-      <button class="modal-close" onclick="closeModal('addModal')">×</button>
+      <span id="wineModalTitle">🍷 Wein hinzufügen</span>
+      <button class="modal-close" onclick="closeModal('wineModal')">×</button>
     </div>
-    <form method="post" action="{{ ingress }}/add" enctype="multipart/form-data">
+    <form method="post" id="wineForm" enctype="multipart/form-data">
       <div class="modal-body">
 
-        <!-- Image upload -->
         <div>
           <label>Foto (Etikett)</label>
-          <div class="img-preview" id="addPreview">
+          <div class="img-preview" id="winePreview">
             📷
             <input type="file" name="image" accept="image/*"
-                   onchange="previewImg(this,'addPreview')">
+                   onchange="previewImg(this,'winePreview')">
           </div>
         </div>
 
         <div>
           <label>Name *</label>
-          <input type="text" name="name" required placeholder="z.B. Barolo Riserva">
+          <input type="text" name="name" id="wine_name" required placeholder="z.B. Barolo Riserva">
         </div>
 
         <div class="row2">
           <div>
             <label>Jahrgang</label>
-            <input type="number" name="year" min="1900" max="2099" placeholder="2020">
+            <input type="number" name="year" id="wine_year" min="1900" max="2099" placeholder="2020">
           </div>
           <div>
             <label>Anzahl Flaschen</label>
-            <input type="number" name="quantity" min="0" value="1">
+            <input type="number" name="quantity" id="wine_qty" min="0" value="1">
           </div>
         </div>
 
         <div class="row2">
           <div>
             <label>Typ</label>
-            <select name="type">
+            <select name="type" id="wine_type">
               <option value="">— wählen —</option>
               {% for t in wine_types %}
               <option>{{ t }}</option>
@@ -482,7 +481,7 @@
           </div>
           <div>
             <label>Region / Herkunft</label>
-            <input type="text" name="region" placeholder="z.B. Piemont, IT">
+            <input type="text" name="region" id="wine_region" placeholder="z.B. Piemont, IT">
           </div>
         </div>
 
@@ -490,147 +489,45 @@
           <label>Bewertung</label>
           <div class="star-input">
             {% for i in [5,4,3,2,1] %}
-            <input type="radio" name="rating" id="add_star{{ i }}" value="{{ i }}">
-            <label for="add_star{{ i }}">★</label>
+            <input type="radio" name="rating" id="wine_star{{ i }}" value="{{ i }}">
+            <label for="wine_star{{ i }}">★</label>
             {% endfor %}
           </div>
         </div>
 
-
         <div class="row2">
           <div>
             <label>Gekauft bei</label>
-            <input type="text" name="purchased_at" placeholder="z.B. Martel, Flaschenpost">
+            <input type="text" name="purchased_at" id="wine_purchased_at" placeholder="z.B. Globus">
           </div>
           <div>
             <label>Kaufpreis (CHF)</label>
-            <input type="number" name="price" min="0" step="0.01" placeholder="24.90">
+            <input type="number" name="price" id="wine_price" min="0" step="0.01" placeholder="54.90">
           </div>
         </div>
 
         <div class="row2">
           <div>
             <label>Trinkfenster von</label>
-            <input type="number" name="drink_from" min="2000" max="2099" placeholder="2025">
+            <input type="number" name="drink_from" id="wine_drink_from" min="2000" max="2099" placeholder="2025">
           </div>
           <div>
             <label>Trinkfenster bis</label>
-            <input type="number" name="drink_until" min="2000" max="2099" placeholder="2030">
+            <input type="number" name="drink_until" id="wine_drink_until" min="2000" max="2099" placeholder="2030">
           </div>
         </div>
 
         <div>
           <label>Lagerort</label>
-          <input type="text" name="location" placeholder="z.B. Regal 2, Fach oben">
+          <input type="text" name="location" id="wine_location" placeholder="z.B. Regal 2, Fach oben">
         </div>
 
         <div>
           <label>Notizen</label>
-          <textarea name="notes" placeholder="Aromen, Anlass…"></textarea>
+          <textarea name="notes" id="wine_notes" placeholder="Aromen, Anlass…"></textarea>
         </div>
 
-        <button type="submit" class="btn-submit">Wein speichern</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-
-<!-- ═══════════════ EDIT MODAL ═══════════════ -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal">
-    <div class="modal-header">
-      ✏️ Wein bearbeiten
-      <button class="modal-close" onclick="closeModal('editModal')">×</button>
-    </div>
-    <form method="post" id="editForm" enctype="multipart/form-data">
-      <div class="modal-body">
-
-        <div>
-          <label>Foto (Etikett)</label>
-          <div class="img-preview" id="editPreview">
-            📷
-            <input type="file" name="image" accept="image/*"
-                   onchange="previewImg(this,'editPreview')">
-          </div>
-        </div>
-
-        <div>
-          <label>Name *</label>
-          <input type="text" name="name" id="edit_name" required>
-        </div>
-
-        <div class="row2">
-          <div>
-            <label>Jahrgang</label>
-            <input type="number" name="year" id="edit_year" min="1900" max="2099">
-          </div>
-          <div>
-            <label>Anzahl Flaschen</label>
-            <input type="number" name="quantity" id="edit_qty" min="0">
-          </div>
-        </div>
-
-        <div class="row2">
-          <div>
-            <label>Typ</label>
-            <select name="type" id="edit_type">
-              <option value="">— wählen —</option>
-              {% for t in wine_types %}
-              <option>{{ t }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div>
-            <label>Region / Herkunft</label>
-            <input type="text" name="region" id="edit_region">
-          </div>
-        </div>
-
-        <div>
-          <label>Bewertung</label>
-          <div class="star-input" id="edit_stars">
-            {% for i in [5,4,3,2,1] %}
-            <input type="radio" name="rating" id="edit_star{{ i }}" value="{{ i }}">
-            <label for="edit_star{{ i }}">★</label>
-            {% endfor %}
-          </div>
-        </div>
-
-
-        <div class="row2">
-          <div>
-            <label>Gekauft bei</label>
-            <input type="text" name="purchased_at" id="edit_purchased_at" placeholder="z.B. Martel">
-          </div>
-          <div>
-            <label>Kaufpreis (CHF)</label>
-            <input type="number" name="price" id="edit_price" min="0" step="0.01">
-          </div>
-        </div>
-
-        <div class="row2">
-          <div>
-            <label>Trinkfenster von</label>
-            <input type="number" name="drink_from" id="edit_drink_from" min="2000" max="2099">
-          </div>
-          <div>
-            <label>Trinkfenster bis</label>
-            <input type="number" name="drink_until" id="edit_drink_until" min="2000" max="2099">
-          </div>
-        </div>
-
-        <div>
-          <label>Lagerort</label>
-          <input type="text" name="location" id="edit_location">
-        </div>
-
-        <div>
-          <label>Notizen</label>
-          <textarea name="notes" id="edit_notes"></textarea>
-        </div>
-
-        <button type="submit" class="btn-submit">Änderungen speichern</button>
+        <button type="submit" class="btn-submit" id="wineSubmitBtn">Wein speichern</button>
       </div>
     </form>
   </div>
@@ -680,10 +577,8 @@
     <div class="delete-confirm-body">
       <div class="delete-confirm-icon">🍷</div>
       <div class="delete-confirm-msg">
-        <span class="delete-confirm-name" id="deleteWineName"></span><br>
-        wirklich löschen?
+        <span class="delete-confirm-name" id="deleteWineName"></span> wirklich löschen?
       </div>
-      <div class="delete-confirm-sub">Dieser Vorgang kann nicht rückgängig gemacht werden.</div>
     </div>
     <div class="delete-confirm-actions">
       <button class="btn-cancel" onclick="closeModal('deleteModal')">Abbrechen</button>
@@ -769,37 +664,59 @@ function previewImg(input, previewId) {
   reader.readAsDataURL(file);
 }
 
-function openEditModal(id, wine) {
-  document.getElementById('editForm').action = INGRESS + '/edit/' + id;
-  document.getElementById('edit_name').value = wine.name || '';
-  document.getElementById('edit_year').value = wine.year || '';
-  document.getElementById('edit_qty').value = wine.quantity !== undefined ? wine.quantity : 1;
-  document.getElementById('edit_type').value = wine.type || '';
-  document.getElementById('edit_region').value = wine.region || '';
-  document.getElementById('edit_notes').value = wine.notes || '';
-  document.getElementById('edit_purchased_at').value = wine.purchased_at || '';
-  document.getElementById('edit_price').value = wine.price || '';
-  document.getElementById('edit_drink_from').value = wine.drink_from || '';
-  document.getElementById('edit_drink_until').value = wine.drink_until || '';
-  document.getElementById('edit_location').value = wine.location || '';
+function openWineModal(id, wine) {
+  const isEdit = !!id;
+  const form = document.getElementById('wineForm');
+  const preview = document.getElementById('winePreview');
+
+  // Title & button text
+  document.getElementById('wineModalTitle').textContent = isEdit ? '✏️ Wein bearbeiten' : '🍷 Wein hinzufügen';
+  document.getElementById('wineSubmitBtn').textContent = isEdit ? 'Änderungen speichern' : 'Wein speichern';
+
+  // Form action
+  form.action = isEdit ? INGRESS + '/edit/' + id : INGRESS + '/add';
+
+  // Reset file input
+  const fileInput = preview.querySelector('input[type=file]');
+  if (fileInput) fileInput.value = '';
+
+  // Fill fields (empty for add, data for edit)
+  const w = wine || {};
+  document.getElementById('wine_name').value = w.name || '';
+  document.getElementById('wine_year').value = w.year || '';
+  document.getElementById('wine_qty').value = w.quantity !== undefined ? w.quantity : 1;
+  document.getElementById('wine_type').value = w.type || '';
+  document.getElementById('wine_region').value = w.region || '';
+  document.getElementById('wine_notes').value = w.notes || '';
+  document.getElementById('wine_purchased_at').value = w.purchased_at || '';
+  document.getElementById('wine_price').value = w.price || '';
+  document.getElementById('wine_drink_from').value = w.drink_from || '';
+  document.getElementById('wine_drink_until').value = w.drink_until || '';
+  document.getElementById('wine_location').value = w.location || '';
 
   // Stars
   for (let i = 1; i <= 5; i++) {
-    const el = document.getElementById('edit_star' + i);
-    if (el) el.checked = (wine.rating == i);
+    const el = document.getElementById('wine_star' + i);
+    if (el) el.checked = isEdit ? (w.rating == i) : false;
   }
 
   // Image preview
-  const preview = document.getElementById('editPreview');
   let img = preview.querySelector('img');
-  if (wine.image) {
+  if (isEdit && w.image) {
     if (!img) { img = document.createElement('img'); preview.prepend(img); }
-    img.src = INGRESS + '/uploads/' + wine.image;
+    img.src = INGRESS + '/uploads/' + w.image;
+    preview.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
   } else {
     if (img) img.remove();
+    // Restore camera emoji
+    let hasEmoji = false;
+    preview.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) hasEmoji = true; });
+    if (!hasEmoji) {
+      preview.insertBefore(document.createTextNode('📷'), preview.firstChild);
+    }
   }
 
-  openModal('editModal');
+  openModal('wineModal');
 }
 
 // Helper: get wine data from closest .card element
@@ -820,7 +737,7 @@ function getCardData(el) {
 
 function editFromCard(el) {
   const { id, wine } = getCardData(el);
-  openEditModal(id, wine);
+  openWineModal(id, wine);
 }
 
 function dupFromCard(el) {
