@@ -126,7 +126,7 @@ def index():
         sql += " AND quantity > 0"
 
     sql += " ORDER BY type, name, year"
-    wines = db.execute(sql, params).fetchall()
+    wines = [dict(row) for row in db.execute(sql, params).fetchall()]
 
     stats = db.execute(
         "SELECT COUNT(*) as cnt, SUM(quantity) as total FROM wines WHERE quantity > 0"

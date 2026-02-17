@@ -9,8 +9,5 @@ RUN pip3 install flask --break-system-packages
 WORKDIR /app
 COPY app/ /app/
 
-# Create data dir
-RUN mkdir -p /share/wine-tracker/uploads
-
 EXPOSE 5050
 CMD ["python3", "app.py"]
