@@ -290,6 +290,26 @@
     display: flex; align-items: center; justify-content: center;
   }
   .qty-btn:hover { background: var(--accent); border-color: var(--accent); }
+
+  /* Lightbox */
+  .lightbox-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.92); z-index: 300;
+    align-items: center; justify-content: center;
+    cursor: zoom-out; padding: 1rem;
+  }
+  .lightbox-overlay.open { display: flex; }
+  .lightbox-overlay img {
+    max-width: 95%; max-height: 92vh; object-fit: contain;
+    border-radius: 8px; box-shadow: 0 0 40px rgba(0,0,0,.6);
+  }
+  .lightbox-close {
+    position: absolute; top: 1rem; right: 1.2rem;
+    background: none; border: none; color: rgba(255,255,255,.7);
+    font-size: 2rem; cursor: pointer; line-height: 1; z-index: 301;
+  }
+  .lightbox-close:hover { color: #fff; }
+  .card-img img { cursor: zoom-in; }
 </style>
 </head>
 <body>
@@ -353,7 +373,7 @@
        data-drink_from="{{ w['drink_from'] or '' }}" data-drink_until="{{ w['drink_until'] or '' }}"
        data-location="{{ w['location'] or '' }}">
 
-    <div class="card-img" onclick="editFromCard(this)">
+    <div class="card-img" onclick="cardImgClick(this)">
       {% if w['image'] %}
         <img src="{{ ingress }}/uploads/{{ w['image'] }}" alt="{{ w['name'] }}" loading="lazy">
       {% else %}
@@ -387,41 +407,12 @@
     </div>
 
     <div class="card-actions">
-      <!-- Quick qty controls -->
-      <form method="post" action="{{ ingress }}/edit/{{ w['id'] }}" style="flex:0">
-        <input type="hidden" name="name" value="{{ w['name'] }}">
-        <input type="hidden" name="year" value="{{ w['year'] or '' }}">
-        <input type="hidden" name="type" value="{{ w['type'] or '' }}">
-        <input type="hidden" name="region" value="{{ w['region'] or '' }}">
-        <input type="hidden" name="rating" value="{{ w['rating'] }}">
-        <input type="hidden" name="notes" value="{{ w['notes'] or '' }}">
-        <input type="hidden" name="purchased_at" value="{{ w['purchased_at'] or '' }}">
-        <input type="hidden" name="price" value="{{ w['price'] or '' }}">
-        <input type="hidden" name="drink_from" value="{{ w['drink_from'] or '' }}">
-        <input type="hidden" name="drink_until" value="{{ w['drink_until'] or '' }}">
-        <input type="hidden" name="location" value="{{ w['location'] or '' }}">
-        <input type="hidden" name="quantity" value="{{ [w['quantity'] - 1, 0]|max }}">
-        <button type="submit" title="Eine Flasche weniger" style="padding:.5rem .65rem">−</button>
-      </form>
-      <span style="flex:1; display:flex; align-items:center; justify-content:center;
+      <button onclick="changeQty(this,-1)" title="Eine Flasche weniger" style="padding:.5rem .65rem">−</button>
+      <span class="qty-display" style="flex:1; display:flex; align-items:center; justify-content:center;
                    font-size:.85rem; color: var(--gold); font-weight:700;">
         {{ w['quantity'] }}
       </span>
-      <form method="post" action="{{ ingress }}/edit/{{ w['id'] }}" style="flex:0">
-        <input type="hidden" name="name" value="{{ w['name'] }}">
-        <input type="hidden" name="year" value="{{ w['year'] or '' }}">
-        <input type="hidden" name="type" value="{{ w['type'] or '' }}">
-        <input type="hidden" name="region" value="{{ w['region'] or '' }}">
-        <input type="hidden" name="rating" value="{{ w['rating'] }}">
-        <input type="hidden" name="notes" value="{{ w['notes'] or '' }}">
-        <input type="hidden" name="purchased_at" value="{{ w['purchased_at'] or '' }}">
-        <input type="hidden" name="price" value="{{ w['price'] or '' }}">
-        <input type="hidden" name="drink_from" value="{{ w['drink_from'] or '' }}">
-        <input type="hidden" name="drink_until" value="{{ w['drink_until'] or '' }}">
-        <input type="hidden" name="location" value="{{ w['location'] or '' }}">
-        <input type="hidden" name="quantity" value="{{ w['quantity'] + 1 }}">
-        <button type="submit" title="Eine Flasche mehr" style="padding:.5rem .65rem">+</button>
-      </form>
+      <button onclick="changeQty(this,1)" title="Eine Flasche mehr" style="padding:.5rem .65rem">+</button>
       <button onclick="editFromCard(this)"
               title="Bearbeiten" style="border-left:1px solid var(--border)">✏️</button>
       <button onclick="dupFromCard(this)"
@@ -439,7 +430,7 @@
   <div class="modal">
     <div class="modal-header">
       <span id="wineModalTitle">🍷 Wein hinzufügen</span>
-      <button class="modal-close" onclick="closeModal('wineModal')">×</button>
+      <button class="modal-close" onclick="tryCloseWineModal()">×</button>
     </div>
     <form method="post" id="wineForm" enctype="multipart/form-data">
       <div class="modal-body">
@@ -590,6 +581,12 @@
 </div>
 
 
+<!-- ═══════════════ LIGHTBOX ═══════════════ -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img id="lightboxImg" src="" alt="Etikett">
+</div>
+
 <script>
 const INGRESS = '{{ ingress }}';
 
@@ -639,15 +636,29 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-// Close on overlay click
+// Close on overlay click (wineModal: block if dirty)
 document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+  el.addEventListener('click', e => {
+    if (e.target !== el) return;
+    if (el.id === 'wineModal') {
+      if (isWineFormDirty()) return; // block close
+    }
+    el.classList.remove('open');
+  });
 });
 
-// ESC closes modals
+// ESC closes modals & lightbox (wineModal: guard if dirty)
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open')
-    .forEach(el => el.classList.remove('open'));
+  if (e.key === 'Escape') {
+    closeLightbox();
+    document.querySelectorAll('.modal-overlay.open').forEach(el => {
+      if (el.id === 'wineModal') {
+        tryCloseWineModal();
+      } else {
+        el.classList.remove('open');
+      }
+    });
+  }
 });
 
 function previewImg(input, previewId) {
@@ -717,6 +728,39 @@ function openWineModal(id, wine) {
   }
 
   openModal('wineModal');
+
+  // Snapshot form state for dirty-tracking (after a tick so DOM settles)
+  setTimeout(function() { wineFormSnapshot = getWineFormState(); }, 0);
+}
+
+// ── Dirty-tracking for wineModal ──────────────────────────────────────────────
+var wineFormSnapshot = '';
+
+function getWineFormState() {
+  var fields = ['wine_name','wine_year','wine_qty','wine_type','wine_region',
+                'wine_notes','wine_purchased_at','wine_price','wine_drink_from',
+                'wine_drink_until','wine_location'];
+  var parts = fields.map(function(id) { return document.getElementById(id).value; });
+  // Stars
+  for (var i = 1; i <= 5; i++) {
+    var el = document.getElementById('wine_star' + i);
+    if (el && el.checked) { parts.push('star' + i); break; }
+  }
+  // File input
+  var fi = document.querySelector('#winePreview input[type=file]');
+  if (fi && fi.value) parts.push('file:' + fi.value);
+  return parts.join('|');
+}
+
+function isWineFormDirty() {
+  return getWineFormState() !== wineFormSnapshot;
+}
+
+function tryCloseWineModal() {
+  if (isWineFormDirty()) {
+    if (!confirm('Änderungen verwerfen?')) return;
+  }
+  closeModal('wineModal');
 }
 
 // Helper: get wine data from closest .card element
@@ -735,6 +779,25 @@ function getCardData(el) {
   }};
 }
 
+function cardImgClick(el) {
+  const card = el.closest('.card');
+  const img = card.dataset.image;
+  if (img) {
+    openLightbox(INGRESS + '/uploads/' + img);
+  } else {
+    editFromCard(el);
+  }
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
+}
+
 function editFromCard(el) {
   const { id, wine } = getCardData(el);
   openWineModal(id, wine);
@@ -747,17 +810,13 @@ function dupFromCard(el) {
 
 function deleteFromCard(el) {
   const { id, wine } = getCardData(el);
-  openDeleteModal(wine.name, INGRESS + '/delete/' + id);
-}
-
-function openDeleteModal(name, action) {
-  document.getElementById('deleteWineName').textContent = name;
-  document.getElementById('deleteForm').action = action;
+  document.getElementById('deleteWineName').textContent = wine.name;
+  document.getElementById('deleteForm').dataset.wineId = id;
   openModal('deleteModal');
 }
 
 function openDupModal(id, name, year, qty) {
-  document.getElementById('dupForm').action = INGRESS + '/duplicate/' + id;
+  document.getElementById('dupForm').dataset.wineId = id;
   document.getElementById('dupHint').textContent =
     '📋 Vorlage: ' + name + (year ? ' · ' + year : '');
   document.getElementById('dup_year').value = year || '';
@@ -765,18 +824,231 @@ function openDupModal(id, name, year, qty) {
   openModal('dupModal');
 }
 
-// Highlight newly added wine & scroll to it
+// ── AJAX helpers ──────────────────────────────────────────────────────────────
+
+function updateStats(s) {
+  var pill = document.querySelector('.stats-pill');
+  if (pill && s) {
+    pill.textContent = '🍾 ' + s.total + (s.total == 1 ? ' Flasche' : ' Flaschen') +
+                       ' · ' + s.types + (s.types == 1 ? ' Weinsorte' : ' Weinsorten');
+  }
+}
+
+function highlightCard(card) {
+  card.classList.remove('highlight');
+  void card.offsetWidth; // force reflow
+  card.classList.add('highlight');
+  setTimeout(function() {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+function wineEmoji(type) {
+  if (type === 'Rotwein') return '🍷';
+  if (type === 'Schaumwein') return '🥂';
+  return '🍾';
+}
+
+function renderCard(w) {
+  var stars = '';
+  if (w.rating) {
+    stars = '<div class="stars">' + '★'.repeat(w.rating) + '☆'.repeat(5 - w.rating) + '</div>';
+  }
+  var extra = '';
+  if (w.price) extra += '<span class="price">CHF ' + Number(w.price).toFixed(2) + '</span>';
+  if (w.drink_from || w.drink_until) extra += '<span class="drink-window">🗓 ' + (w.drink_from || '?') + '–' + (w.drink_until || '?') + '</span>';
+  if (w.location) extra += '<span>📍 ' + w.location + '</span>';
+
+  var imgHtml = w.image
+    ? '<img src="' + INGRESS + '/uploads/' + w.image + '" alt="' + (w.name||'') + '" loading="lazy">'
+    : wineEmoji(w.type);
+
+  var notesHtml = w.notes ? '<div class="card-notes">' + w.notes.replace(/</g,'&lt;') + '</div>' : '';
+
+  var metaParts = '';
+  if (w.year) metaParts += '<span>' + w.year + '</span>';
+  if (w.type) metaParts += '<span>' + w.type + '</span>';
+  if (w.region) metaParts += '<span>' + w.region + '</span>';
+
+  return '<div class="card-img" onclick="cardImgClick(this)">' + imgHtml + '</div>' +
+    '<div class="qty-badge ' + (w.quantity > 0 ? 'has' : '') + '">' + w.quantity + ' Fl.</div>' +
+    '<div class="card-body" onclick="editFromCard(this)">' +
+      '<div class="card-name" title="' + (w.name||'') + '">' + (w.name||'') + '</div>' +
+      '<div class="card-meta">' + metaParts + '</div>' +
+      stars +
+      '<div class="card-extra">' + extra + '</div>' +
+      notesHtml +
+    '</div>' +
+    '<div class="card-actions">' +
+      '<button onclick="changeQty(this,-1)" title="Eine Flasche weniger" style="padding:.5rem .65rem">−</button>' +
+      '<span class="qty-display" style="flex:1;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--gold);font-weight:700;">' + w.quantity + '</span>' +
+      '<button onclick="changeQty(this,1)" title="Eine Flasche mehr" style="padding:.5rem .65rem">+</button>' +
+      '<button onclick="editFromCard(this)" title="Bearbeiten" style="border-left:1px solid var(--border)">✏️</button>' +
+      '<button onclick="dupFromCard(this)" title="Duplizieren">📋</button>' +
+      '<button class="danger" title="Löschen" onclick="deleteFromCard(this)">🗑</button>' +
+    '</div>';
+}
+
+function updateCardData(card, w) {
+  card.dataset.name = w.name || '';
+  card.dataset.year = w.year || '';
+  card.dataset.type = w.type || '';
+  card.dataset.region = w.region || '';
+  card.dataset.quantity = w.quantity;
+  card.dataset.rating = w.rating || 0;
+  card.dataset.notes = w.notes || '';
+  card.dataset.image = w.image || '';
+  card.dataset.purchased_at = w.purchased_at || '';
+  card.dataset.price = w.price || '';
+  card.dataset.drink_from = w.drink_from || '';
+  card.dataset.drink_until = w.drink_until || '';
+  card.dataset.location = w.location || '';
+  card.classList.toggle('empty', w.quantity == 0);
+}
+
+// ── AJAX form submit (wineModal) ──────────────────────────────────────────────
+
+document.getElementById('wineForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var form = this;
+  var fd = new FormData(form);
+  fetch(form.action, {
+    method: 'POST', body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.ok) return;
+    var w = data.wine;
+    var card = document.querySelector('.card[data-id="' + w.id + '"]');
+    if (card) {
+      // Edit: update existing card
+      updateCardData(card, w);
+      card.innerHTML = renderCard(w);
+    } else {
+      // Add: create new card
+      card = document.createElement('div');
+      card.className = 'card' + (w.quantity == 0 ? ' empty' : '');
+      card.dataset.id = w.id;
+      updateCardData(card, w);
+      card.innerHTML = renderCard(w);
+      var grid = document.querySelector('.grid');
+      // Remove empty state if present
+      var emptyState = grid.querySelector('.empty-state');
+      if (emptyState) emptyState.remove();
+      grid.appendChild(card);
+    }
+    updateStats(data.stats);
+    closeModal('wineModal');
+    highlightCard(card);
+  });
+});
+
+// ── AJAX qty change ───────────────────────────────────────────────────────────
+
+function changeQty(el, delta) {
+  var card = el.closest('.card');
+  var id = card.dataset.id;
+  var d = card.dataset;
+  var newQty = Math.max(0, (parseInt(d.quantity) || 0) + delta);
+
+  var fd = new FormData();
+  fd.append('name', d.name);
+  fd.append('year', d.year);
+  fd.append('type', d.type);
+  fd.append('region', d.region);
+  fd.append('quantity', newQty);
+  fd.append('rating', d.rating);
+  fd.append('notes', d.notes);
+  fd.append('purchased_at', d.purchased_at);
+  fd.append('price', d.price);
+  fd.append('drink_from', d.drink_from);
+  fd.append('drink_until', d.drink_until);
+  fd.append('location', d.location);
+
+  // Optimistic UI update
+  card.dataset.quantity = newQty;
+  card.querySelector('.qty-display').textContent = newQty;
+  card.querySelector('.qty-badge').textContent = newQty + ' Fl.';
+  card.querySelector('.qty-badge').classList.toggle('has', newQty > 0);
+  card.classList.toggle('empty', newQty == 0);
+
+  fetch(INGRESS + '/edit/' + id, {
+    method: 'POST', body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) { if (data.ok) updateStats(data.stats); });
+}
+
+// ── AJAX duplicate ────────────────────────────────────────────────────────────
+
+document.getElementById('dupForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var form = this;
+  var id = form.dataset.wineId;
+  var fd = new FormData(form);
+
+  fetch(INGRESS + '/duplicate/' + id, {
+    method: 'POST', body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.ok) return;
+    var w = data.wine;
+    var card = document.createElement('div');
+    card.className = 'card' + (w.quantity == 0 ? ' empty' : '');
+    card.dataset.id = w.id;
+    updateCardData(card, w);
+    card.innerHTML = renderCard(w);
+    // Insert after original card
+    var orig = document.querySelector('.card[data-id="' + id + '"]');
+    if (orig && orig.nextSibling) {
+      orig.parentNode.insertBefore(card, orig.nextSibling);
+    } else {
+      document.querySelector('.grid').appendChild(card);
+    }
+    updateStats(data.stats);
+    closeModal('dupModal');
+    highlightCard(card);
+  });
+});
+
+// ── AJAX delete ───────────────────────────────────────────────────────────────
+
+document.getElementById('deleteForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var form = this;
+  var id = form.dataset.wineId;
+
+  fetch(INGRESS + '/delete/' + id, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.ok) return;
+    var card = document.querySelector('.card[data-id="' + id + '"]');
+    if (card) card.remove();
+    updateStats(data.stats);
+    closeModal('deleteModal');
+    // Show empty state if no cards left
+    var grid = document.querySelector('.grid');
+    if (!grid.querySelector('.card')) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div>🍷</div><p>Noch keine Weine erfasst.<br>Füge deinen ersten Wein hinzu!</p></div>';
+    }
+  });
+});
+
+// Highlight newly added wine & scroll to it (for non-JS fallback / initial load)
 (function() {
   const params = new URLSearchParams(window.location.search);
   const newId = params.get('new');
   if (!newId) return;
   const card = document.querySelector('.card[data-id="' + newId + '"]');
   if (!card) return;
-  card.classList.add('highlight');
-  setTimeout(function() {
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 100);
-  // Clean URL
+  highlightCard(card);
   params.delete('new');
   const clean = params.toString();
   history.replaceState(null, '', window.location.pathname + (clean ? '?' + clean : ''));

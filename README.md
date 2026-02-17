@@ -77,6 +77,15 @@ oder in Automationen nutzen kannst.
 - **Frontend**: Vanilla HTML/CSS (kein Framework, kein Node.js)
 - **Base Image**: Home Assistant Alpine-basiert
 
+## Offene Features
+
+- Export / Import Funktion
+- Integration von AI zum Adden von Weininfos oder Weininfos laden per API
+- Statistik-Seite
+- Suche verbessern – Live-Suche beim Tippen
+- Bugfixes Themes
+- Custom Sortierungen
+
 ## Lizenz
 
 MIT

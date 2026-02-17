@@ -1,4 +1,5 @@
 import os
+import shutil
 import sqlite3
 import uuid
 from datetime import date
@@ -91,6 +92,28 @@ def init_db():
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def is_ajax():
+    return request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+
+def wine_json(wine_id):
+    """Return a single wine row as JSON dict (for AJAX responses)."""
+    db = get_db()
+    row = db.execute("SELECT * FROM wines WHERE id=?", (wine_id,)).fetchone()
+    if not row:
+        return None
+    return dict(row)
+
+
+def stats_json():
+    """Return current stats dict."""
+    db = get_db()
+    s = db.execute(
+        "SELECT SUM(quantity) as total, COUNT(DISTINCT name) as types FROM wines WHERE quantity > 0"
+    ).fetchone()
+    return {"total": s["total"] or 0, "types": s["types"] or 0}
+
+
 def allowed(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
 
@@ -180,6 +203,8 @@ def add():
     )
     db.commit()
     new_id = cur.lastrowid
+    if is_ajax():
+        return jsonify({"ok": True, "wine": wine_json(new_id), "stats": stats_json()})
     path = g.get("ingress", "") + url_for("index") + f"?new={new_id}"
     return redirect(path)
 
@@ -225,6 +250,8 @@ def edit(wine_id):
         ),
     )
     db.commit()
+    if is_ajax():
+        return jsonify({"ok": True, "wine": wine_json(wine_id), "stats": stats_json()})
     path = g.get("ingress", "") + url_for("index") + f"?new={wine_id}"
     return redirect(path)
 
@@ -238,8 +265,19 @@ def duplicate(wine_id):
 
     new_year = request.form.get("new_year") or wine["year"]
 
+    # Copy image so each wine has its own independent file
+    new_image = None
+    if wine["image"]:
+        src = os.path.join(UPLOAD_DIR, wine["image"])
+        if os.path.exists(src):
+            ext = wine["image"].rsplit(".", 1)[-1].lower()
+            new_image = f"{uuid.uuid4().hex}.{ext}"
+            shutil.copy2(src, os.path.join(UPLOAD_DIR, new_image))
+
     db.execute(
-        "INSERT INTO wines (name, year, type, region, quantity, rating, notes, image, added) VALUES (?,?,?,?,?,?,?,?,?)",
+        """INSERT INTO wines (name, year, type, region, quantity, rating, notes, image, added,
+           purchased_at, price, drink_from, drink_until, location)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             wine["name"],
             new_year,
@@ -248,11 +286,19 @@ def duplicate(wine_id):
             int(request.form.get("quantity", wine["quantity"])),
             wine["rating"],
             wine["notes"],
-            wine["image"],  # share same image
+            new_image,
             str(date.today()),
+            wine["purchased_at"],
+            wine["price"],
+            wine["drink_from"],
+            wine["drink_until"],
+            wine["location"],
         ),
     )
     db.commit()
+    new_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    if is_ajax():
+        return jsonify({"ok": True, "wine": wine_json(new_id), "stats": stats_json()})
     return ingress_redirect("index")
 
 
@@ -272,6 +318,8 @@ def delete(wine_id):
                 pass
     db.execute("DELETE FROM wines WHERE id=?", (wine_id,))
     db.commit()
+    if is_ajax():
+        return jsonify({"ok": True, "deleted": wine_id, "stats": stats_json()})
     return ingress_redirect("index")
 
 
