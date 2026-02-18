@@ -1,6 +1,6 @@
 name: "Wine Tracker"
 description: "Für alle, die den Weinkeller im Griff haben wollen"
-version: "0.1.7"
+version: "0.1.8"
 slug: "wine_tracker"
 url: "https://github.com/xenofex7/ha-wine-tracker"
 init: false

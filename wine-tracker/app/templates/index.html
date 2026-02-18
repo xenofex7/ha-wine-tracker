@@ -327,29 +327,21 @@
 
 <!-- Toolbar -->
 <div class="toolbar">
-  <form method="get" style="display:contents">
-    <div class="search-wrap">
-      <input type="text" name="q" value="{{ query }}" placeholder="Suchen…" autocomplete="off">
-      <button type="button" class="search-clear" onclick="clearSearch()" title="Suche leeren">×</button>
-    </div>
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="Suchen…" autocomplete="off" oninput="debouncedFilter()">
+    <button type="button" class="search-clear" onclick="clearSearch()" title="Suche leeren">×</button>
+  </div>
 
-    {% if used_types|length > 0 %}
-    <div class="filter-tabs">
-      <a class="tab {% if not active_type %}active{% endif %}"
-         href="?q={{ query }}&show_empty={{ show_empty }}">Alle</a>
-      {% for t in used_types %}
-      <a class="tab {% if active_type == t %}active{% endif %}"
-         href="?q={{ query }}&type={{ t }}&show_empty={{ show_empty }}">{{ t }}</a>
-      {% endfor %}
-    </div>
-    {% endif %}
+  {% if used_types|length > 0 %}
+  <div class="filter-tabs" id="filterTabs">
+    <button class="tab active" onclick="filterByType('')">Alle</button>
+    {% for t in used_types %}
+    <button class="tab" onclick="filterByType('{{ t }}')">{{ t }}</button>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    {% if show_empty == '1' %}
-    <a class="toggle-empty" href="?q={{ query }}&type={{ active_type }}&show_empty=0">⊘ Leere ausblenden</a>
-    {% else %}
-    <a class="toggle-empty" href="?q={{ query }}&type={{ active_type }}&show_empty=1">◎ Leere anzeigen</a>
-    {% endif %}
-  </form>
+  <button class="toggle-empty" id="toggleEmptyBtn" onclick="toggleEmpty()">⊘ Leere ausblenden</button>
 
   <button class="btn-add" onclick="openWineModal()">+ Wein hinzufügen</button>
 </div>
@@ -623,10 +615,104 @@ function cycleTheme() {
   });
 })();
 
+// ── Client-side filter state ─────────────────────────────────────────────────
+var activeType = '';
+var showEmpty = true;
+var _filterTimer = null;
+
+function debouncedFilter() {
+  clearTimeout(_filterTimer);
+  _filterTimer = setTimeout(applyFilters, 150);
+}
+
+function applyFilters() {
+  var query = document.getElementById('searchInput').value.trim().toLowerCase();
+  var cards = document.querySelectorAll('.grid .card');
+  var visibleCount = 0;
+
+  cards.forEach(function(card) {
+    var d = card.dataset;
+    // Type match
+    var typeOk = !activeType || d.type === activeType;
+    // Search match (name, region, notes)
+    var searchOk = !query ||
+      (d.name || '').toLowerCase().indexOf(query) !== -1 ||
+      (d.region || '').toLowerCase().indexOf(query) !== -1 ||
+      (d.notes || '').toLowerCase().indexOf(query) !== -1;
+    // Empty match
+    var emptyOk = showEmpty || parseInt(d.quantity) > 0;
+
+    var visible = typeOk && searchOk && emptyOk;
+    card.style.display = visible ? '' : 'none';
+    if (visible) visibleCount++;
+  });
+
+  // Show/hide empty state
+  var grid = document.querySelector('.grid');
+  var emptyState = grid.querySelector('.empty-state');
+  if (visibleCount === 0 && cards.length > 0) {
+    if (!emptyState) {
+      emptyState = document.createElement('div');
+      emptyState.className = 'empty-state';
+      emptyState.style.gridColumn = '1/-1';
+      emptyState.innerHTML = '<div>🔍</div><p>Keine Weine gefunden.</p>';
+      grid.appendChild(emptyState);
+    }
+    emptyState.style.display = '';
+  } else if (emptyState && cards.length > 0) {
+    emptyState.style.display = 'none';
+  }
+
+  // Update search-clear button visibility
+  var clearBtn = document.querySelector('.search-clear');
+  if (clearBtn) clearBtn.style.display = query ? 'block' : '';
+}
+
+function filterByType(type) {
+  activeType = type;
+  // Update tab active states
+  var tabs = document.querySelectorAll('#filterTabs .tab');
+  tabs.forEach(function(tab) {
+    var tabType = tab.textContent === 'Alle' ? '' : tab.textContent;
+    tab.classList.toggle('active', tabType === activeType);
+  });
+  applyFilters();
+}
+
+function toggleEmpty() {
+  showEmpty = !showEmpty;
+  var btn = document.getElementById('toggleEmptyBtn');
+  btn.textContent = showEmpty ? '⊘ Leere ausblenden' : '◎ Leere anzeigen';
+  applyFilters();
+}
+
 function clearSearch() {
-  const input = document.querySelector('.search-wrap input[name="q"]');
-  input.value = '';
-  input.form.submit();
+  document.getElementById('searchInput').value = '';
+  applyFilters();
+}
+
+function ensureFilterTab(type) {
+  if (!type) return;
+  var tabs = document.getElementById('filterTabs');
+  if (!tabs) {
+    // Create the filter-tabs container (first wine with a type)
+    tabs = document.createElement('div');
+    tabs.className = 'filter-tabs';
+    tabs.id = 'filterTabs';
+    tabs.innerHTML = '<button class="tab active" onclick="filterByType(\'\')">Alle</button>';
+    var searchWrap = document.querySelector('.search-wrap');
+    searchWrap.parentNode.insertBefore(tabs, searchWrap.nextSibling);
+  }
+  // Check if tab for this type already exists
+  var existing = tabs.querySelectorAll('.tab');
+  for (var i = 0; i < existing.length; i++) {
+    if (existing[i].textContent === type) return;
+  }
+  var btn = document.createElement('button');
+  btn.className = 'tab';
+  btn.textContent = type;
+  btn.onclick = function() { filterByType(type); };
+  tabs.appendChild(btn);
 }
 
 function openModal(id) {
@@ -938,8 +1024,10 @@ document.getElementById('wineForm').addEventListener('submit', function(e) {
       if (emptyState) emptyState.remove();
       grid.appendChild(card);
     }
+    ensureFilterTab(w.type);
     updateStats(data.stats);
     closeModal('wineModal');
+    applyFilters();
     highlightCard(card);
   });
 });
@@ -972,6 +1060,7 @@ function changeQty(el, delta) {
   card.querySelector('.qty-badge').textContent = newQty + ' Fl.';
   card.querySelector('.qty-badge').classList.toggle('has', newQty > 0);
   card.classList.toggle('empty', newQty == 0);
+  applyFilters();
 
   fetch(INGRESS + '/edit/' + id, {
     method: 'POST', body: fd,
@@ -1009,8 +1098,10 @@ document.getElementById('dupForm').addEventListener('submit', function(e) {
     } else {
       document.querySelector('.grid').appendChild(card);
     }
+    ensureFilterTab(w.type);
     updateStats(data.stats);
     closeModal('dupModal');
+    applyFilters();
     highlightCard(card);
   });
 });
