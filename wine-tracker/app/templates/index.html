@@ -52,7 +52,10 @@
     padding: .3rem .8rem; border-radius: 20px;
     font-size: .8rem; color: var(--gold);
   }
+  .stats-pill { text-decoration: none; transition: all .2s; cursor: pointer; }
+  .stats-pill:hover { background: rgba(0,0,0,.5); border-color: var(--gold); }
   html.light .stats-pill { background: rgba(0,0,0,.06); }
+  html.light .stats-pill:hover { background: rgba(0,0,0,.12); }
   .theme-toggle {
     background: none; border: 1px solid var(--border); color: var(--muted);
     height: 32px; border-radius: 16px; cursor: pointer;
@@ -219,7 +222,7 @@
     outline: none; border-color: var(--accent);
   }
   select option { background: var(--bg); }
-  textarea { resize: vertical; min-height: 70px; }
+  textarea { resize: vertical; min-height: 70px; font-family: inherit; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 
   /* Star rating input */
@@ -320,7 +323,7 @@
   {% if stats %}
   {% set total = stats['total'] or 0 %}
   {% set types = stats['types'] or 0 %}
-  <div class="stats-pill">🍾 {{ total }} {{ 'Flasche' if total == 1 else 'Flaschen' }} · {{ types }} {{ 'Weinsorte' if types == 1 else 'Weinsorten' }}</div>
+  <a class="stats-pill" href="{{ ingress }}/stats">🍾 {{ total }} {{ 'Flasche' if total == 1 else 'Flaschen' }} · {{ types }} {{ 'Weinsorte' if types == 1 else 'Weinsorten' }}</a>
   {% endif %}
   <button class="theme-toggle" onclick="cycleTheme()" title="Darstellung wechseln"><span class="theme-icon">☀️</span></button>
 </header>
@@ -369,7 +372,7 @@
       {% if w['image'] %}
         <img src="{{ ingress }}/uploads/{{ w['image'] }}" alt="{{ w['name'] }}" loading="lazy">
       {% else %}
-        {{ '🍷' if w['type'] == 'Rotwein' else ('🥂' if w['type'] == 'Schaumwein' else '🍾') }}
+        {{ '🍷' if w['type'] == 'Rotwein' else ('🥂' if w['type'] == 'Schaumwein' else '🍷') }}
       {% endif %}
     </div>
 
@@ -932,7 +935,7 @@ function highlightCard(card) {
 function wineEmoji(type) {
   if (type === 'Rotwein') return '🍷';
   if (type === 'Schaumwein') return '🥂';
-  return '🍾';
+  return '🍷';
 }
 
 function renderCard(w) {

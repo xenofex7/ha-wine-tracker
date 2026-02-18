@@ -82,9 +82,10 @@ oder in Automationen nutzen kannst.
 - Export / Import Funktion
 - Integration von AI zum Adden von Weininfos oder Weininfos laden per API
 - Statistik-Seite
-- Suche verbessern – Live-Suche beim Tippen
 - Bugfixes Themes
 - Custom Sortierungen
+- Multi-Language
+- Darstellung - Listen-Ansicht oder Portal
 
 ## Lizenz
 

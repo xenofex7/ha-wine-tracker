@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 Statistiken – Wine Tracker</title>
+<style>
+  :root {
+    --bg: #1a0a0f;
+    --surface: #2a1520;
+    --surface2: #3a1f2c;
+    --border: #5a2a3a;
+    --accent: #c0392b;
+    --accent2: #8b1a2a;
+    --gold: #d4a843;
+    --text: #f0e0e5;
+    --muted: #9a7a82;
+    --empty: #3a2a30;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(0,0,0,.5);
+  }
+  html.light {
+    --bg: #f5f0eb;
+    --surface: #ffffff;
+    --surface2: #f0e8e0;
+    --border: #ddd0c8;
+    --accent: #a03025;
+    --accent2: #7a1520;
+    --gold: #9a7a20;
+    --text: #2a1a10;
+    --muted: #7a6a60;
+    --empty: #ece5de;
+    --shadow: 0 4px 24px rgba(0,0,0,.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, var(--accent2), var(--surface));
+    padding: 1.2rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .back-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    height: 32px; padding: 0 .7rem; border-radius: 8px; cursor: pointer;
+    font-size: .85rem; display: flex; align-items: center; gap: .3rem;
+    text-decoration: none; transition: all .2s; flex-shrink: 0;
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--text); }
+  header h1 { font-size: 1.3rem; font-weight: 700; flex: 1; }
+  .theme-toggle {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    height: 32px; border-radius: 16px; cursor: pointer;
+    font-size: .85rem; display: flex; align-items: center; justify-content: center;
+    transition: all .2s; flex-shrink: 0; padding: 0 .6rem;
+  }
+  .theme-toggle:hover { color: var(--text); border-color: var(--text); }
+
+  /* Content */
+  .content { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+
+  /* Highlight cards (top row) */
+  .highlights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem; margin-bottom: 1.5rem;
+  }
+  .highlight-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.2rem 1rem;
+    text-align: center;
+  }
+  .highlight-card .emoji { font-size: 1.8rem; margin-bottom: .4rem; }
+  .highlight-card .big-number {
+    font-size: 2rem; font-weight: 800; color: var(--gold);
+    line-height: 1.1;
+  }
+  .highlight-card .label {
+    font-size: .8rem; color: var(--muted); margin-top: .25rem;
+  }
+
+  /* Stat sections */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.25rem; margin-bottom: 1.5rem;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .stat-card h2 {
+    padding: .85rem 1rem; font-size: .9rem; font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: .5rem;
+    color: var(--text);
+  }
+  .stat-card .stat-body { padding: 1rem; }
+
+  /* Bar chart (CSS-only) */
+  .bar-list { display: flex; flex-direction: column; gap: .65rem; }
+  .bar-item { display: flex; align-items: center; gap: .75rem; }
+  .bar-label {
+    font-size: .82rem; width: 90px; flex-shrink: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .bar-track {
+    flex: 1; height: 22px; background: var(--bg);
+    border-radius: 6px; overflow: hidden; position: relative;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .6s ease;
+    min-width: 2px;
+  }
+  .bar-value {
+    font-size: .78rem; color: var(--gold); font-weight: 700;
+    width: 50px; text-align: right; flex-shrink: 0;
+  }
+
+  /* Wine list */
+  .wine-list { display: flex; flex-direction: column; gap: .6rem; }
+  .wine-list-item {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .5rem .6rem; background: var(--bg);
+    border-radius: 8px;
+  }
+  .wine-list-item .rank {
+    font-size: .75rem; font-weight: 800; color: var(--accent);
+    width: 20px; text-align: center; flex-shrink: 0;
+  }
+  .wine-list-item .wine-info { flex: 1; min-width: 0; }
+  .wine-list-item .wine-name {
+    font-size: .85rem; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .wine-list-item .wine-detail {
+    font-size: .75rem; color: var(--muted);
+  }
+  .wine-list-item .stars { color: var(--gold); font-size: .85rem; flex-shrink: 0; }
+  .wine-list-item .wine-price { color: var(--gold); font-size: .85rem; font-weight: 700; flex-shrink: 0; }
+
+  /* Info row */
+  .info-row {
+    display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+  }
+  .info-chip {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: .45rem .9rem;
+    font-size: .82rem; display: flex; align-items: center; gap: .4rem;
+  }
+  .info-chip .chip-label { color: var(--muted); }
+  .info-chip .chip-value { font-weight: 700; }
+
+  /* Empty state */
+  .empty-stats {
+    text-align: center; padding: 4rem 2rem; color: var(--muted);
+  }
+  .empty-stats div { font-size: 4rem; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back-btn" href="{{ ingress }}/">← Zurück</a>
+  <h1>📊 Statistiken</h1>
+  <button class="theme-toggle" onclick="cycleTheme()" title="Darstellung wechseln"><span class="theme-icon">☀️</span></button>
+</header>
+
+<div class="content">
+
+{% set total_bottles = totals['bottles'] or 0 %}
+{% set total_wines = totals['wines'] or 0 %}
+
+{% if total_wines == 0 %}
+  <div class="empty-stats">
+    <div>📊</div>
+    <p>Noch keine Daten vorhanden.<br>Füge zuerst Weine hinzu!</p>
+  </div>
+{% else %}
+
+<!-- ═══════ HIGHLIGHT CARDS ═══════ -->
+<div class="highlights">
+  <div class="highlight-card">
+    <div class="emoji">🍾</div>
+    <div class="big-number">{{ total_bottles }}</div>
+    <div class="label">{{ 'Flasche' if total_bottles == 1 else 'Flaschen' }} gesamt</div>
+  </div>
+
+  <div class="highlight-card">
+    <div class="emoji">📦</div>
+    <div class="big-number">{{ total_wines }}</div>
+    <div class="label">{{ 'Wein' if total_wines == 1 else 'Verschiedene Weine' }}</div>
+  </div>
+
+  {% if value and value['total_value'] %}
+  <div class="highlight-card">
+    <div class="emoji">💰</div>
+    <div class="big-number">{{ "%.0f"|format(value['total_value']) }}</div>
+    <div class="label">CHF Gesamtwert</div>
+  </div>
+  {% endif %}
+
+  {% if avg_age is not none and avg_age %}
+  <div class="highlight-card">
+    <div class="emoji">⏳</div>
+    <div class="big-number">~{{ "%.0f"|format(avg_age) }}</div>
+    <div class="label">Jahre Ø Alter</div>
+  </div>
+  {% endif %}
+</div>
+
+
+<!-- ═══════ INFO CHIPS ═══════ -->
+<div class="info-row">
+  <div class="info-chip">
+    <span class="chip-label">Auf Lager:</span>
+    <span class="chip-value">{{ in_stock }} Fl.</span>
+  </div>
+  <div class="info-chip">
+    <span class="chip-label">Ausgetrunken:</span>
+    <span class="chip-value">{{ out_of_stock }} {{ 'Wein' if out_of_stock == 1 else 'Weine' }}</span>
+  </div>
+  {% if value and value['avg_price'] %}
+  <div class="info-chip">
+    <span class="chip-label">Ø Preis:</span>
+    <span class="chip-value">CHF {{ "%.2f"|format(value['avg_price']) }}</span>
+  </div>
+  {% endif %}
+  {% if oldest %}
+  <div class="info-chip">
+    <span>🏛</span>
+    <span class="chip-label">Ältester:</span>
+    <span class="chip-value">{{ oldest['name'] }} {{ oldest['year'] }}</span>
+  </div>
+  {% endif %}
+  {% if newest %}
+  <div class="info-chip">
+    <span>✨</span>
+    <span class="chip-label">Neuester:</span>
+    <span class="chip-value">{{ newest['name'] }} {{ newest['year'] }}</span>
+  </div>
+  {% endif %}
+</div>
+
+
+<!-- ═══════ BAR CHARTS ═══════ -->
+<div class="stat-grid">
+
+  {% if by_type %}
+  <div class="stat-card">
+    <h2>🍷 Flaschen pro Typ</h2>
+    <div class="stat-body">
+      <div class="bar-list">
+        {% set max_type = by_type[0]['qty'] if by_type else 1 %}
+        {% for item in by_type %}
+        <div class="bar-item">
+          <div class="bar-label" title="{{ item['type'] }}">{{ item['type'] }}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ (item['qty'] / max_type * 100)|round }}%"></div>
+          </div>
+          <div class="bar-value">{{ item['qty'] }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if top_regions %}
+  <div class="stat-card">
+    <h2>🌍 Top Regionen</h2>
+    <div class="stat-body">
+      <div class="bar-list">
+        {% set region_total = top_regions|sum(attribute='qty') %}
+        {% set max_region = top_regions[0]['qty'] if top_regions else 1 %}
+        {% for item in top_regions %}
+        <div class="bar-item">
+          <div class="bar-label" title="{{ item['region'] }}">{{ item['region'] }}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ (item['qty'] / max_region * 100)|round }}%"></div>
+          </div>
+          <div class="bar-value">{{ (item['qty'] / region_total * 100)|round }}%</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+
+<!-- ═══════ LISTS ═══════ -->
+<div class="stat-grid">
+
+  {% if best_rated %}
+  <div class="stat-card">
+    <h2>⭐ Beste Bewertungen</h2>
+    <div class="stat-body">
+      <div class="wine-list">
+        {% for w in best_rated %}
+        <div class="wine-list-item">
+          <div class="rank">{{ loop.index }}</div>
+          <div class="wine-info">
+            <div class="wine-name">{{ w['name'] }}</div>
+            <div class="wine-detail">
+              {% if w['year'] %}{{ w['year'] }}{% endif %}
+              {% if w['type'] %} · {{ w['type'] }}{% endif %}
+            </div>
+          </div>
+          <div class="stars">{{ '★' * w['rating'] }}{{ '☆' * (5 - w['rating']) }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if most_expensive or cheapest %}
+  <div class="stat-card">
+    <h2>💶 Preisübersicht</h2>
+    <div class="stat-body">
+      <div class="wine-list">
+        {% if most_expensive %}
+        <div class="wine-list-item">
+          <div class="rank">📈</div>
+          <div class="wine-info">
+            <div class="wine-name">{{ most_expensive['name'] }}</div>
+            <div class="wine-detail">Teuerster Wein{% if most_expensive['year'] %} · {{ most_expensive['year'] }}{% endif %}</div>
+          </div>
+          <div class="wine-price">CHF {{ "%.2f"|format(most_expensive['price']) }}</div>
+        </div>
+        {% endif %}
+        {% if cheapest %}
+        <div class="wine-list-item">
+          <div class="rank">📉</div>
+          <div class="wine-info">
+            <div class="wine-name">{{ cheapest['name'] }}</div>
+            <div class="wine-detail">Günstigster Wein{% if cheapest['year'] %} · {{ cheapest['year'] }}{% endif %}</div>
+          </div>
+          <div class="wine-price">CHF {{ "%.2f"|format(cheapest['price']) }}</div>
+        </div>
+        {% endif %}
+        {% if value and value['avg_price'] %}
+        <div class="wine-list-item">
+          <div class="rank">Ø</div>
+          <div class="wine-info">
+            <div class="wine-name">Durchschnittspreis</div>
+            <div class="wine-detail">Über alle Weine mit Preis</div>
+          </div>
+          <div class="wine-price">CHF {{ "%.2f"|format(value['avg_price']) }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+
+<!-- ═══════ RECENT ═══════ -->
+{% if recent %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <h2>🕐 Zuletzt hinzugefügt</h2>
+    <div class="stat-body">
+      <div class="wine-list">
+        {% for w in recent %}
+        <div class="wine-list-item">
+          <div class="rank">{{ loop.index }}</div>
+          <div class="wine-info">
+            <div class="wine-name">{{ w['name'] }}</div>
+            <div class="wine-detail">
+              {% if w['type'] %}{{ w['type'] }}{% endif %}
+              {% if w['year'] %} · {{ w['year'] }}{% endif %}
+              {% if w['added'] %} · {{ w['added'] }}{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endif %}
+</div>
+
+<script>
+// Theme: same 3-state cycle as index
+const THEME_MODES = ['dark', 'light', 'system'];
+const THEME_ICONS = { dark: '🌙', light: '☀️', system: '💻' };
+
+function getSystemPreference() {
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function applyTheme(mode) {
+  const effective = mode === 'system' ? getSystemPreference() : mode;
+  document.documentElement.classList.toggle('light', effective === 'light');
+  const btn = document.querySelector('.theme-icon');
+  if (btn) btn.textContent = THEME_ICONS[mode];
+}
+
+function cycleTheme() {
+  const current = localStorage.getItem('wine-theme') || 'dark';
+  const idx = THEME_MODES.indexOf(current);
+  const next = THEME_MODES[(idx + 1) % THEME_MODES.length];
+  localStorage.setItem('wine-theme', next);
+  applyTheme(next);
+}
+
+// Init theme (shared localStorage with index page)
+(function() {
+  const saved = localStorage.getItem('wine-theme') || 'dark';
+  applyTheme(saved);
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+    if (localStorage.getItem('wine-theme') === 'system') applyTheme('system');
+  });
+})();
+</script>
+
+</body>
+</html>

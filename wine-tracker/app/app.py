@@ -323,6 +323,90 @@ def delete(wine_id):
     return ingress_redirect("index")
 
 
+@app.route("/stats")
+def stats_page():
+    db = get_db()
+    from datetime import datetime
+    current_year = datetime.now().year
+
+    # Total bottles & distinct wines
+    totals = db.execute(
+        "SELECT SUM(quantity) as bottles, COUNT(*) as wines FROM wines"
+    ).fetchone()
+
+    # Bottles by type
+    by_type = [dict(r) for r in db.execute(
+        "SELECT type, SUM(quantity) as qty FROM wines WHERE type IS NOT NULL AND type != '' GROUP BY type ORDER BY qty DESC"
+    ).fetchall()]
+
+    # Top regions
+    top_regions = [dict(r) for r in db.execute(
+        "SELECT region, SUM(quantity) as qty FROM wines WHERE region IS NOT NULL AND region != '' GROUP BY region ORDER BY qty DESC LIMIT 7"
+    ).fetchall()]
+
+    # Total value
+    value = db.execute(
+        "SELECT SUM(quantity * price) as total_value, AVG(price) as avg_price, "
+        "MIN(price) as min_price, MAX(price) as max_price FROM wines WHERE price IS NOT NULL AND price > 0"
+    ).fetchone()
+
+    # Most expensive wine
+    most_expensive = db.execute(
+        "SELECT name, year, price FROM wines WHERE price IS NOT NULL ORDER BY price DESC LIMIT 1"
+    ).fetchone()
+
+    # Cheapest wine
+    cheapest = db.execute(
+        "SELECT name, year, price FROM wines WHERE price IS NOT NULL AND price > 0 ORDER BY price ASC LIMIT 1"
+    ).fetchone()
+
+    # Best rated wines
+    best_rated = [dict(r) for r in db.execute(
+        "SELECT name, year, type, rating, quantity FROM wines WHERE rating > 0 ORDER BY rating DESC, name LIMIT 5"
+    ).fetchall()]
+
+    # Average age
+    avg_age = db.execute(
+        f"SELECT AVG({current_year} - year) as avg_age FROM wines WHERE year IS NOT NULL AND year > 0"
+    ).fetchone()
+
+    # Oldest wine
+    oldest = db.execute(
+        "SELECT name, year, type FROM wines WHERE year IS NOT NULL AND year > 0 ORDER BY year ASC LIMIT 1"
+    ).fetchone()
+
+    # Newest wine
+    newest = db.execute(
+        "SELECT name, year, type FROM wines WHERE year IS NOT NULL AND year > 0 ORDER BY year DESC LIMIT 1"
+    ).fetchone()
+
+    # Recently added
+    recent = [dict(r) for r in db.execute(
+        "SELECT name, year, type, added FROM wines ORDER BY id DESC LIMIT 3"
+    ).fetchall()]
+
+    # Bottles in stock vs out
+    in_stock = db.execute("SELECT SUM(quantity) FROM wines WHERE quantity > 0").fetchone()[0] or 0
+    out_of_stock = db.execute("SELECT COUNT(*) FROM wines WHERE quantity = 0").fetchone()[0] or 0
+
+    return render_template(
+        "stats.html",
+        totals=totals,
+        by_type=by_type,
+        top_regions=top_regions,
+        value=value,
+        most_expensive=dict(most_expensive) if most_expensive else None,
+        cheapest=dict(cheapest) if cheapest else None,
+        best_rated=best_rated,
+        avg_age=avg_age["avg_age"] if avg_age else None,
+        oldest=dict(oldest) if oldest else None,
+        newest=dict(newest) if newest else None,
+        recent=recent,
+        in_stock=in_stock,
+        out_of_stock=out_of_stock,
+    )
+
+
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_DIR, filename)
