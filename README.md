@@ -16,6 +16,7 @@
 ![github stars][stars-badge]
 ![github issues][issues-badge]
 ![last commit][commit-badge]
+![commit activity][activity-badge]
 
 A sleek, modern wine cellar tracker running as a Home Assistant add-on. Manage your entire collection — from label photo to tasting notes — directly in the HA sidebar.
 
@@ -147,6 +148,13 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 - **Globe**: COBE (WebGL 3D globe)
 - **Base image**: Home Assistant Alpine-based
 
+## Roadmap
+
+- Export / Import function
+- Bugfixes for themes
+- Custom sorting options
+- Display modes — list view or portal
+
 ## License
 
 MIT
@@ -162,3 +170,4 @@ MIT
 [stars-badge]: https://img.shields.io/github/stars/xenofex7/ha-wine-tracker?style=flat&logo=github
 [issues-badge]: https://img.shields.io/github/issues/xenofex7/ha-wine-tracker?style=flat&logo=github
 [commit-badge]: https://img.shields.io/github/last-commit/xenofex7/ha-wine-tracker?style=flat&logo=github
+[activity-badge]: https://img.shields.io/github/commit-activity/y/xenofex7/ha-wine-tracker?style=flat&logo=github

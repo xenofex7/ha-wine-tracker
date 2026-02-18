@@ -597,7 +597,12 @@
           </div>
           <div>
             <label>{{ t.label_region }}</label>
-            <input type="text" name="region" id="wine_region" placeholder="{{ t.placeholder_region }}">
+            <input type="text" name="region" id="wine_region" placeholder="{{ t.placeholder_region }}" list="regionList" autocomplete="off">
+            <datalist id="regionList">
+              {% for r in used_regions %}
+              <option value="{{ r }}">
+              {% endfor %}
+            </datalist>
           </div>
         </div>
 
@@ -624,7 +629,12 @@
         <div class="row2">
           <div>
             <label>{{ t.label_purchased_at }}</label>
-            <input type="text" name="purchased_at" id="wine_purchased_at" placeholder="{{ t.placeholder_purchased }}">
+            <input type="text" name="purchased_at" id="wine_purchased_at" placeholder="{{ t.placeholder_purchased }}" list="purchasedAtList" autocomplete="off">
+            <datalist id="purchasedAtList">
+              {% for p in used_purchased_at %}
+              <option value="{{ p }}">
+              {% endfor %}
+            </datalist>
           </div>
           <div>
             <label>{{ t.label_price }} ({{ currency }})</label>
@@ -1244,6 +1254,30 @@ function refreshLocationList() {
   dl.innerHTML = sorted.map(function(l) { return '<option value="' + l.replace(/"/g, '&quot;') + '">'; }).join('');
 }
 
+function refreshPurchasedAtList() {
+  var dl = document.getElementById('purchasedAtList');
+  if (!dl) return;
+  var vals = new Set();
+  document.querySelectorAll('.card').forEach(function(c) {
+    var v = (c.dataset.purchased_at || '').trim();
+    if (v) vals.add(v);
+  });
+  var sorted = Array.from(vals).sort(function(a, b) { return a.localeCompare(b); });
+  dl.innerHTML = sorted.map(function(v) { return '<option value="' + v.replace(/"/g, '&quot;') + '">'; }).join('');
+}
+
+function refreshRegionList() {
+  var dl = document.getElementById('regionList');
+  if (!dl) return;
+  var vals = new Set();
+  document.querySelectorAll('.card').forEach(function(c) {
+    var v = (c.dataset.region || '').trim();
+    if (v) vals.add(v);
+  });
+  var sorted = Array.from(vals).sort(function(a, b) { return a.localeCompare(b); });
+  dl.innerHTML = sorted.map(function(v) { return '<option value="' + v.replace(/"/g, '&quot;') + '">'; }).join('');
+}
+
 function wineIcon(type) {
   if (type === 'Schaumwein') return '<i class="mdi mdi-glass-flute"></i>';
   return '<i class="mdi mdi-glass-wine"></i>';
@@ -1343,6 +1377,8 @@ document.getElementById('wineForm').addEventListener('submit', function(e) {
     ensureFilterTab(w.type);
     updateStats(data.stats);
     refreshLocationList();
+    refreshPurchasedAtList();
+    refreshRegionList();
     closeModal('wineModal');
     applyFilters();
     highlightCard(card);
@@ -1419,6 +1455,8 @@ document.getElementById('dupForm').addEventListener('submit', function(e) {
     ensureFilterTab(w.type);
     updateStats(data.stats);
     refreshLocationList();
+    refreshPurchasedAtList();
+    refreshRegionList();
     closeModal('dupModal');
     applyFilters();
     highlightCard(card);
@@ -1443,6 +1481,8 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
     if (card) card.remove();
     updateStats(data.stats);
     refreshLocationList();
+    refreshPurchasedAtList();
+    refreshRegionList();
     closeModal('deleteModal');
     // Show empty state if no cards left
     var grid = document.querySelector('.grid');

@@ -342,6 +342,20 @@ def index():
         ).fetchall()
     ]
 
+    # Distinct purchased_at values for datalist autocomplete
+    used_purchased_at = [
+        row[0] for row in db.execute(
+            "SELECT DISTINCT purchased_at FROM wines WHERE purchased_at IS NOT NULL AND purchased_at != '' ORDER BY purchased_at"
+        ).fetchall()
+    ]
+
+    # Distinct regions for datalist autocomplete
+    used_regions = [
+        row[0] for row in db.execute(
+            "SELECT DISTINCT region FROM wines WHERE region IS NOT NULL AND region != '' ORDER BY region"
+        ).fetchall()
+    ]
+
     return render_template(
         "index.html",
         wines=wines,
@@ -349,6 +363,8 @@ def index():
         used_types=used_types,
         used_locations=used_locations,
         used_grapes=used_grapes,
+        used_purchased_at=used_purchased_at,
+        used_regions=used_regions,
         query=q,
         active_type=t,
         show_empty=show_empty,
