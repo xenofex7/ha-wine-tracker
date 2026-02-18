@@ -1,0 +1,40 @@
+configuration:
+  currency:
+    name: Valuta
+    description: Valutasymbool voor wijnprijzen (bijv. CHF, EUR, USD, GBP).
+  language:
+    name: Taal
+    description: >-
+      Taal van de interface. Ondersteund: de (Duits), en (Engels),
+      fr (Frans), it (Italiaans), es (Spaans), pt (Portugees), nl (Nederlands).
+  ai_provider:
+    name: AI-provider
+    description: >-
+      Kies een AI-provider voor etiketherkenning, of "none" om uit te schakelen.
+      Wanneer ingeschakeld, maak een foto van het etiket en de AI vult automatisch de wijndetails in.
+  anthropic_api_key:
+    name: Anthropic API-sleutel
+    description: API-sleutel van console.anthropic.com. Vereist voor provider "anthropic".
+  anthropic_model:
+    name: Anthropic Model
+    description: Modelnaam voor Anthropic (bijv. claude-opus-4-6).
+  openai_api_key:
+    name: OpenAI API-sleutel
+    description: API-sleutel van platform.openai.com. Vereist voor provider "openai".
+  openai_model:
+    name: OpenAI Model
+    description: Modelnaam voor OpenAI (bijv. gpt-5.2).
+  openrouter_api_key:
+    name: OpenRouter API-sleutel
+    description: API-sleutel van openrouter.ai. Vereist voor provider "openrouter".
+  openrouter_model:
+    name: OpenRouter Model
+    description: Model-ID voor OpenRouter (bijv. anthropic/claude-opus-4.6).
+  ollama_host:
+    name: Ollama Host
+    description: >-
+      URL van je Ollama-server (bijv. http://localhost:11434).
+      Vereist voor provider "ollama". Geen API-sleutel nodig.
+  ollama_model:
+    name: Ollama Model
+    description: Vision-modelnaam voor Ollama (bijv. llava, llava-llama3).

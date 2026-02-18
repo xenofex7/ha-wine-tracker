@@ -27,8 +27,8 @@ TRANSLATIONS = {
     "btn_add_wine": "+ Wein hinzufügen",
 
     # Wine form
-    "modal_add_title": "\U0001f377 Wein hinzufügen",
-    "modal_edit_title": "\u270f\ufe0f Wein bearbeiten",
+    "modal_add_title": "Wein hinzufügen",
+    "modal_edit_title": "Wein bearbeiten",
     "label_photo": "Foto (Etikett)",
     "label_name": "Name *",
     "placeholder_name": "z.B. Barolo Riserva",
@@ -46,6 +46,8 @@ TRANSLATIONS = {
     "label_drink_until": "Trinkfenster bis",
     "label_location": "Lagerort",
     "placeholder_location": "z.B. Regal 2, Fach oben",
+    "label_grape": "Rebsorte",
+    "placeholder_grape": "z.B. Merlot",
     "label_notes": "Notizen",
     "placeholder_notes": "Aromen, Anlass\u2026",
     "btn_save": "Wein speichern",
@@ -68,13 +70,13 @@ TRANSLATIONS = {
     "btn_delete": "Löschen",
 
     # Delete modal
-    "delete_title": "\U0001f5d1 Wein löschen",
+    "delete_title": "Wein löschen",
     "delete_really": "wirklich löschen?",
     "btn_cancel": "Abbrechen",
     "btn_confirm_delete": "Löschen",
 
     # Duplicate modal
-    "dup_title": "\U0001f4cb Wein duplizieren",
+    "dup_title": "Wein duplizieren",
     "dup_template": "Vorlage",
     "dup_new_vintage": "Neuer Jahrgang",
     "dup_qty": "Anzahl Flaschen",
@@ -87,8 +89,8 @@ TRANSLATIONS = {
     "empty_no_results": "Keine Weine gefunden.",
 
     # AI label recognition
-    "ai_step_title": "Weinetikett fotografieren",
-    "ai_step_subtitle": "Laden Sie ein Foto des Weinetiketts hoch und die KI erkennt die Details automatisch.",
+    "ai_step_title": "KI-Erkennung",
+    "ai_step_subtitle": "Mach ein Foto vom Etikett \u2013 die KI erledigt den Rest!",
     "ai_upload_btn": "Foto aufnehmen oder hochladen",
     "ai_analyzing": "Etikett wird analysiert\u2026",
     "ai_skip": "Manuell erfassen",
@@ -152,8 +154,8 @@ TRANSLATIONS = {
     "toggle_empty_show": "\u25CE Show empty",
     "btn_add_wine": "+ Add wine",
 
-    "modal_add_title": "\U0001f377 Add wine",
-    "modal_edit_title": "\u270f\ufe0f Edit wine",
+    "modal_add_title": "Add wine",
+    "modal_edit_title": "Edit wine",
     "label_photo": "Photo (label)",
     "label_name": "Name *",
     "placeholder_name": "e.g. Barolo Riserva",
@@ -171,6 +173,8 @@ TRANSLATIONS = {
     "label_drink_until": "Drink window until",
     "label_location": "Storage location",
     "placeholder_location": "e.g. Shelf 2, top row",
+    "label_grape": "Grape variety",
+    "placeholder_grape": "e.g. Merlot",
     "label_notes": "Notes",
     "placeholder_notes": "Aromas, occasion\u2026",
     "btn_save": "Save wine",
@@ -190,12 +194,12 @@ TRANSLATIONS = {
     "btn_duplicate": "Duplicate",
     "btn_delete": "Delete",
 
-    "delete_title": "\U0001f5d1 Delete wine",
+    "delete_title": "Delete wine",
     "delete_really": "really delete?",
     "btn_cancel": "Cancel",
     "btn_confirm_delete": "Delete",
 
-    "dup_title": "\U0001f4cb Duplicate wine",
+    "dup_title": "Duplicate wine",
     "dup_template": "Template",
     "dup_new_vintage": "New vintage",
     "dup_qty": "Quantity",
@@ -207,8 +211,8 @@ TRANSLATIONS = {
     "empty_no_results": "No wines found.",
 
     # AI label recognition
-    "ai_step_title": "Photograph wine label",
-    "ai_step_subtitle": "Upload a photo of the wine label and AI will automatically detect the details.",
+    "ai_step_title": "AI Recognition",
+    "ai_step_subtitle": "Snap a photo of the label \u2013 AI does the rest!",
     "ai_upload_btn": "Take photo or upload",
     "ai_analyzing": "Analyzing label\u2026",
     "ai_skip": "Enter manually",
@@ -269,8 +273,8 @@ TRANSLATIONS = {
     "toggle_empty_show": "\u25CE Afficher vides",
     "btn_add_wine": "+ Ajouter un vin",
 
-    "modal_add_title": "\U0001f377 Ajouter un vin",
-    "modal_edit_title": "\u270f\ufe0f Modifier le vin",
+    "modal_add_title": "Ajouter un vin",
+    "modal_edit_title": "Modifier le vin",
     "label_photo": "Photo (étiquette)",
     "label_name": "Nom *",
     "placeholder_name": "p.ex. Barolo Riserva",
@@ -288,6 +292,8 @@ TRANSLATIONS = {
     "label_drink_until": "Fenêtre de dégustation à",
     "label_location": "Lieu de stockage",
     "placeholder_location": "p.ex. Étagère 2, rangée du haut",
+    "label_grape": "Cépage",
+    "placeholder_grape": "p.ex. Merlot",
     "label_notes": "Notes",
     "placeholder_notes": "Arômes, occasion\u2026",
     "btn_save": "Enregistrer le vin",
@@ -307,12 +313,12 @@ TRANSLATIONS = {
     "btn_duplicate": "Dupliquer",
     "btn_delete": "Supprimer",
 
-    "delete_title": "\U0001f5d1 Supprimer le vin",
+    "delete_title": "Supprimer le vin",
     "delete_really": "vraiment supprimer ?",
     "btn_cancel": "Annuler",
     "btn_confirm_delete": "Supprimer",
 
-    "dup_title": "\U0001f4cb Dupliquer le vin",
+    "dup_title": "Dupliquer le vin",
     "dup_template": "Modèle",
     "dup_new_vintage": "Nouveau millésime",
     "dup_qty": "Quantité",
@@ -324,8 +330,8 @@ TRANSLATIONS = {
     "empty_no_results": "Aucun vin trouvé.",
 
     # AI label recognition
-    "ai_step_title": "Photographier l'étiquette",
-    "ai_step_subtitle": "Téléchargez une photo de l'étiquette et l'IA détectera automatiquement les détails.",
+    "ai_step_title": "Reconnaissance IA",
+    "ai_step_subtitle": "Prends une photo de l'étiquette \u2013 l'IA fait le reste !",
     "ai_upload_btn": "Prendre une photo ou télécharger",
     "ai_analyzing": "Analyse de l'étiquette\u2026",
     "ai_skip": "Saisir manuellement",
@@ -386,8 +392,8 @@ TRANSLATIONS = {
     "toggle_empty_show": "\u25CE Mostra vuoti",
     "btn_add_wine": "+ Aggiungi vino",
 
-    "modal_add_title": "\U0001f377 Aggiungi vino",
-    "modal_edit_title": "\u270f\ufe0f Modifica vino",
+    "modal_add_title": "Aggiungi vino",
+    "modal_edit_title": "Modifica vino",
     "label_photo": "Foto (etichetta)",
     "label_name": "Nome *",
     "placeholder_name": "es. Barolo Riserva",
@@ -405,6 +411,8 @@ TRANSLATIONS = {
     "label_drink_until": "Finestra di beva a",
     "label_location": "Luogo di conservazione",
     "placeholder_location": "es. Scaffale 2, fila in alto",
+    "label_grape": "Vitigno",
+    "placeholder_grape": "es. Merlot",
     "label_notes": "Note",
     "placeholder_notes": "Aromi, occasione\u2026",
     "btn_save": "Salva vino",
@@ -424,12 +432,12 @@ TRANSLATIONS = {
     "btn_duplicate": "Duplica",
     "btn_delete": "Elimina",
 
-    "delete_title": "\U0001f5d1 Elimina vino",
+    "delete_title": "Elimina vino",
     "delete_really": "eliminare davvero?",
     "btn_cancel": "Annulla",
     "btn_confirm_delete": "Elimina",
 
-    "dup_title": "\U0001f4cb Duplica vino",
+    "dup_title": "Duplica vino",
     "dup_template": "Modello",
     "dup_new_vintage": "Nuova annata",
     "dup_qty": "Quantità",
@@ -441,8 +449,8 @@ TRANSLATIONS = {
     "empty_no_results": "Nessun vino trovato.",
 
     # AI label recognition
-    "ai_step_title": "Fotografa l'etichetta",
-    "ai_step_subtitle": "Carica una foto dell'etichetta e l'IA rileverà automaticamente i dettagli.",
+    "ai_step_title": "Riconoscimento IA",
+    "ai_step_subtitle": "Scatta una foto dell'etichetta \u2013 l'IA fa il resto!",
     "ai_upload_btn": "Scatta foto o carica",
     "ai_analyzing": "Analisi dell'etichetta\u2026",
     "ai_skip": "Inserisci manualmente",
@@ -503,8 +511,8 @@ TRANSLATIONS = {
     "toggle_empty_show": "\u25CE Mostrar vacíos",
     "btn_add_wine": "+ Añadir vino",
 
-    "modal_add_title": "\U0001f377 Añadir vino",
-    "modal_edit_title": "\u270f\ufe0f Editar vino",
+    "modal_add_title": "Añadir vino",
+    "modal_edit_title": "Editar vino",
     "label_photo": "Foto (etiqueta)",
     "label_name": "Nombre *",
     "placeholder_name": "ej. Barolo Riserva",
@@ -522,6 +530,8 @@ TRANSLATIONS = {
     "label_drink_until": "Ventana de consumo hasta",
     "label_location": "Lugar de almacenamiento",
     "placeholder_location": "ej. Estante 2, fila superior",
+    "label_grape": "Variedad de uva",
+    "placeholder_grape": "ej. Merlot",
     "label_notes": "Notas",
     "placeholder_notes": "Aromas, ocasión\u2026",
     "btn_save": "Guardar vino",
@@ -541,12 +551,12 @@ TRANSLATIONS = {
     "btn_duplicate": "Duplicar",
     "btn_delete": "Eliminar",
 
-    "delete_title": "\U0001f5d1 Eliminar vino",
+    "delete_title": "Eliminar vino",
     "delete_really": "¿eliminar realmente?",
     "btn_cancel": "Cancelar",
     "btn_confirm_delete": "Eliminar",
 
-    "dup_title": "\U0001f4cb Duplicar vino",
+    "dup_title": "Duplicar vino",
     "dup_template": "Plantilla",
     "dup_new_vintage": "Nueva añada",
     "dup_qty": "Cantidad",
@@ -558,8 +568,8 @@ TRANSLATIONS = {
     "empty_no_results": "No se encontraron vinos.",
 
     # AI label recognition
-    "ai_step_title": "Fotografiar etiqueta",
-    "ai_step_subtitle": "Sube una foto de la etiqueta y la IA detectará automáticamente los detalles.",
+    "ai_step_title": "Reconocimiento IA",
+    "ai_step_subtitle": "Haz una foto de la etiqueta \u2013 \u00a1la IA hace el resto!",
     "ai_upload_btn": "Tomar foto o subir",
     "ai_analyzing": "Analizando etiqueta\u2026",
     "ai_skip": "Introducir manualmente",
@@ -620,8 +630,8 @@ TRANSLATIONS = {
     "toggle_empty_show": "\u25CE Mostrar vazios",
     "btn_add_wine": "+ Adicionar vinho",
 
-    "modal_add_title": "\U0001f377 Adicionar vinho",
-    "modal_edit_title": "\u270f\ufe0f Editar vinho",
+    "modal_add_title": "Adicionar vinho",
+    "modal_edit_title": "Editar vinho",
     "label_photo": "Foto (rótulo)",
     "label_name": "Nome *",
     "placeholder_name": "ex. Barolo Riserva",
@@ -639,6 +649,8 @@ TRANSLATIONS = {
     "label_drink_until": "Janela de consumo até",
     "label_location": "Local de armazenamento",
     "placeholder_location": "ex. Prateleira 2, fila de cima",
+    "label_grape": "Casta",
+    "placeholder_grape": "ex. Merlot",
     "label_notes": "Notas",
     "placeholder_notes": "Aromas, ocasião\u2026",
     "btn_save": "Salvar vinho",
@@ -658,12 +670,12 @@ TRANSLATIONS = {
     "btn_duplicate": "Duplicar",
     "btn_delete": "Excluir",
 
-    "delete_title": "\U0001f5d1 Excluir vinho",
+    "delete_title": "Excluir vinho",
     "delete_really": "realmente excluir?",
     "btn_cancel": "Cancelar",
     "btn_confirm_delete": "Excluir",
 
-    "dup_title": "\U0001f4cb Duplicar vinho",
+    "dup_title": "Duplicar vinho",
     "dup_template": "Modelo",
     "dup_new_vintage": "Nova safra",
     "dup_qty": "Quantidade",
@@ -675,8 +687,8 @@ TRANSLATIONS = {
     "empty_no_results": "Nenhum vinho encontrado.",
 
     # AI label recognition
-    "ai_step_title": "Fotografar rótulo do vinho",
-    "ai_step_subtitle": "Carregue uma foto do rótulo e a IA detectará automaticamente os detalhes.",
+    "ai_step_title": "Reconhecimento IA",
+    "ai_step_subtitle": "Tira uma foto do rótulo \u2013 a IA faz o resto!",
     "ai_upload_btn": "Tirar foto ou carregar",
     "ai_analyzing": "Analisando rótulo\u2026",
     "ai_skip": "Inserir manualmente",
@@ -737,8 +749,8 @@ TRANSLATIONS = {
     "toggle_empty_show": "\u25CE Lege tonen",
     "btn_add_wine": "+ Wijn toevoegen",
 
-    "modal_add_title": "\U0001f377 Wijn toevoegen",
-    "modal_edit_title": "\u270f\ufe0f Wijn bewerken",
+    "modal_add_title": "Wijn toevoegen",
+    "modal_edit_title": "Wijn bewerken",
     "label_photo": "Foto (etiket)",
     "label_name": "Naam *",
     "placeholder_name": "bijv. Barolo Riserva",
@@ -756,6 +768,8 @@ TRANSLATIONS = {
     "label_drink_until": "Drinkvenster tot",
     "label_location": "Opslaglocatie",
     "placeholder_location": "bijv. Rek 2, bovenste rij",
+    "label_grape": "Druivenras",
+    "placeholder_grape": "bijv. Merlot",
     "label_notes": "Notities",
     "placeholder_notes": "Aroma's, gelegenheid\u2026",
     "btn_save": "Wijn opslaan",
@@ -775,12 +789,12 @@ TRANSLATIONS = {
     "btn_duplicate": "Dupliceren",
     "btn_delete": "Verwijderen",
 
-    "delete_title": "\U0001f5d1 Wijn verwijderen",
+    "delete_title": "Wijn verwijderen",
     "delete_really": "echt verwijderen?",
     "btn_cancel": "Annuleren",
     "btn_confirm_delete": "Verwijderen",
 
-    "dup_title": "\U0001f4cb Wijn dupliceren",
+    "dup_title": "Wijn dupliceren",
     "dup_template": "Sjabloon",
     "dup_new_vintage": "Nieuwe jaargang",
     "dup_qty": "Aantal",
@@ -792,8 +806,8 @@ TRANSLATIONS = {
     "empty_no_results": "Geen wijnen gevonden.",
 
     # AI label recognition
-    "ai_step_title": "Wijnlabel fotograferen",
-    "ai_step_subtitle": "Upload een foto van het wijnlabel en de AI herkent automatisch de details.",
+    "ai_step_title": "AI-herkenning",
+    "ai_step_subtitle": "Maak een foto van het etiket \u2013 de AI doet de rest!",
     "ai_upload_btn": "Foto maken of uploaden",
     "ai_analyzing": "Label wordt geanalyseerd\u2026",
     "ai_skip": "Handmatig invoeren",

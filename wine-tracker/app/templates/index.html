@@ -432,7 +432,8 @@
        data-notes="{{ w['notes'] or '' }}" data-image="{{ w['image'] or '' }}"
        data-purchased_at="{{ w['purchased_at'] or '' }}" data-price="{{ w['price'] or '' }}"
        data-drink_from="{{ w['drink_from'] or '' }}" data-drink_until="{{ w['drink_until'] or '' }}"
-       data-location="{{ w['location'] or '' }}">
+       data-location="{{ w['location'] or '' }}"
+       data-grape="{{ w['grape'] or '' }}">
 
     <div class="card-img" onclick="cardImgClick(this)">
       {% if w['image'] %}
@@ -460,6 +461,7 @@
       <div class="card-extra">
         {% if w['price'] %}<span class="price">{{ currency }} {{ "%.2f"|format(w['price']) }}</span>{% endif %}
         {% if w['drink_from'] or w['drink_until'] %}<span class="drink-window"><i class="mdi mdi-calendar-range"></i> {{ w['drink_from'] or '?' }}–{{ w['drink_until'] or '?' }}</span>{% endif %}
+        {% if w['grape'] %}<span><i class="mdi mdi-fruit-grapes"></i> {{ w['grape'] }}</span>{% endif %}
         {% if w['location'] %}<span><i class="mdi mdi-map-marker"></i> {{ w['location'] }}</span>{% endif %}
       </div>
       {% if w['notes'] %}
@@ -615,6 +617,11 @@
             <option value="{{ loc }}">
             {% endfor %}
           </datalist>
+        </div>
+
+        <div>
+          <label>{{ t.label_grape }}</label>
+          <input type="text" name="grape" id="wine_grape" placeholder="{{ t.placeholder_grape }}">
         </div>
 
         <div>
@@ -909,6 +916,7 @@ function openWineModal(id, wine) {
   document.getElementById('wine_drink_from').value = w.drink_from || '';
   document.getElementById('wine_drink_until').value = w.drink_until || '';
   document.getElementById('wine_location').value = w.location || '';
+  document.getElementById('wine_grape').value = w.grape || '';
 
   // Stars
   for (let i = 1; i <= 5; i++) {
@@ -922,6 +930,9 @@ function openWineModal(id, wine) {
     if (!img) { img = document.createElement('img'); preview.prepend(img); }
     img.src = INGRESS + '/uploads/' + w.image;
     preview.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
+    // Hide camera icon when image exists
+    let camIcon = preview.querySelector('.mdi-camera');
+    if (camIcon) camIcon.remove();
   } else {
     if (img) img.remove();
     // Restore camera icon
@@ -1038,6 +1049,7 @@ function populateFormFromAi(fields, imageFilename) {
   if (fields.vintage) document.getElementById('wine_year').value = fields.vintage;
   if (fields.wine_type) document.getElementById('wine_type').value = fields.wine_type;
   if (fields.region) document.getElementById('wine_region').value = fields.region;
+  if (fields.grape) document.getElementById('wine_grape').value = fields.grape;
   if (fields.price) document.getElementById('wine_price').value = fields.price;
   if (fields.notes) document.getElementById('wine_notes').value = fields.notes;
 
@@ -1082,7 +1094,7 @@ var wineFormSnapshot = '';
 function getWineFormState() {
   var fields = ['wine_name','wine_year','wine_qty','wine_type','wine_region',
                 'wine_notes','wine_purchased_at','wine_price','wine_drink_from',
-                'wine_drink_until','wine_location'];
+                'wine_drink_until','wine_location','wine_grape'];
   var parts = fields.map(function(id) { return document.getElementById(id).value; });
   // Stars
   for (var i = 1; i <= 5; i++) {
@@ -1118,7 +1130,8 @@ function getCardData(el) {
     purchased_at: d.purchased_at || null, price: d.price ? parseFloat(d.price) : null,
     drink_from: d.drink_from ? parseInt(d.drink_from) : null,
     drink_until: d.drink_until ? parseInt(d.drink_until) : null,
-    location: d.location || null
+    location: d.location || null,
+    grape: d.grape || null
   }};
 }
 
@@ -1212,6 +1225,7 @@ function renderCard(w) {
   var extra = '';
   if (w.price) extra += '<span class="price">' + CURRENCY + ' ' + Number(w.price).toFixed(2) + '</span>';
   if (w.drink_from || w.drink_until) extra += '<span class="drink-window"><i class="mdi mdi-calendar-range"></i> ' + (w.drink_from || '?') + '–' + (w.drink_until || '?') + '</span>';
+  if (w.grape) extra += '<span><i class="mdi mdi-fruit-grapes"></i> ' + w.grape + '</span>';
   if (w.location) extra += '<span><i class="mdi mdi-map-marker"></i> ' + w.location + '</span>';
 
   var imgHtml = w.image
@@ -1258,6 +1272,7 @@ function updateCardData(card, w) {
   card.dataset.drink_from = w.drink_from || '';
   card.dataset.drink_until = w.drink_until || '';
   card.dataset.location = w.location || '';
+  card.dataset.grape = w.grape || '';
   card.classList.toggle('empty', w.quantity == 0);
 }
 
@@ -1323,6 +1338,7 @@ function changeQty(el, delta) {
   fd.append('drink_from', d.drink_from);
   fd.append('drink_until', d.drink_until);
   fd.append('location', d.location);
+  fd.append('grape', d.grape);
 
   // Optimistic UI update
   card.dataset.quantity = newQty;

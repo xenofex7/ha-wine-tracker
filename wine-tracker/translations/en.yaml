@@ -1,0 +1,41 @@
+configuration:
+  currency:
+    name: Currency
+    description: Currency symbol for wine prices (e.g. CHF, EUR, USD, GBP).
+  language:
+    name: Language
+    description: >-
+      UI language for the app. Supported: de (German), en (English),
+      fr (French), it (Italian), es (Spanish), pt (Portuguese), nl (Dutch).
+  ai_provider:
+    name: AI Provider
+    description: >-
+      Choose an AI provider for wine label recognition, or "none" to disable.
+      When enabled, you can snap a photo of a wine label and AI will
+      automatically fill in the wine details.
+  anthropic_api_key:
+    name: Anthropic API Key
+    description: API key from console.anthropic.com. Required when AI provider is "anthropic".
+  anthropic_model:
+    name: Anthropic Model
+    description: Model name for Anthropic (e.g. claude-opus-4-6).
+  openai_api_key:
+    name: OpenAI API Key
+    description: API key from platform.openai.com. Required when AI provider is "openai".
+  openai_model:
+    name: OpenAI Model
+    description: Model name for OpenAI (e.g. gpt-5.2).
+  openrouter_api_key:
+    name: OpenRouter API Key
+    description: API key from openrouter.ai. Required when AI provider is "openrouter".
+  openrouter_model:
+    name: OpenRouter Model
+    description: Model identifier for OpenRouter (e.g. anthropic/claude-opus-4.6).
+  ollama_host:
+    name: Ollama Host
+    description: >-
+      URL of your Ollama server (e.g. http://localhost:11434).
+      Required when AI provider is "ollama". No API key needed.
+  ollama_model:
+    name: Ollama Model
+    description: Vision model name for Ollama (e.g. llava, llava-llama3).

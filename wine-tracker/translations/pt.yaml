@@ -1,0 +1,40 @@
+configuration:
+  currency:
+    name: Moeda
+    description: Símbolo da moeda para os preços dos vinhos (ex. CHF, EUR, USD, GBP).
+  language:
+    name: Idioma
+    description: >-
+      Idioma da interface. Suportados: de (alemão), en (inglês),
+      fr (francês), it (italiano), es (espanhol), pt (português), nl (neerlandês).
+  ai_provider:
+    name: Provedor de IA
+    description: >-
+      Escolha um provedor de IA para o reconhecimento de rótulos, ou "none" para desativar.
+      Quando ativado, tire uma foto do rótulo e a IA preenche automaticamente os detalhes do vinho.
+  anthropic_api_key:
+    name: Chave API Anthropic
+    description: Chave API de console.anthropic.com. Necessária para o provedor "anthropic".
+  anthropic_model:
+    name: Modelo Anthropic
+    description: Nome do modelo Anthropic (ex. claude-opus-4-6).
+  openai_api_key:
+    name: Chave API OpenAI
+    description: Chave API de platform.openai.com. Necessária para o provedor "openai".
+  openai_model:
+    name: Modelo OpenAI
+    description: Nome do modelo OpenAI (ex. gpt-5.2).
+  openrouter_api_key:
+    name: Chave API OpenRouter
+    description: Chave API de openrouter.ai. Necessária para o provedor "openrouter".
+  openrouter_model:
+    name: Modelo OpenRouter
+    description: Identificador do modelo OpenRouter (ex. anthropic/claude-opus-4.6).
+  ollama_host:
+    name: Host Ollama
+    description: >-
+      URL do seu servidor Ollama (ex. http://localhost:11434).
+      Necessário para o provedor "ollama". Nenhuma chave API necessária.
+  ollama_model:
+    name: Modelo Ollama
+    description: Nome do modelo de visão para Ollama (ex. llava, llava-llama3).

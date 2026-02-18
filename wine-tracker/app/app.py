@@ -221,7 +221,8 @@ def init_db():
                 price        REAL,
                 drink_from   INTEGER,
                 drink_until  INTEGER,
-                location     TEXT
+                location     TEXT,
+                grape        TEXT
             )
         """)
         # Migrate existing DBs – add columns if missing
@@ -232,6 +233,7 @@ def init_db():
             "drink_from":   "INTEGER",
             "drink_until":  "INTEGER",
             "location":     "TEXT",
+            "grape":        "TEXT",
         }
         for col, dtype in migrations.items():
             if col not in existing:
@@ -359,8 +361,8 @@ def add():
     cur = db.execute(
         """INSERT INTO wines
            (name, year, type, region, quantity, rating, notes, image, added,
-            purchased_at, price, drink_from, drink_until, location)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            purchased_at, price, drink_from, drink_until, location, grape)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             request.form["name"].strip(),
             request.form.get("year") or None,
@@ -376,6 +378,7 @@ def add():
             request.form.get("drink_from") or None,
             request.form.get("drink_until") or None,
             request.form.get("location", "").strip() or None,
+            request.form.get("grape", "").strip() or None,
         ),
     )
     db.commit()
@@ -407,7 +410,8 @@ def edit(wine_id):
     price_raw = request.form.get("price", "").strip()
     db.execute(
         """UPDATE wines SET name=?, year=?, type=?, region=?, quantity=?, rating=?,
-           notes=?, image=?, purchased_at=?, price=?, drink_from=?, drink_until=?, location=?
+           notes=?, image=?, purchased_at=?, price=?, drink_from=?, drink_until=?, location=?,
+           grape=?
            WHERE id=?""",
         (
             request.form["name"].strip(),
@@ -423,6 +427,7 @@ def edit(wine_id):
             request.form.get("drink_from") or None,
             request.form.get("drink_until") or None,
             request.form.get("location", "").strip() or None,
+            request.form.get("grape", "").strip() or None,
             wine_id,
         ),
     )
@@ -453,8 +458,8 @@ def duplicate(wine_id):
 
     db.execute(
         """INSERT INTO wines (name, year, type, region, quantity, rating, notes, image, added,
-           purchased_at, price, drink_from, drink_until, location)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+           purchased_at, price, drink_from, drink_until, location, grape)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             wine["name"],
             new_year,
@@ -470,6 +475,7 @@ def duplicate(wine_id):
             wine["drink_from"],
             wine["drink_until"],
             wine["location"],
+            wine["grape"],
         ),
     )
     db.commit()

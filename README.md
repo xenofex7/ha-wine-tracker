@@ -1,91 +1,139 @@
-# Wine Tracker – Home Assistant App
+# Wine Tracker – Home Assistant Add-on
 
 <p align="center">
   <img src="logo.png" alt="Wine Tracker Logo" width="128">
 </p>
 
-Ein schlanker, eleganter Weinkeller-Tracker als Home Assistant App.
+A sleek, modern wine cellar tracker running as a Home Assistant add-on. Manage your entire collection — from label photo to tasting notes — directly in the HA sidebar.
 
 ## Features
 
-- Weinliste als Karten mit Foto, Jahrgang, Typ, Region, Bewertung & Notizen
-- Foto-Upload direkt vom Handy (Etikett fotografieren)
-- Sternebewertung (1-5)
-- Schnelle Mengen-Buttons direkt auf der Karte
-- Duplizieren - perfekt wenn sich nur der Jahrgang aendert
-- Quantity = 0 bleibt sichtbar als Platzhalter (ausblendbar per Toggle)
-- Suche & Filter nach Weintyp
-- HA Ingress - direkt in der HA-Sidebar eingebettet
-- REST API unter `/api/summary` fuer HA-Sensoren
+- **Wine cards** with photo, vintage, type, region, grape variety, rating & notes
+- **Photo upload** — snap a label photo from your phone
+- **AI wine label recognition** — automatically extract wine details from a label photo (supports 4 AI providers)
+- **Star rating** (1–5 stars)
+- **Quick quantity buttons** (+/−) directly on the card
+- **Duplicate wines** — perfect when only the vintage changes
+- **Empty bottles** stay visible as placeholders (toggle to hide)
+- **Search & filter** by wine type
+- **Drink window** (from/until year)
+- **Purchase price** with configurable currency
+- **Storage location** with autocomplete from existing entries
+- **Grape variety** (e.g. Merlot, Pinot Noir, Chardonnay)
+- **Interactive globe** — see your wine regions on a 3D globe (COBE)
+- **Statistics** — donut charts for wine types + total bottle count
+- **Multi-language** — 7 languages supported
+- **HA Ingress** — embedded directly in the Home Assistant sidebar
+- **REST API** at `/api/summary` for HA sensors
+- **Fully responsive** — works great on desktop & mobile
 
-## Installation als GitHub-Repository
+## Supported Languages
 
-1. **Einstellungen > Apps > App Store**
-2. Oben rechts: **drei Punkte > Repositories**
-3. Repository-URL eingeben: `https://github.com/xenofex7/ha-wine-tracker`
-4. **Wine Tracker** erscheint im Store
-5. **Installieren > Starten**
+| Language | Code |
+|----------|------|
+| 🇩🇪 German | `de` |
+| 🇬🇧 English | `en` |
+| 🇫🇷 French | `fr` |
+| 🇮🇹 Italian | `it` |
+| 🇪🇸 Spanish | `es` |
+| 🇵🇹 Portuguese | `pt` |
+| 🇳🇱 Dutch | `nl` |
 
-Die App oeffnet sich in der HA-Sidebar unter **Wine Tracker**.
+Set your preferred language in the add-on configuration (`language` option).
 
-## Datenpersistenz
+## Installation
 
-Alle Daten (SQLite-DB + Fotos) werden unter `/share/wine-tracker/` gespeichert -
-bleiben also bei App-Updates, Neustarts und HA-Updates erhalten.
+1. Go to **Settings → Add-ons → Add-on Store**
+2. Top right: **⋮ → Repositories**
+3. Add the repository URL: `https://github.com/xenofex7/ha-wine-tracker`
+4. **Wine Tracker** will appear in the store
+5. Click **Install → Start**
 
-## Home Assistant Sensor (optional)
+The add-on opens in the HA sidebar under **Wine Tracker**.
+
+## Configuration
+
+All options are configured via the Home Assistant add-on configuration page.
+
+### General
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `currency` | string | `CHF` | Currency symbol displayed for prices (e.g. `EUR`, `USD`, `GBP`) |
+| `language` | string | `de` | UI language — one of: `de`, `en`, `fr`, `it`, `es`, `pt`, `nl` |
+
+### AI Wine Label Recognition
+
+The AI feature lets you snap a photo of a wine label and automatically fills in the wine details (name, vintage, type, region, grape, price, notes).
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ai_provider` | dropdown | `none` | AI provider: `none`, `anthropic`, `openai`, `openrouter`, `ollama` |
+| `anthropic_api_key` | string | _(empty)_ | API key for Anthropic (Claude) |
+| `anthropic_model` | string | `claude-opus-4-6` | Anthropic model name |
+| `openai_api_key` | string | _(empty)_ | API key for OpenAI |
+| `openai_model` | string | `gpt-5.2` | OpenAI model name |
+| `openrouter_api_key` | string | _(empty)_ | API key for OpenRouter |
+| `openrouter_model` | string | `anthropic/claude-opus-4.6` | OpenRouter model identifier |
+| `ollama_host` | string | `http://localhost:11434` | Ollama server URL (for local AI) |
+| `ollama_model` | string | `llava` | Ollama vision model name |
+
+**Provider notes:**
+- **Anthropic** — uses the Claude API directly. Requires an API key from [console.anthropic.com](https://console.anthropic.com)
+- **OpenAI** — uses the OpenAI API. Requires an API key from [platform.openai.com](https://platform.openai.com)
+- **OpenRouter** — a unified API that routes to many models. Requires an API key from [openrouter.ai](https://openrouter.ai). You can choose any vision-capable model.
+- **Ollama** — runs fully local, no API key needed. Install [Ollama](https://ollama.com) and pull a vision model (e.g. `llava`). Set the host to your Ollama server address.
+
+## Data Persistence
+
+All data (SQLite database + photos) is stored under `/share/wine-tracker/` — preserved across add-on updates, restarts, and HA updates.
+
+## Home Assistant Sensor (Optional)
 
 ```yaml
 # configuration.yaml
 sensor:
   - platform: rest
-    name: "Weinbestand"
+    name: "Wine Stock"
     resource: "http://localhost:5050/api/summary"
     value_template: "{{ value_json.total_bottles }}"
-    unit_of_measurement: "Flaschen"
+    unit_of_measurement: "bottles"
     json_attributes:
       - by_type
     scan_interval: 3600
 ```
 
-Damit hast du einen HA-Sensor `sensor.weinbestand` den du auf dem Dashboard
-oder in Automationen nutzen kannst.
+This creates a `sensor.wine_stock` entity you can use on dashboards or in automations.
 
-## Datenbank-Felder
+## Database Fields
 
-| Feld | Typ | Beschreibung |
-|------|-----|-------------|
-| `name` | Text | Weinname (Pflichtfeld) |
-| `year` | Integer | Jahrgang |
-| `type` | Text | Rotwein / Weisswein / Rose / Schaumwein / Dessertwein |
-| `region` | Text | Herkunft (z.B. Piemont, IT) |
-| `quantity` | Integer | Anzahl Flaschen (0 = Platzhalter) |
-| `rating` | Integer | 1-5 Sterne |
-| `notes` | Text | Freitext |
-| `image` | Text | Dateiname des Etikettfotos |
-| `added` | Date | Erfassungsdatum |
-| `purchased_at` | Text | Bezugsquelle |
-| `price` | Real | Kaufpreis (CHF) |
-| `drink_from` | Integer | Trinkfenster von (Jahr) |
-| `drink_until` | Integer | Trinkfenster bis (Jahr) |
-| `location` | Text | Lagerort |
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | Text | Wine name (required) |
+| `year` | Integer | Vintage year |
+| `type` | Text | Wine type: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Anderes |
+| `region` | Text | Origin (e.g. Piemont, IT) |
+| `grape` | Text | Grape variety (e.g. Merlot, Pinot Noir) |
+| `quantity` | Integer | Number of bottles (0 = placeholder) |
+| `rating` | Integer | 1–5 stars |
+| `notes` | Text | Free text |
+| `image` | Text | Label photo filename |
+| `added` | Date | Date added |
+| `purchased_at` | Text | Purchase source |
+| `price` | Real | Purchase price |
+| `drink_from` | Integer | Drink window start (year) |
+| `drink_until` | Integer | Drink window end (year) |
+| `location` | Text | Storage location |
 
-## Technologie
+## Technology
 
 - **Backend**: Python 3 + Flask
-- **Datenbank**: SQLite (eine einzige Datei)
-- **Frontend**: Vanilla HTML/CSS (kein Framework, kein Node.js)
-- **Base Image**: Home Assistant Alpine-basiert
+- **Database**: SQLite (single file)
+- **Frontend**: Vanilla HTML / CSS / JS (no framework, no Node.js)
+- **AI**: Anthropic SDK, OpenAI SDK, Ollama REST API
+- **Globe**: COBE (WebGL 3D globe)
+- **Base image**: Home Assistant Alpine-based
 
-## Offene Features
-
-- Export / Import Funktion
-- Integration von AI zum Adden von Weininfos oder Weininfos laden per API
-- Bugfixes Themes
-- Custom Sortierungen
-- Multi-Language
-- Darstellung - Listen-Ansicht oder Portal
-
-## Lizenz
+## License
 
 MIT

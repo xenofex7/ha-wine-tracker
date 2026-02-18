@@ -1,0 +1,41 @@
+configuration:
+  currency:
+    name: Währung
+    description: Währungssymbol für Weinpreise (z.B. CHF, EUR, USD, GBP).
+  language:
+    name: Sprache
+    description: >-
+      Sprache der App-Oberfläche. Unterstützt: de (Deutsch), en (Englisch),
+      fr (Französisch), it (Italienisch), es (Spanisch), pt (Portugiesisch), nl (Niederländisch).
+  ai_provider:
+    name: KI-Anbieter
+    description: >-
+      Wähle einen KI-Anbieter für die Weinetikett-Erkennung, oder "none" zum Deaktivieren.
+      Wenn aktiviert, kannst du ein Foto vom Etikett machen und die KI füllt die Weindetails
+      automatisch aus.
+  anthropic_api_key:
+    name: Anthropic API-Schlüssel
+    description: API-Schlüssel von console.anthropic.com. Erforderlich bei KI-Anbieter "anthropic".
+  anthropic_model:
+    name: Anthropic Modell
+    description: Modellname für Anthropic (z.B. claude-opus-4-6).
+  openai_api_key:
+    name: OpenAI API-Schlüssel
+    description: API-Schlüssel von platform.openai.com. Erforderlich bei KI-Anbieter "openai".
+  openai_model:
+    name: OpenAI Modell
+    description: Modellname für OpenAI (z.B. gpt-5.2).
+  openrouter_api_key:
+    name: OpenRouter API-Schlüssel
+    description: API-Schlüssel von openrouter.ai. Erforderlich bei KI-Anbieter "openrouter".
+  openrouter_model:
+    name: OpenRouter Modell
+    description: Modell-Kennung für OpenRouter (z.B. anthropic/claude-opus-4.6).
+  ollama_host:
+    name: Ollama Host
+    description: >-
+      URL deines Ollama-Servers (z.B. http://localhost:11434).
+      Erforderlich bei KI-Anbieter "ollama". Kein API-Schlüssel nötig.
+  ollama_model:
+    name: Ollama Modell
+    description: Vision-Modellname für Ollama (z.B. llava, llava-llama3).
