@@ -102,6 +102,47 @@
   }
   .stat-card .stat-body { padding: 1rem; }
 
+  /* Donut chart */
+  .donut-card .stat-body { padding: 1.2rem 1.5rem; }
+  .donut-wrap {
+    display: flex; align-items: center;
+    gap: 2rem;
+  }
+  .donut-svg-wrap {
+    position: relative; width: 150px; height: 150px; flex-shrink: 0;
+  }
+  .donut-svg-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .donut-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .donut-center .big { font-size: 2rem; font-weight: 800; color: var(--text); line-height: 1; }
+  .donut-center .sub {
+    font-size: .6rem; color: var(--muted); margin-top: .2rem;
+    text-transform: uppercase; letter-spacing: .1em; font-weight: 600;
+  }
+  .donut-legend { display: flex; flex-direction: column; gap: .7rem; flex: 1; min-width: 0; }
+  .donut-legend-item {
+    display: flex; align-items: center; gap: .6rem;
+    font-size: .9rem;
+  }
+  .donut-dot {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+  }
+  .donut-legend-label {
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .donut-legend-value {
+    font-weight: 700; color: var(--text); font-size: .95rem; flex-shrink: 0;
+    min-width: 40px; text-align: right;
+  }
+  @media (max-width: 420px) {
+    .donut-wrap { flex-direction: column; align-items: center; gap: 1rem; }
+    .donut-legend { width: 100%; }
+  }
+
   /* Bar chart (CSS-only) */
   .bar-list { display: flex; flex-direction: column; gap: .65rem; }
   .bar-item { display: flex; align-items: center; gap: .75rem; }
@@ -157,6 +198,34 @@
   }
   .info-chip .chip-label { color: var(--muted); }
   .info-chip .chip-value { font-weight: 700; }
+
+  /* Map */
+  .map-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .map-card h2 {
+    padding: .85rem 1rem; font-size: .9rem; font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: .5rem;
+    color: var(--text);
+  }
+  .globe-wrap {
+    position: relative;
+    display: flex; justify-content: center; align-items: center;
+    padding: 1rem 0;
+    background: var(--bg);
+  }
+  #globeCanvas {
+    width: 100%; max-width: 500px;
+    aspect-ratio: 1 / 1;
+    cursor: grab;
+  }
+  #globeCanvas:active { cursor: grabbing; }
+  @media (max-width: 500px) {
+    #globeCanvas { max-width: 280px; }
+  }
 
   /* Empty state */
   .empty-stats {
@@ -250,24 +319,60 @@
 </div>
 
 
+<!-- ═══════ HERKUNFT MAP ═══════ -->
+{% if map_points %}
+<div class="map-card">
+  <h2>🌍 Herkunft deiner Weine</h2>
+  <div class="globe-wrap">
+    <canvas id="globeCanvas"></canvas>
+  </div>
+</div>
+{% endif %}
+
 <!-- ═══════ BAR CHARTS ═══════ -->
 <div class="stat-grid">
 
   {% if by_type %}
-  <div class="stat-card">
+  {% set type_total = by_type|sum(attribute='qty') %}
+  <div class="stat-card donut-card">
     <h2>🍷 Flaschen pro Typ</h2>
     <div class="stat-body">
-      <div class="bar-list">
-        {% set max_type = by_type[0]['qty'] if by_type else 1 %}
-        {% for item in by_type %}
-        <div class="bar-item">
-          <div class="bar-label" title="{{ item['type'] }}">{{ item['type'] }}</div>
-          <div class="bar-track">
-            <div class="bar-fill" style="width: {{ (item['qty'] / max_type * 100)|round }}%"></div>
+      <div class="donut-wrap">
+        <div class="donut-svg-wrap">
+          <svg viewBox="0 0 100 100">
+            {# Donut segments via stroke-dasharray on circles #}
+            {% set ns = namespace(offset=0) %}
+            {% set colors = ['#c0392b', '#d4a843', '#8b1a2a', '#e67e22', '#6c3461', '#2c8c99'] %}
+            {% for item in by_type %}
+            {% set pct = (item['qty'] / type_total * 100) if type_total > 0 else 0 %}
+            {% set gap = 1.2 %}
+            {% set seg = pct - gap if pct > gap else pct %}
+            <circle cx="50" cy="50" r="35"
+                    fill="none" stroke="{{ colors[loop.index0 % 6] }}"
+                    stroke-width="18"
+                    stroke-dasharray="{{ seg * 2.199 }} {{ 219.9 - seg * 2.199 }}"
+                    stroke-dashoffset="{{ -ns.offset * 2.199 }}"
+                    stroke-linecap="round"
+                    style="opacity:.92; transition: stroke-dasharray .6s ease;"/>
+            {% set ns.offset = ns.offset + pct %}
+            {% endfor %}
+          </svg>
+          <div class="donut-center">
+            <div class="big">{{ type_total }}</div>
+            <div class="sub">Flaschen</div>
           </div>
-          <div class="bar-value">{{ item['qty'] }}</div>
         </div>
-        {% endfor %}
+        <div class="donut-legend">
+          {% for item in by_type %}
+          {% set colors = ['#c0392b', '#d4a843', '#8b1a2a', '#e67e22', '#6c3461', '#2c8c99'] %}
+          {% set pct = (item['qty'] / type_total * 100)|round|int if type_total > 0 else 0 %}
+          <div class="donut-legend-item">
+            <span class="donut-dot" style="background:{{ colors[loop.index0 % 6] }}"></span>
+            <span class="donut-legend-label">{{ item['type'] }}</span>
+            <span class="donut-legend-value">{{ pct }}%</span>
+          </div>
+          {% endfor %}
+        </div>
       </div>
     </div>
   </div>
@@ -395,8 +500,116 @@
 {% endif %}
 </div>
 
-<script>
-// Theme: same 3-state cycle as index
+<script type="module">
+// ── COBE 3D Globe ────────────────────────────────────────────────────────────
+import createGlobe from 'https://cdn.skypack.dev/cobe';
+
+const GLOBE_THEMES = {
+  dark: {
+    dark: 1,
+    baseColor: [0.3, 0.1, 0.15],
+    markerColor: [0.9, 0.35, 0.25],
+    glowColor: [0.2, 0.05, 0.1],
+    mapBrightness: 6,
+    diffuse: 1.2
+  },
+  light: {
+    dark: 0,
+    baseColor: [1, 1, 1],
+    markerColor: [0.75, 0.15, 0.12],
+    glowColor: [0.85, 0.8, 0.75],
+    mapBrightness: 8,
+    diffuse: 2
+  }
+};
+
+let globeInstance = null;
+let phi = 0;
+let pointerDown = false;
+let pointerX = 0;
+let velocity = 0;
+
+function initGlobe() {
+  const canvas = document.getElementById('globeCanvas');
+  if (!canvas) return;
+
+  const points = {{ map_points | tojson }};
+  if (!points || points.length === 0) {
+    canvas.closest('.map-card')?.remove();
+    return;
+  }
+
+  // Build markers from map_points
+  const maxQty = Math.max(...points.map(p => p.qty));
+  const markers = points.map(p => ({
+    location: [p.lat, p.lon],
+    size: Math.max(0.04, (p.qty / maxQty) * 0.14)
+  }));
+
+  // Determine initial rotation to center on the first/biggest region
+  const biggest = points.reduce((a, b) => a.qty > b.qty ? a : b);
+  const startPhi = -((biggest.lon * Math.PI) / 180);
+  const startTheta = ((biggest.lat * Math.PI) / 180) * 0.6 + 0.15;
+  phi = startPhi;
+
+  // Get current theme
+  const isLight = document.documentElement.classList.contains('light');
+  const theme = isLight ? GLOBE_THEMES.light : GLOBE_THEMES.dark;
+
+  // Canvas sizing
+  const w = canvas.offsetWidth;
+  const dpr = window.devicePixelRatio || 1;
+
+  // Destroy existing globe
+  if (globeInstance) { globeInstance.destroy(); globeInstance = null; }
+
+  globeInstance = createGlobe(canvas, {
+    devicePixelRatio: Math.min(dpr, 2),
+    width: w * 2,
+    height: w * 2,
+    phi: phi,
+    theta: startTheta,
+    dark: theme.dark,
+    diffuse: theme.diffuse,
+    mapSamples: 16000,
+    mapBrightness: theme.mapBrightness,
+    baseColor: theme.baseColor,
+    markerColor: theme.markerColor,
+    glowColor: theme.glowColor,
+    markers: markers,
+    opacity: 0.85,
+    onRender: (state) => {
+      // Auto-rotation slowed when user interacts
+      if (!pointerDown) {
+        phi += 0.003;
+      }
+      state.phi = phi + velocity;
+      velocity *= 0.95;
+      state.width = canvas.offsetWidth * 2;
+      state.height = canvas.offsetWidth * 2;
+    }
+  });
+
+  // Pointer interaction for manual rotation
+  canvas.addEventListener('pointerdown', (e) => {
+    pointerDown = true;
+    pointerX = e.clientX;
+    canvas.style.cursor = 'grabbing';
+  });
+  window.addEventListener('pointerup', () => {
+    pointerDown = false;
+    canvas.style.cursor = 'grab';
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (pointerDown) {
+      const delta = e.clientX - pointerX;
+      pointerX = e.clientX;
+      velocity += delta * 0.0002;
+    }
+  });
+}
+
+// ── Theme: 3-state cycle (shared with index page) ────────────────────────────
 const THEME_MODES = ['dark', 'light', 'system'];
 const THEME_ICONS = { dark: '🌙', light: '☀️', system: '💻' };
 
@@ -409,17 +622,19 @@ function applyTheme(mode) {
   document.documentElement.classList.toggle('light', effective === 'light');
   const btn = document.querySelector('.theme-icon');
   if (btn) btn.textContent = THEME_ICONS[mode];
+  // Recreate globe with theme-matching colors
+  initGlobe();
 }
 
-function cycleTheme() {
+window.cycleTheme = function() {
   const current = localStorage.getItem('wine-theme') || 'dark';
   const idx = THEME_MODES.indexOf(current);
   const next = THEME_MODES[(idx + 1) % THEME_MODES.length];
   localStorage.setItem('wine-theme', next);
   applyTheme(next);
-}
+};
 
-// Init theme (shared localStorage with index page)
+// Init theme
 (function() {
   const saved = localStorage.getItem('wine-theme') || 'dark';
   applyTheme(saved);

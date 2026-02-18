@@ -17,6 +17,89 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 ALLOWED_EXT = {"jpg", "jpeg", "png", "webp", "gif"}
 WINE_TYPES = ["Rotwein", "Weisswein", "Rosé", "Schaumwein", "Dessertwein", "Anderes"]
 
+# ── Region → Coordinates lookup (for stats map) ──────────────────────────────
+# Covers major wine countries and regions.  Keys are matched case-insensitively.
+REGION_COORDS = {
+    # Countries
+    "frankreich":   [46.6, 2.2],   "france":      [46.6, 2.2],
+    "italien":      [42.5, 12.5],  "italy":       [42.5, 12.5],  "italia":    [42.5, 12.5],
+    "spanien":      [40.0, -3.7],  "spain":       [40.0, -3.7],  "españa":    [40.0, -3.7],
+    "schweiz":      [46.8, 8.2],   "switzerland": [46.8, 8.2],   "suisse":    [46.8, 8.2],
+    "deutschland":  [50.1, 8.7],   "germany":     [50.1, 8.7],
+    "österreich":   [47.5, 14.5],  "austria":     [47.5, 14.5],
+    "portugal":     [39.4, -8.2],
+    "usa":          [38.5, -121.5], "vereinigte staaten": [38.5, -121.5],
+    "argentinien":  [-33.4, -68.4], "argentina":  [-33.4, -68.4],
+    "chile":        [-35.0, -71.2],
+    "australien":   [-35.0, 138.5], "australia":  [-35.0, 138.5],
+    "neuseeland":   [-41.3, 174.8], "new zealand": [-41.3, 174.8],
+    "südafrika":    [-33.9, 18.9],  "south africa": [-33.9, 18.9],
+    "griechenland": [38.5, 23.5],   "greece":     [38.5, 23.5],
+    "ungarn":       [47.0, 19.5],   "hungary":    [47.0, 19.5],
+    "georgien":     [42.0, 43.5],   "georgia":    [42.0, 43.5],
+    "libanon":      [33.9, 35.5],   "lebanon":    [33.9, 35.5],
+    "kroatien":     [45.1, 15.2],   "croatia":    [45.1, 15.2],
+    "slowenien":    [46.1, 14.5],   "slovenia":   [46.1, 14.5],
+    # French regions
+    "bordeaux":     [44.8, -0.6],  "burgund":    [47.0, 4.8],    "bourgogne":  [47.0, 4.8],
+    "champagne":    [49.0, 3.9],   "elsass":     [48.3, 7.4],    "alsace":     [48.3, 7.4],
+    "loire":        [47.4, 0.7],   "rhône":      [44.9, 4.8],    "rhone":      [44.9, 4.8],
+    "provence":     [43.5, 5.9],   "languedoc":  [43.3, 3.0],    "jura":       [46.7, 5.9],
+    "beaujolais":   [46.1, 4.6],   "côtes du rhône": [44.3, 4.8],
+    # Italian regions
+    "toskana":      [43.4, 11.2],  "tuscany":    [43.4, 11.2],   "toscana":    [43.4, 11.2],
+    "piemont":      [44.7, 8.0],   "piemonte":   [44.7, 8.0],    "piedmont":   [44.7, 8.0],
+    "venetien":     [45.4, 12.3],  "veneto":     [45.4, 12.3],
+    "sizilien":     [37.5, 14.0],  "sicilia":    [37.5, 14.0],   "sicily":     [37.5, 14.0],
+    "sardinien":    [40.1, 9.1],   "sardegna":   [40.1, 9.1],
+    "apulien":      [41.1, 16.9],  "puglia":     [41.1, 16.9],
+    "abruzzen":     [42.2, 13.8],  "abruzzo":    [42.2, 13.8],
+    "südtirol":     [46.5, 11.3],  "alto adige": [46.5, 11.3],
+    "lombardei":    [45.5, 9.9],   "lombardia":  [45.5, 9.9],
+    "kampanien":    [40.8, 14.3],  "campania":   [40.8, 14.3],
+    "friaul":       [46.1, 13.2],  "friuli":     [46.1, 13.2],
+    # Spanish regions
+    "rioja":        [42.5, -2.5],  "ribera del duero": [41.6, -3.7],
+    "priorat":      [41.2, 0.8],   "penedès":    [41.4, 1.7],
+    "katalonien":   [41.6, 1.5],   "cataluña":   [41.6, 1.5],
+    "galizien":     [42.5, -8.0],  "galicia":    [42.5, -8.0],
+    "navarra":      [42.7, -1.6],
+    # German regions
+    "mosel":        [49.9, 6.9],   "rheingau":   [50.0, 8.0],
+    "pfalz":        [49.3, 8.1],   "baden":      [48.0, 7.8],
+    "franken":      [49.8, 10.0],  "rheinhessen": [49.8, 8.2],
+    "ahr":          [50.5, 7.1],   "nahe":       [49.8, 7.6],
+    "württemberg":  [48.8, 9.2],
+    # Swiss regions
+    "wallis":       [46.2, 7.6],   "valais":     [46.2, 7.6],
+    "waadt":        [46.5, 6.6],   "vaud":       [46.5, 6.6],
+    "genf":         [46.2, 6.1],   "genève":     [46.2, 6.1],
+    "tessin":       [46.2, 8.9],   "ticino":     [46.2, 8.9],
+    "graubünden":   [46.8, 9.8],   "schaffhausen": [47.7, 8.6],
+    "zürich":       [47.4, 8.5],   "aargau":     [47.4, 8.1],
+    # Austrian regions
+    "wachau":       [48.4, 15.4],  "burgenland": [47.5, 16.5],
+    "steiermark":   [46.9, 15.5],  "styria":     [46.9, 15.5],
+    "niederösterreich": [48.2, 15.7], "wien":    [48.2, 16.4],
+    # Portuguese regions
+    "douro":        [41.2, -7.8],  "alentejo":   [38.5, -7.9],
+    "dão":          [40.5, -7.9],  "minho":      [41.8, -8.3],
+    # US regions
+    "napa valley":  [38.5, -122.3], "napa":      [38.5, -122.3],
+    "sonoma":       [38.3, -122.7], "kalifornien": [36.8, -119.4], "california": [36.8, -119.4],
+    "oregon":       [45.2, -122.8], "washington": [46.8, -120.5],
+    # South American regions
+    "mendoza":      [-33.0, -68.8], "maipo":     [-33.7, -70.6],
+    "colchagua":    [-34.7, -71.2], "casablanca": [-33.3, -71.4],
+    # Australian regions
+    "barossa":      [-34.5, 138.9], "barossa valley": [-34.5, 138.9],
+    "mclaren vale": [-35.2, 138.5], "hunter valley":  [-32.8, 151.2],
+    "margaret river": [-33.9, 115.0],
+    # Others
+    "tokaj":        [48.1, 21.4],  "stellenbosch": [-33.9, 18.8],
+    "marlborough":  [-41.5, 174.0], "hawke's bay": [-39.5, 176.8],
+}
+
 
 # ── Ingress support ──────────────────────────────────────────────────────────
 # HA Ingress proxies the app under /api/hassio_ingress/<token>/
@@ -91,6 +174,21 @@ def init_db():
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def geocode_region(region_name):
+    """Look up lat/lon for a wine region. Returns [lat, lon] or None."""
+    if not region_name:
+        return None
+    key = region_name.strip().lower()
+    # Exact match first
+    if key in REGION_COORDS:
+        return REGION_COORDS[key]
+    # Substring match – e.g. "Toskana, Italien" → finds "toskana"
+    for name, coords in REGION_COORDS.items():
+        if name in key or key in name:
+            return coords
+    return None
+
 
 def is_ajax():
     return request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -339,10 +437,20 @@ def stats_page():
         "SELECT type, SUM(quantity) as qty FROM wines WHERE type IS NOT NULL AND type != '' GROUP BY type ORDER BY qty DESC"
     ).fetchall()]
 
-    # Top regions
+    # Top regions (bar chart – limited)
     top_regions = [dict(r) for r in db.execute(
         "SELECT region, SUM(quantity) as qty FROM wines WHERE region IS NOT NULL AND region != '' GROUP BY region ORDER BY qty DESC LIMIT 7"
     ).fetchall()]
+
+    # All regions with coordinates (for the map)
+    all_regions = [dict(r) for r in db.execute(
+        "SELECT region, SUM(quantity) as qty FROM wines WHERE region IS NOT NULL AND region != '' GROUP BY region ORDER BY qty DESC"
+    ).fetchall()]
+    map_points = []
+    for r in all_regions:
+        coords = geocode_region(r["region"])
+        if coords:
+            map_points.append({"region": r["region"], "qty": r["qty"], "lat": coords[0], "lon": coords[1]})
 
     # Total value
     value = db.execute(
@@ -394,6 +502,7 @@ def stats_page():
         totals=totals,
         by_type=by_type,
         top_regions=top_regions,
+        map_points=map_points,
         value=value,
         most_expensive=dict(most_expensive) if most_expensive else None,
         cheapest=dict(cheapest) if cheapest else None,
