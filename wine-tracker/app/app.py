@@ -735,11 +735,14 @@ def analyze_wine():
   "region": "wine region",
   "grape": "grape variety/varieties",
   "price": number or null,
+  "drink_from": year as integer or null,
+  "drink_until": year as integer or null,
   "notes": "brief tasting notes if visible on label"
 }
 Rules:
 - wine_type MUST be exactly one of the 6 listed values
 - vintage must be a 4-digit year or null
+- drink_from/drink_until: drinking window years if mentioned on label, otherwise null
 - price as number without currency symbol, or null if not visible
 - If a field cannot be determined, set it to null or empty string
 - Return ONLY the JSON object, no markdown, no explanation"""
@@ -773,8 +776,10 @@ Rules:
         return jsonify({"ok": True, "fields": fields, "image_filename": image_filename})
 
     except json.JSONDecodeError:
+        app.logger.exception("AI analyze-wine JSON parse error")
         return jsonify({"ok": False, "error": "parse_error", "image_filename": image_filename}), 500
     except Exception as e:
+        app.logger.exception("AI analyze-wine error: %s", e)
         error_msg = str(e)
         if "timeout" in error_msg.lower():
             return jsonify({"ok": False, "error": "timeout", "image_filename": image_filename}), 500
