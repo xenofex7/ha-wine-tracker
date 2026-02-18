@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import sqlite3
@@ -6,6 +7,22 @@ from datetime import date
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, g
 
 app = Flask(__name__)
+
+# ── HA Add-on Options ─────────────────────────────────────────────────────────
+OPTIONS_PATH = "/data/options.json"
+
+def load_options():
+    """Read HA add-on options with sensible defaults."""
+    defaults = {"currency": "CHF"}
+    try:
+        with open(OPTIONS_PATH, "r") as f:
+            opts = json.load(f)
+        defaults.update(opts)
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    return defaults
+
+HA_OPTIONS = load_options()
 
 # Persist data in /share so it survives app restarts/updates
 DATA_DIR = "/share/wine-tracker"
@@ -111,8 +128,11 @@ def set_ingress_path():
 
 
 @app.context_processor
-def inject_ingress():
-    return {"ingress": g.get("ingress", "")}
+def inject_globals():
+    return {
+        "ingress": g.get("ingress", ""),
+        "currency": HA_OPTIONS.get("currency", "CHF"),
+    }
 
 
 def ingress_redirect(endpoint, **kwargs):

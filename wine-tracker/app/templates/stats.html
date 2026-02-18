@@ -103,7 +103,9 @@
   .stat-card .stat-body { padding: 1rem; }
 
   /* Donut chart */
+  .donut-card { max-width: 50%; }
   .donut-card .stat-body { padding: 1.2rem 1.5rem; }
+  @media (max-width: 700px) { .donut-card { max-width: 100%; } }
   .donut-wrap {
     display: flex; align-items: center;
     gap: 2rem;
@@ -223,8 +225,31 @@
     cursor: grab;
   }
   #globeCanvas:active { cursor: grabbing; }
+  .globe-legend {
+    position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: .35rem;
+    padding: .6rem .8rem; border-radius: 10px;
+    background: rgba(0,0,0,.45); backdrop-filter: blur(6px);
+    max-height: 80%; overflow-y: auto;
+    pointer-events: none;
+  }
+  .light .globe-legend { background: rgba(255,255,255,.55); }
+  .globe-legend-item {
+    display: flex; align-items: center; gap: .45rem;
+    font-size: .7rem; color: #fff; white-space: nowrap;
+  }
+  .light .globe-legend-item { color: var(--text); }
+  .globe-legend-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: var(--wine);
+  }
+  .globe-legend-qty {
+    margin-left: auto; font-weight: 700; padding-left: .5rem;
+    opacity: .8;
+  }
   @media (max-width: 500px) {
     #globeCanvas { max-width: 280px; }
+    .globe-legend { position: static; transform: none; width: 100%; max-height: none; margin-top: .5rem; }
   }
 
   /* Empty state */
@@ -272,7 +297,7 @@
   <div class="highlight-card">
     <div class="emoji">💰</div>
     <div class="big-number">{{ "%.0f"|format(value['total_value']) }}</div>
-    <div class="label">CHF Gesamtwert</div>
+    <div class="label">{{ currency }} Gesamtwert</div>
   </div>
   {% endif %}
 
@@ -299,7 +324,7 @@
   {% if value and value['avg_price'] %}
   <div class="info-chip">
     <span class="chip-label">Ø Preis:</span>
-    <span class="chip-value">CHF {{ "%.2f"|format(value['avg_price']) }}</span>
+    <span class="chip-value">{{ currency }} {{ "%.2f"|format(value['avg_price']) }}</span>
   </div>
   {% endif %}
   {% if oldest %}
@@ -325,6 +350,15 @@
   <h2>🌍 Herkunft deiner Weine</h2>
   <div class="globe-wrap">
     <canvas id="globeCanvas"></canvas>
+    <div class="globe-legend">
+      {% for p in map_points|sort(attribute='qty', reverse=True) %}
+      <div class="globe-legend-item">
+        <span class="globe-legend-dot"></span>
+        <span>{{ p.region }}</span>
+        <span class="globe-legend-qty">{{ p.qty }}</span>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </div>
 {% endif %}
@@ -349,10 +383,9 @@
             {% set seg = pct - gap if pct > gap else pct %}
             <circle cx="50" cy="50" r="35"
                     fill="none" stroke="{{ colors[loop.index0 % 6] }}"
-                    stroke-width="18"
+                    stroke-width="12"
                     stroke-dasharray="{{ seg * 2.199 }} {{ 219.9 - seg * 2.199 }}"
                     stroke-dashoffset="{{ -ns.offset * 2.199 }}"
-                    stroke-linecap="round"
                     style="opacity:.92; transition: stroke-dasharray .6s ease;"/>
             {% set ns.offset = ns.offset + pct %}
             {% endfor %}
@@ -440,7 +473,7 @@
             <div class="wine-name">{{ most_expensive['name'] }}</div>
             <div class="wine-detail">Teuerster Wein{% if most_expensive['year'] %} · {{ most_expensive['year'] }}{% endif %}</div>
           </div>
-          <div class="wine-price">CHF {{ "%.2f"|format(most_expensive['price']) }}</div>
+          <div class="wine-price">{{ currency }} {{ "%.2f"|format(most_expensive['price']) }}</div>
         </div>
         {% endif %}
         {% if cheapest %}
@@ -450,7 +483,7 @@
             <div class="wine-name">{{ cheapest['name'] }}</div>
             <div class="wine-detail">Günstigster Wein{% if cheapest['year'] %} · {{ cheapest['year'] }}{% endif %}</div>
           </div>
-          <div class="wine-price">CHF {{ "%.2f"|format(cheapest['price']) }}</div>
+          <div class="wine-price">{{ currency }} {{ "%.2f"|format(cheapest['price']) }}</div>
         </div>
         {% endif %}
         {% if value and value['avg_price'] %}
@@ -460,7 +493,7 @@
             <div class="wine-name">Durchschnittspreis</div>
             <div class="wine-detail">Über alle Weine mit Preis</div>
           </div>
-          <div class="wine-price">CHF {{ "%.2f"|format(value['avg_price']) }}</div>
+          <div class="wine-price">{{ currency }} {{ "%.2f"|format(value['avg_price']) }}</div>
         </div>
         {% endif %}
       </div>
@@ -528,6 +561,7 @@ let phi = 0;
 let pointerDown = false;
 let pointerX = 0;
 let velocity = 0;
+let resumeAutoRotate = 0;
 
 function initGlobe() {
   const canvas = document.getElementById('globeCanvas');
@@ -579,32 +613,38 @@ function initGlobe() {
     markers: markers,
     opacity: 0.85,
     onRender: (state) => {
-      // Auto-rotation slowed when user interacts
-      if (!pointerDown) {
+      const now = Date.now();
+      if (!pointerDown && now > resumeAutoRotate) {
         phi += 0.003;
       }
-      state.phi = phi + velocity;
-      velocity *= 0.95;
+      phi += velocity;
+      velocity *= 0.92;
+      if (Math.abs(velocity) < 0.00001) velocity = 0;
+      state.phi = phi;
       state.width = canvas.offsetWidth * 2;
       state.height = canvas.offsetWidth * 2;
     }
   });
 
-  // Pointer interaction for manual rotation
+  // Pointer interaction – drag to rotate, pause auto-rotation after release
   canvas.addEventListener('pointerdown', (e) => {
     pointerDown = true;
     pointerX = e.clientX;
+    velocity = 0;
     canvas.style.cursor = 'grabbing';
   });
   window.addEventListener('pointerup', () => {
-    pointerDown = false;
-    canvas.style.cursor = 'grab';
+    if (pointerDown) {
+      pointerDown = false;
+      resumeAutoRotate = Date.now() + 2000;
+      canvas.style.cursor = 'grab';
+    }
   });
   window.addEventListener('pointermove', (e) => {
     if (pointerDown) {
       const delta = e.clientX - pointerX;
       pointerX = e.clientX;
-      velocity += delta * 0.0002;
+      phi += delta * 0.005;
     }
   });
 }

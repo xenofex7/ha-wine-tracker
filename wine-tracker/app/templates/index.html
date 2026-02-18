@@ -392,7 +392,7 @@
       <div class="stars">{{ '★' * w['rating'] }}{{ '☆' * (5 - w['rating']) }}</div>
       {% endif %}
       <div class="card-extra">
-        {% if w['price'] %}<span class="price">CHF {{ "%.2f"|format(w['price']) }}</span>{% endif %}
+        {% if w['price'] %}<span class="price">{{ currency }} {{ "%.2f"|format(w['price']) }}</span>{% endif %}
         {% if w['drink_from'] or w['drink_until'] %}<span class="drink-window">🗓 {{ w['drink_from'] or '?' }}–{{ w['drink_until'] or '?' }}</span>{% endif %}
         {% if w['location'] %}<span>📍 {{ w['location'] }}</span>{% endif %}
       </div>
@@ -487,7 +487,7 @@
             <input type="text" name="purchased_at" id="wine_purchased_at" placeholder="z.B. Globus">
           </div>
           <div>
-            <label>Kaufpreis (CHF)</label>
+            <label>Kaufpreis ({{ currency }})</label>
             <input type="number" name="price" id="wine_price" min="0" step="0.01" placeholder="54.90">
           </div>
         </div>
@@ -584,6 +584,7 @@
 
 <script>
 const INGRESS = '{{ ingress }}';
+const CURRENCY = '{{ currency }}';
 
 // Theme: 3-state cycle → dark → light → system
 const THEME_MODES = ['dark', 'light', 'system'];
@@ -944,7 +945,7 @@ function renderCard(w) {
     stars = '<div class="stars">' + '★'.repeat(w.rating) + '☆'.repeat(5 - w.rating) + '</div>';
   }
   var extra = '';
-  if (w.price) extra += '<span class="price">CHF ' + Number(w.price).toFixed(2) + '</span>';
+  if (w.price) extra += '<span class="price">' + CURRENCY + ' ' + Number(w.price).toFixed(2) + '</span>';
   if (w.drink_from || w.drink_until) extra += '<span class="drink-window">🗓 ' + (w.drink_from || '?') + '–' + (w.drink_until || '?') + '</span>';
   if (w.location) extra += '<span>📍 ' + w.location + '</span>';
 

@@ -1,6 +1,6 @@
 name: "Wine Tracker"
 description: "Für alle, die den Weinkeller im Griff haben wollen"
-version: "0.2.1"
+version: "0.2.2"
 slug: "wine_tracker"
 url: "https://github.com/xenofex7/ha-wine-tracker"
 init: false
@@ -20,7 +20,9 @@ ingress: true
 ingress_port: 5050
 panel_icon: mdi:bottle-wine
 panel_title: "Wine Tracker"
-options: {}
-schema: {}
+options:
+  currency: "CHF"
+schema:
+  currency: str
 map:
   - share:rw
