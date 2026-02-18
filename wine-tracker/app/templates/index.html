@@ -213,19 +213,21 @@
 
   /* Wide-screen: photo side panel (only wine modal) */
   @media (min-width: 700px) {
-    #wineModal .modal { max-width: 780px; }
+    #wineModal .modal { max-width: 900px; }
     #wineModal .modal-body {
-      display: grid; grid-template-columns: 1fr 260px;
+      display: grid; grid-template-columns: 1fr 340px;
       gap: 1.25rem; align-items: start;
     }
     .form-photo-panel {
-      order: 2; position: sticky; top: 70px;
+      order: 2; align-self: stretch;
+      display: flex; flex-direction: column;
     }
+    .form-photo-panel label { flex-shrink: 0; }
     .form-photo-panel .img-preview {
-      height: auto; min-height: 180px; border-style: solid;
+      flex: 1; height: auto; min-height: 180px;
     }
     .form-photo-panel .img-preview img {
-      width: 100%; height: auto; max-height: 60vh; object-fit: contain;
+      width: 100%; height: 100%; object-fit: contain; object-position: center;
     }
     .form-fields-panel { order: 1; }
   }
@@ -259,7 +261,7 @@
   /* Image preview */
   .img-preview {
     width: 100%; height: 140px; background: var(--bg);
-    border: 1px dashed var(--border); border-radius: 8px;
+    border: 1px solid var(--border); border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     font-size: 2rem; cursor: pointer; overflow: hidden; position: relative;
   }

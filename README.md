@@ -4,6 +4,19 @@
   <img src="logo.png" alt="Wine Tracker Logo" width="128">
 </p>
 
+![version][version-badge]
+![project stage][stage-badge]
+![maintained][maintained-badge]
+![license][license-badge]
+![languages][languages-badge]
+![ha addon][ha-badge]
+![ai powered][ai-badge]
+![arch][arch-badge]
+
+![github stars][stars-badge]
+![github issues][issues-badge]
+![last commit][commit-badge]
+
 A sleek, modern wine cellar tracker running as a Home Assistant add-on. Manage your entire collection — from label photo to tasting notes — directly in the HA sidebar.
 
 ## Features
@@ -137,3 +150,15 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 ## License
 
 MIT
+
+[version-badge]: https://img.shields.io/badge/version-v0.3.3-blue.svg
+[stage-badge]: https://img.shields.io/badge/project%20stage-experimental-orange.svg
+[maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen.svg
+[license-badge]: https://img.shields.io/badge/license-MIT-green.svg
+[languages-badge]: https://img.shields.io/badge/languages-7-blue.svg
+[ha-badge]: https://img.shields.io/badge/Home%20Assistant-Add--on-41BDF5.svg?logo=homeassistant&logoColor=white
+[ai-badge]: https://img.shields.io/badge/AI%20powered-label%20recognition-blueviolet.svg
+[arch-badge]: https://img.shields.io/badge/arch-aarch64%20|%20amd64%20|%20armhf%20|%20armv7-informational.svg
+[stars-badge]: https://img.shields.io/github/stars/xenofex7/ha-wine-tracker?style=flat&logo=github
+[issues-badge]: https://img.shields.io/github/issues/xenofex7/ha-wine-tracker?style=flat&logo=github
+[commit-badge]: https://img.shields.io/github/last-commit/xenofex7/ha-wine-tracker?style=flat&logo=github
