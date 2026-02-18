@@ -103,9 +103,7 @@
   .stat-card .stat-body { padding: 1rem; }
 
   /* Donut chart */
-  .donut-card { max-width: 50%; }
   .donut-card .stat-body { padding: 1.2rem 1.5rem; }
-  @media (max-width: 700px) { .donut-card { max-width: 100%; } }
   .donut-wrap {
     display: flex; align-items: center;
     gap: 2rem;
@@ -558,8 +556,10 @@ const GLOBE_THEMES = {
 
 let globeInstance = null;
 let phi = 0;
+let theta = 0;
 let pointerDown = false;
 let pointerX = 0;
+let pointerY = 0;
 let velocity = 0;
 let resumeAutoRotate = 0;
 
@@ -585,6 +585,7 @@ function initGlobe() {
   const startPhi = -((biggest.lon * Math.PI) / 180);
   const startTheta = ((biggest.lat * Math.PI) / 180) * 0.6 + 0.15;
   phi = startPhi;
+  theta = startTheta;
 
   // Get current theme
   const isLight = document.documentElement.classList.contains('light');
@@ -621,15 +622,17 @@ function initGlobe() {
       velocity *= 0.92;
       if (Math.abs(velocity) < 0.00001) velocity = 0;
       state.phi = phi;
+      state.theta = theta;
       state.width = canvas.offsetWidth * 2;
       state.height = canvas.offsetWidth * 2;
     }
   });
 
-  // Pointer interaction – drag to rotate, pause auto-rotation after release
+  // Pointer interaction – drag to rotate (X = longitude, Y = latitude)
   canvas.addEventListener('pointerdown', (e) => {
     pointerDown = true;
     pointerX = e.clientX;
+    pointerY = e.clientY;
     velocity = 0;
     canvas.style.cursor = 'grabbing';
   });
@@ -642,9 +645,12 @@ function initGlobe() {
   });
   window.addEventListener('pointermove', (e) => {
     if (pointerDown) {
-      const delta = e.clientX - pointerX;
+      const dx = e.clientX - pointerX;
+      const dy = e.clientY - pointerY;
       pointerX = e.clientX;
-      phi += delta * 0.005;
+      pointerY = e.clientY;
+      phi += dx * 0.005;
+      theta = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, theta - dy * 0.005));
     }
   });
 }
