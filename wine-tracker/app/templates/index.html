@@ -209,6 +209,26 @@
                  font-size: 1.3rem; cursor: pointer; line-height: 1; }
   .modal-close:hover { color: var(--text); }
   .modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: .9rem; }
+  .form-fields-panel { display: flex; flex-direction: column; gap: .9rem; }
+
+  /* Wide-screen: photo side panel (only wine modal) */
+  @media (min-width: 700px) {
+    #wineModal .modal { max-width: 780px; }
+    #wineModal .modal-body {
+      display: grid; grid-template-columns: 1fr 260px;
+      gap: 1.25rem; align-items: start;
+    }
+    .form-photo-panel {
+      order: 2; position: sticky; top: 70px;
+    }
+    .form-photo-panel .img-preview {
+      height: auto; min-height: 180px; border-style: solid;
+    }
+    .form-photo-panel .img-preview img {
+      width: 100%; height: auto; max-height: 60vh; object-fit: contain;
+    }
+    .form-fields-panel { order: 1; }
+  }
 
   /* Form elements */
   label { font-size: .8rem; color: var(--muted); display: block; margin-bottom: .25rem; }
@@ -536,7 +556,8 @@
       <input type="hidden" name="ai_image" id="aiImageField" value="">
       <div class="modal-body" id="formStep">
 
-        <div>
+        <!-- Photo: shown inline on mobile, side panel on wide screens -->
+        <div class="form-photo-panel">
           <label>{{ t.label_photo }}</label>
           <div class="img-preview" id="winePreview">
             <i class="mdi mdi-camera" style="font-size:2rem; opacity:.5"></i>
@@ -545,6 +566,7 @@
           </div>
         </div>
 
+        <div class="form-fields-panel">
         <div>
           <label>{{ t.label_name }}</label>
           <input type="text" name="name" id="wine_name" required placeholder="{{ t.placeholder_name }}">
@@ -575,6 +597,16 @@
             <label>{{ t.label_region }}</label>
             <input type="text" name="region" id="wine_region" placeholder="{{ t.placeholder_region }}">
           </div>
+        </div>
+
+        <div>
+          <label>{{ t.label_grape }}</label>
+          <input type="text" name="grape" id="wine_grape" placeholder="{{ t.placeholder_grape }}" list="grapeList" autocomplete="off">
+          <datalist id="grapeList">
+            {% for g in used_grapes %}
+            <option value="{{ g }}">
+            {% endfor %}
+          </datalist>
         </div>
 
         <div>
@@ -620,16 +652,12 @@
         </div>
 
         <div>
-          <label>{{ t.label_grape }}</label>
-          <input type="text" name="grape" id="wine_grape" placeholder="{{ t.placeholder_grape }}">
-        </div>
-
-        <div>
           <label>{{ t.label_notes }}</label>
           <textarea name="notes" id="wine_notes" placeholder="{{ t.placeholder_notes }}"></textarea>
         </div>
 
         <button type="submit" class="btn-submit" id="wineSubmitBtn">{{ t.btn_save }}</button>
+        </div><!-- /form-fields-panel -->
       </div>
     </form>
   </div>

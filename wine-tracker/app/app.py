@@ -335,12 +335,20 @@ def index():
         ).fetchall()
     ]
 
+    # Distinct grape varieties for datalist autocomplete
+    used_grapes = [
+        row[0] for row in db.execute(
+            "SELECT DISTINCT grape FROM wines WHERE grape IS NOT NULL AND grape != '' ORDER BY grape"
+        ).fetchall()
+    ]
+
     return render_template(
         "index.html",
         wines=wines,
         wine_types=WINE_TYPES,
         used_types=used_types,
         used_locations=used_locations,
+        used_grapes=used_grapes,
         query=q,
         active_type=t,
         show_empty=show_empty,
