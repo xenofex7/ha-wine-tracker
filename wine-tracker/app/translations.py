@@ -98,6 +98,26 @@ TRANSLATIONS = {
     "ai_retry": "Erneut versuchen",
     "ai_change_photo": "Anderes Foto",
 
+    # Vivino search
+    "source_step_title": "Wein erfassen",
+    "source_step_subtitle": "Wähle eine Methode",
+    "source_ai_desc": "Foto vom Etikett machen",
+    "vivino_title": "Vivino-Suche",
+    "vivino_desc": "Nach Weinnamen suchen",
+    "vivino_placeholder": "Weinname eingeben\u2026",
+    "vivino_searching": "Suche auf Vivino\u2026",
+    "vivino_error": "Vivino-Suche fehlgeschlagen",
+    "vivino_no_results": "Keine Ergebnisse gefunden",
+
+    # Reload
+    "btn_reload": "Daten ergänzen",
+    "reload_step_title": "Fehlende Daten ergänzen",
+    "reload_step_subtitle": "Wähle eine Quelle, um leere Felder zu füllen",
+    "reload_ai_desc": "Etikett erneut analysieren",
+    "reload_vivino_desc": "Fehlende Daten von Vivino laden",
+    "reload_filled": "Felder ergänzt!",
+    "reload_nothing": "Keine neuen Daten gefunden",
+
     # Discard
     "confirm_discard": "Änderungen verwerfen?",
 
@@ -220,6 +240,26 @@ TRANSLATIONS = {
     "ai_retry": "Try again",
     "ai_change_photo": "Change photo",
 
+    # Vivino search
+    "source_step_title": "Add wine",
+    "source_step_subtitle": "Choose a method",
+    "source_ai_desc": "Snap a photo of the label",
+    "vivino_title": "Vivino Search",
+    "vivino_desc": "Search by wine name",
+    "vivino_placeholder": "Type a wine name\u2026",
+    "vivino_searching": "Searching Vivino\u2026",
+    "vivino_error": "Vivino search failed",
+    "vivino_no_results": "No results found",
+
+    # Reload
+    "btn_reload": "Fill missing data",
+    "reload_step_title": "Fill missing data",
+    "reload_step_subtitle": "Choose a source to fill empty fields",
+    "reload_ai_desc": "Re-analyze the label",
+    "reload_vivino_desc": "Load missing data from Vivino",
+    "reload_filled": "Fields updated!",
+    "reload_nothing": "No new data found",
+
     "confirm_discard": "Discard changes?",
 
     "lightbox_alt": "Label",
@@ -338,6 +378,26 @@ TRANSLATIONS = {
     "ai_error": "Analyse échouée. Veuillez remplir manuellement.",
     "ai_retry": "Réessayer",
     "ai_change_photo": "Autre photo",
+
+    # Vivino search
+    "source_step_title": "Ajouter un vin",
+    "source_step_subtitle": "Choisissez une méthode",
+    "source_ai_desc": "Prendre une photo de l'étiquette",
+    "vivino_title": "Recherche Vivino",
+    "vivino_desc": "Rechercher par nom de vin",
+    "vivino_placeholder": "Saisir un nom de vin\u2026",
+    "vivino_searching": "Recherche sur Vivino\u2026",
+    "vivino_error": "Recherche Vivino échouée",
+    "vivino_no_results": "Aucun résultat trouvé",
+
+    # Reload
+    "btn_reload": "Compléter les données",
+    "reload_step_title": "Compléter les données",
+    "reload_step_subtitle": "Choisissez une source pour remplir les champs vides",
+    "reload_ai_desc": "Réanalyser l'étiquette",
+    "reload_vivino_desc": "Charger les données manquantes depuis Vivino",
+    "reload_filled": "Champs complétés !",
+    "reload_nothing": "Aucune nouvelle donnée trouvée",
 
     "confirm_discard": "Annuler les modifications ?",
 
@@ -458,6 +518,26 @@ TRANSLATIONS = {
     "ai_retry": "Riprova",
     "ai_change_photo": "Altra foto",
 
+    # Vivino search
+    "source_step_title": "Aggiungi vino",
+    "source_step_subtitle": "Scegli un metodo",
+    "source_ai_desc": "Scatta una foto dell'etichetta",
+    "vivino_title": "Ricerca Vivino",
+    "vivino_desc": "Cerca per nome del vino",
+    "vivino_placeholder": "Inserisci un nome di vino\u2026",
+    "vivino_searching": "Ricerca su Vivino\u2026",
+    "vivino_error": "Ricerca Vivino fallita",
+    "vivino_no_results": "Nessun risultato trovato",
+
+    # Reload
+    "btn_reload": "Completa dati",
+    "reload_step_title": "Completa dati mancanti",
+    "reload_step_subtitle": "Scegli una fonte per riempire i campi vuoti",
+    "reload_ai_desc": "Rianalizza l'etichetta",
+    "reload_vivino_desc": "Carica i dati mancanti da Vivino",
+    "reload_filled": "Campi aggiornati!",
+    "reload_nothing": "Nessun nuovo dato trovato",
+
     "confirm_discard": "Annullare le modifiche?",
 
     "lightbox_alt": "Etichetta",
@@ -576,6 +656,26 @@ TRANSLATIONS = {
     "ai_error": "Análisis fallido. Por favor, rellene manualmente.",
     "ai_retry": "Reintentar",
     "ai_change_photo": "Otra foto",
+
+    # Vivino search
+    "source_step_title": "Añadir vino",
+    "source_step_subtitle": "Elige un método",
+    "source_ai_desc": "Haz una foto de la etiqueta",
+    "vivino_title": "Búsqueda Vivino",
+    "vivino_desc": "Buscar por nombre de vino",
+    "vivino_placeholder": "Escribe un nombre de vino\u2026",
+    "vivino_searching": "Buscando en Vivino\u2026",
+    "vivino_error": "Búsqueda Vivino fallida",
+    "vivino_no_results": "No se encontraron resultados",
+
+    # Reload
+    "btn_reload": "Completar datos",
+    "reload_step_title": "Completar datos faltantes",
+    "reload_step_subtitle": "Elige una fuente para rellenar los campos vacíos",
+    "reload_ai_desc": "Reanalizar la etiqueta",
+    "reload_vivino_desc": "Cargar datos faltantes de Vivino",
+    "reload_filled": "¡Campos actualizados!",
+    "reload_nothing": "No se encontraron datos nuevos",
 
     "confirm_discard": "¿Descartar cambios?",
 
@@ -696,6 +796,26 @@ TRANSLATIONS = {
     "ai_retry": "Tentar novamente",
     "ai_change_photo": "Outra foto",
 
+    # Vivino search
+    "source_step_title": "Adicionar vinho",
+    "source_step_subtitle": "Escolha um método",
+    "source_ai_desc": "Tire uma foto do rótulo",
+    "vivino_title": "Pesquisa Vivino",
+    "vivino_desc": "Pesquisar por nome do vinho",
+    "vivino_placeholder": "Digite o nome de um vinho\u2026",
+    "vivino_searching": "Pesquisando no Vivino\u2026",
+    "vivino_error": "Pesquisa Vivino falhou",
+    "vivino_no_results": "Nenhum resultado encontrado",
+
+    # Reload
+    "btn_reload": "Completar dados",
+    "reload_step_title": "Completar dados em falta",
+    "reload_step_subtitle": "Escolha uma fonte para preencher os campos vazios",
+    "reload_ai_desc": "Reanalisar o rótulo",
+    "reload_vivino_desc": "Carregar dados em falta do Vivino",
+    "reload_filled": "Campos atualizados!",
+    "reload_nothing": "Nenhum dado novo encontrado",
+
     "confirm_discard": "Descartar alterações?",
 
     "lightbox_alt": "Rótulo",
@@ -814,6 +934,26 @@ TRANSLATIONS = {
     "ai_error": "Analyse mislukt. Vul a.u.b. handmatig in.",
     "ai_retry": "Opnieuw proberen",
     "ai_change_photo": "Andere foto",
+
+    # Vivino search
+    "source_step_title": "Wijn toevoegen",
+    "source_step_subtitle": "Kies een methode",
+    "source_ai_desc": "Maak een foto van het etiket",
+    "vivino_title": "Vivino zoeken",
+    "vivino_desc": "Zoek op wijnnaam",
+    "vivino_placeholder": "Voer een wijnnaam in\u2026",
+    "vivino_searching": "Zoeken op Vivino\u2026",
+    "vivino_error": "Vivino-zoekopdracht mislukt",
+    "vivino_no_results": "Geen resultaten gevonden",
+
+    # Reload
+    "btn_reload": "Gegevens aanvullen",
+    "reload_step_title": "Ontbrekende gegevens aanvullen",
+    "reload_step_subtitle": "Kies een bron om lege velden in te vullen",
+    "reload_ai_desc": "Etiket opnieuw analyseren",
+    "reload_vivino_desc": "Ontbrekende gegevens van Vivino laden",
+    "reload_filled": "Velden bijgewerkt!",
+    "reload_nothing": "Geen nieuwe gegevens gevonden",
 
     "confirm_discard": "Wijzigingen verwerpen?",
 

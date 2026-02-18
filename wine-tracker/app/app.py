@@ -234,6 +234,7 @@ def init_db():
             "drink_until":  "INTEGER",
             "location":     "TEXT",
             "grape":        "TEXT",
+            "vivino_id":    "INTEGER",
         }
         for col, dtype in migrations.items():
             if col not in existing:
@@ -382,11 +383,12 @@ def add():
         if ai_img and os.path.isfile(os.path.join(UPLOAD_DIR, ai_img)):
             image = ai_img
     price_raw = request.form.get("price", "").strip()
+    vivino_raw = request.form.get("vivino_id", "").strip()
     cur = db.execute(
         """INSERT INTO wines
            (name, year, type, region, quantity, rating, notes, image, added,
-            purchased_at, price, drink_from, drink_until, location, grape)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            purchased_at, price, drink_from, drink_until, location, grape, vivino_id)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             request.form["name"].strip(),
             request.form.get("year") or None,
@@ -403,6 +405,7 @@ def add():
             request.form.get("drink_until") or None,
             request.form.get("location", "").strip() or None,
             request.form.get("grape", "").strip() or None,
+            int(vivino_raw) if vivino_raw else None,
         ),
     )
     db.commit()
@@ -432,10 +435,11 @@ def edit(wine_id):
         image = new_image
 
     price_raw = request.form.get("price", "").strip()
+    vivino_raw = request.form.get("vivino_id", "").strip()
     db.execute(
         """UPDATE wines SET name=?, year=?, type=?, region=?, quantity=?, rating=?,
            notes=?, image=?, purchased_at=?, price=?, drink_from=?, drink_until=?, location=?,
-           grape=?
+           grape=?, vivino_id=?
            WHERE id=?""",
         (
             request.form["name"].strip(),
@@ -452,6 +456,7 @@ def edit(wine_id):
             request.form.get("drink_until") or None,
             request.form.get("location", "").strip() or None,
             request.form.get("grape", "").strip() or None,
+            int(vivino_raw) if vivino_raw else None,
             wine_id,
         ),
     )
@@ -482,8 +487,8 @@ def duplicate(wine_id):
 
     db.execute(
         """INSERT INTO wines (name, year, type, region, quantity, rating, notes, image, added,
-           purchased_at, price, drink_from, drink_until, location, grape)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+           purchased_at, price, drink_from, drink_until, location, grape, vivino_id)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             wine["name"],
             new_year,
@@ -500,6 +505,7 @@ def duplicate(wine_id):
             wine["drink_until"],
             wine["location"],
             wine["grape"],
+            wine["vivino_id"],
         ),
     )
     db.commit()
@@ -766,7 +772,7 @@ def analyze_wine():
 Rules:
 - wine_type MUST be exactly one of the 6 listed values
 - vintage must be a 4-digit year or null
-- drink_from/drink_until: drinking window years if mentioned on label, otherwise null
+- drink_from/drink_until: drinking window years. If mentioned on label, use those. Otherwise ESTIMATE a reasonable drinking window based on the wine type, grape variety, region, and vintage using your wine expertise. For example, a simple Pinot Grigio 2023 might be 2024-2026, while a Barolo 2018 might be 2025-2035. Only return null if you cannot determine enough about the wine to estimate.
 - price as number without currency symbol, or null if not visible
 - If a field cannot be determined, set it to null or empty string
 - Return ONLY the JSON object, no markdown, no explanation"""
@@ -808,6 +814,220 @@ Rules:
         if "timeout" in error_msg.lower():
             return jsonify({"ok": False, "error": "timeout", "image_filename": image_filename}), 500
         return jsonify({"ok": False, "error": "api_error", "message": error_msg, "image_filename": image_filename}), 500
+
+
+# ── Vivino Wine Search ──────────────────────────────────────────────────────
+
+VIVINO_WINE_TYPES = {1: "Rotwein", 2: "Weisswein", 3: "Schaumwein", 4: "Rosé", 7: "Dessertwein"}
+
+def _vivino_country_code(currency):
+    """Map currency to Vivino country/currency codes."""
+    mapping = {
+        "CHF": ("CH", "CHF"), "EUR": ("DE", "EUR"), "USD": ("US", "USD"),
+        "GBP": ("GB", "GBP"), "CAD": ("CA", "CAD"), "AUD": ("AU", "AUD"),
+        "SEK": ("SE", "SEK"), "NOK": ("NO", "NOK"), "DKK": ("DK", "DKK"),
+        "PLN": ("PL", "PLN"), "CZK": ("CZ", "CZK"), "BRL": ("BR", "BRL"),
+    }
+    return mapping.get(currency, ("US", "USD"))
+
+
+@app.route("/api/vivino-search")
+def vivino_search():
+    """Proxy search to Vivino explore API."""
+    import requests as req
+
+    query = request.args.get("q", "").strip()
+    if len(query) < 2:
+        return jsonify({"ok": False, "error": "query_too_short"}), 400
+
+    opts = load_options()
+    country, currency = _vivino_country_code(opts.get("currency", "CHF"))
+
+    try:
+        resp = req.get(
+            "https://www.vivino.com/api/explore/explore",
+            params={
+                "q": query,
+                "country_code": country,
+                "currency_code": currency,
+                "page": 1,
+                "per_page": 8,
+            },
+            headers={"User-Agent": "WineTracker/1.0"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except req.exceptions.Timeout:
+        return jsonify({"ok": False, "error": "timeout"}), 504
+    except Exception as e:
+        app.logger.exception("Vivino search error: %s", e)
+        return jsonify({"ok": False, "error": "api_error"}), 502
+
+    results = []
+    try:
+        for match in data.get("explore_vintage", {}).get("matches", []):
+            vintage = match.get("vintage", {})
+            wine = vintage.get("wine", {}) or {}
+            winery = wine.get("winery", {}) or {}
+            region = wine.get("region", {}) or {}
+            country_obj = region.get("country", {}) or {}
+
+            # Grape varieties
+            grapes = []
+            for g_item in wine.get("grapes", []) or []:
+                grape_obj = g_item.get("grape", {}) or {}
+                if grape_obj.get("name"):
+                    grapes.append(grape_obj["name"])
+
+            # Price
+            price_obj = vintage.get("price", {}) or match.get("price", {}) or {}
+            price_val = price_obj.get("amount")
+
+            # Wine type
+            wine_type_id = wine.get("type_id")
+            wine_type = VIVINO_WINE_TYPES.get(wine_type_id, "Anderes") if wine_type_id else ""
+
+            # Region string
+            region_name = region.get("name", "")
+            country_name = country_obj.get("name", "")
+            region_str = f"{region_name}, {country_name}" if region_name and country_name else region_name or country_name
+
+            # Image
+            image_url = vintage.get("image", {}).get("location", "") if vintage.get("image") else ""
+
+            results.append({
+                "vivino_id": wine.get("id"),
+                "name": f"{winery.get('name', '')} {wine.get('name', '')}".strip(),
+                "year": vintage.get("year"),
+                "wine_type": wine_type,
+                "region": region_str,
+                "grape": ", ".join(grapes),
+                "rating": round(vintage.get("statistics", {}).get("wine_ratings_average", 0), 1) or None,
+                "price": round(price_val, 2) if price_val else None,
+                "image_url": image_url,
+            })
+    except Exception as e:
+        app.logger.exception("Vivino parse error: %s", e)
+        return jsonify({"ok": False, "error": "parse_error"}), 502
+
+    return jsonify({"ok": True, "results": results})
+
+
+@app.route("/api/vivino-image", methods=["POST"])
+def vivino_image():
+    """Download a Vivino wine image and save it locally."""
+    import requests as req
+
+    body = request.get_json(silent=True) or {}
+    url = body.get("url", "").strip()
+    if not url:
+        return jsonify({"ok": False, "error": "no_url"}), 400
+
+    try:
+        resp = req.get(url, timeout=10, headers={"User-Agent": "WineTracker/1.0"})
+        resp.raise_for_status()
+        # Determine extension from content-type
+        ct = resp.headers.get("Content-Type", "image/jpeg")
+        ext = "jpg"
+        if "png" in ct:
+            ext = "png"
+        elif "webp" in ct:
+            ext = "webp"
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_DIR, filename)
+        with open(filepath, "wb") as f:
+            f.write(resp.content)
+        return jsonify({"ok": True, "filename": filename})
+    except Exception as e:
+        app.logger.exception("Vivino image download error: %s", e)
+        return jsonify({"ok": False, "error": "download_failed"}), 500
+
+
+# ── AI Re-analysis (reload existing image) ───────────────────────────────────
+
+@app.route("/api/reanalyze-wine", methods=["POST"])
+def reanalyze_wine():
+    """Re-analyze an existing wine image to fill missing fields."""
+    import base64
+
+    opts = load_options()
+    provider = opts.get("ai_provider", "none").strip().lower()
+
+    if provider == "none" or not _is_ai_configured(opts):
+        return jsonify({"ok": False, "error": "no_api_key"}), 400
+
+    image_filename = request.json.get("image_filename", "").strip() if request.is_json else ""
+    if not image_filename:
+        return jsonify({"ok": False, "error": "no_image"}), 400
+
+    image_path = os.path.join(UPLOAD_DIR, image_filename)
+    if not os.path.isfile(image_path):
+        return jsonify({"ok": False, "error": "image_not_found"}), 404
+
+    with open(image_path, "rb") as f:
+        image_data = base64.standard_b64encode(f.read()).decode("utf-8")
+
+    ext = image_filename.rsplit(".", 1)[-1].lower() if "." in image_filename else "jpg"
+    media_type = {
+        "jpg": "image/jpeg", "jpeg": "image/jpeg",
+        "png": "image/png", "webp": "image/webp", "gif": "image/gif",
+    }.get(ext, "image/jpeg")
+
+    prompt = """Analyze this wine bottle label image. Extract the following fields and return ONLY valid JSON:
+{
+  "name": "wine name",
+  "wine_type": "one of: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Anderes",
+  "vintage": year as integer or null,
+  "region": "wine region",
+  "grape": "grape variety/varieties",
+  "price": number or null,
+  "drink_from": year as integer or null,
+  "drink_until": year as integer or null,
+  "notes": "brief tasting notes if visible on label"
+}
+Rules:
+- wine_type MUST be exactly one of the 6 listed values
+- vintage must be a 4-digit year or null
+- drink_from/drink_until: drinking window years. If mentioned on label, use those. Otherwise ESTIMATE a reasonable drinking window based on the wine type, grape variety, region, and vintage using your wine expertise. For example, a simple Pinot Grigio 2023 might be 2024-2026, while a Barolo 2018 might be 2025-2035. Only return null if you cannot determine enough about the wine to estimate.
+- price as number without currency symbol, or null if not visible
+- If a field cannot be determined, set it to null or empty string
+- Return ONLY the JSON object, no markdown, no explanation"""
+
+    try:
+        dispatch = {
+            "anthropic": _call_anthropic,
+            "openai": _call_openai,
+            "openrouter": _call_openrouter,
+            "ollama": _call_ollama,
+        }
+        call_fn = dispatch.get(provider)
+        if not call_fn:
+            return jsonify({"ok": False, "error": "invalid_provider"}), 400
+
+        raw = call_fn(image_data, media_type, prompt, opts).strip()
+
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[-1]
+            if raw.endswith("```"):
+                raw = raw[:-3].strip()
+
+        fields = json.loads(raw)
+
+        if fields.get("wine_type") and fields["wine_type"] not in WINE_TYPES:
+            fields["wine_type"] = ""
+
+        return jsonify({"ok": True, "fields": fields})
+
+    except json.JSONDecodeError:
+        app.logger.exception("AI reanalyze-wine JSON parse error")
+        return jsonify({"ok": False, "error": "parse_error"}), 500
+    except Exception as e:
+        app.logger.exception("AI reanalyze-wine error: %s", e)
+        error_msg = str(e)
+        if "timeout" in error_msg.lower():
+            return jsonify({"ok": False, "error": "timeout"}), 500
+        return jsonify({"ok": False, "error": "api_error", "message": error_msg}), 500
 
 
 # ── API for Home Assistant sensors ───────────────────────────────────────────
