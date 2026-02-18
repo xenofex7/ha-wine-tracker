@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🍷 Wine Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7/css/materialdesignicons.min.css">
+<title>Wine Tracker</title>
 <style>
   :root {
     --bg: #1a0a0f;
@@ -162,6 +163,12 @@
   .card-meta span { background: var(--bg); padding: .1rem .4rem; border-radius: 4px; }
 
   .stars { color: var(--gold); font-size: .85rem; margin-top: .35rem; letter-spacing: 1px; }
+  .stars .mdi { font-size: .95rem; vertical-align: middle; }
+  .mdi { vertical-align: middle; }
+  .card-actions .mdi { font-size: 1.05rem; }
+  .card-img .mdi { font-size: 3rem; }
+  .empty-state .mdi { font-size: 4rem; }
+  .stat-pill-icon { font-size: .9rem; margin-right: .15rem; }
   .card-notes { font-size: .78rem; color: var(--muted); margin-top: .4rem;
                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .card-extra { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .4rem; }
@@ -313,19 +320,47 @@
   }
   .lightbox-close:hover { color: #fff; }
   .card-img img { cursor: zoom-in; }
+
+  /* FAB – hidden on desktop, shown on mobile */
+  .fab {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-size: 1.8rem;
+    font-weight: 300;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    z-index: 150;
+    transition: transform .2s, box-shadow .2s;
+    line-height: 1;
+  }
+  .fab:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+
+  @media (max-width: 600px) {
+    .btn-add { display: none; }
+    .fab { display: flex; align-items: center; justify-content: center; }
+    .grid { padding-bottom: 5rem; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <span style="font-size:1.5rem">🍷</span>
+  <span style="font-size:1.5rem"><i class="mdi mdi-glass-wine"></i></span>
   <h1>Wine Tracker</h1>
   {% if stats %}
   {% set total = stats['total'] or 0 %}
   {% set types = stats['types'] or 0 %}
-  <a class="stats-pill" href="{{ ingress }}/stats">🍾 {{ total }} {{ t.stats_pill_bottle if total == 1 else t.stats_pill_bottles }} · {{ types }} {{ t.stats_pill_wine if types == 1 else t.stats_pill_wines }}</a>
+  <a class="stats-pill" href="{{ ingress }}/stats"><i class="mdi mdi-bottle-wine stat-pill-icon"></i> {{ total }} {{ t.stats_pill_bottle if total == 1 else t.stats_pill_bottles }} · {{ types }} {{ t.stats_pill_wine if types == 1 else t.stats_pill_wines }}</a>
   {% endif %}
-  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon">☀️</span></button>
+  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon"><i class="mdi mdi-weather-sunny"></i></span></button>
 </header>
 
 <!-- Toolbar -->
@@ -353,7 +388,7 @@
 <div class="grid">
   {% if not wines %}
   <div class="empty-state" style="grid-column: 1/-1">
-    <div>🍷</div>
+    <div><i class="mdi mdi-glass-wine"></i></div>
     <p>{{ t.empty_no_wines }}<br>{{ t.empty_add_first }}</p>
   </div>
   {% endif %}
@@ -372,7 +407,7 @@
       {% if w['image'] %}
         <img src="{{ ingress }}/uploads/{{ w['image'] }}" alt="{{ w['name'] }}" loading="lazy">
       {% else %}
-        {{ '🍷' if w['type'] == 'Rotwein' else ('🥂' if w['type'] == 'Schaumwein' else '🍷') }}
+        <i class="mdi {{ 'mdi-glass-flute' if w['type'] == 'Schaumwein' else 'mdi-glass-wine' }}"></i>
       {% endif %}
     </div>
 
@@ -389,12 +424,12 @@
         {% if w['region'] %}<span>{{ w['region'] }}</span>{% endif %}
       </div>
       {% if w['rating'] %}
-      <div class="stars">{{ '★' * w['rating'] }}{{ '☆' * (5 - w['rating']) }}</div>
+      <div class="stars">{% for i in range(w['rating']) %}<i class="mdi mdi-star"></i>{% endfor %}{% for i in range(5 - w['rating']) %}<i class="mdi mdi-star-outline"></i>{% endfor %}</div>
       {% endif %}
       <div class="card-extra">
         {% if w['price'] %}<span class="price">{{ currency }} {{ "%.2f"|format(w['price']) }}</span>{% endif %}
-        {% if w['drink_from'] or w['drink_until'] %}<span class="drink-window">🗓 {{ w['drink_from'] or '?' }}–{{ w['drink_until'] or '?' }}</span>{% endif %}
-        {% if w['location'] %}<span>📍 {{ w['location'] }}</span>{% endif %}
+        {% if w['drink_from'] or w['drink_until'] %}<span class="drink-window"><i class="mdi mdi-calendar-range"></i> {{ w['drink_from'] or '?' }}–{{ w['drink_until'] or '?' }}</span>{% endif %}
+        {% if w['location'] %}<span><i class="mdi mdi-map-marker"></i> {{ w['location'] }}</span>{% endif %}
       </div>
       {% if w['notes'] %}
       <div class="card-notes">{{ w['notes'] }}</div>
@@ -409,11 +444,11 @@
       </span>
       <button onclick="changeQty(this,1)" title="{{ t.btn_more }}" style="padding:.5rem .65rem">+</button>
       <button onclick="editFromCard(this)"
-              title="{{ t.btn_edit }}" style="border-left:1px solid var(--border)">✏️</button>
+              title="{{ t.btn_edit }}" style="border-left:1px solid var(--border)"><i class="mdi mdi-pencil"></i></button>
       <button onclick="dupFromCard(this)"
-              title="{{ t.btn_duplicate }}">📋</button>
+              title="{{ t.btn_duplicate }}"><i class="mdi mdi-content-copy"></i></button>
       <button class="danger" title="{{ t.btn_delete }}"
-              onclick="deleteFromCard(this)">🗑</button>
+              onclick="deleteFromCard(this)"><i class="mdi mdi-delete"></i></button>
     </div>
   </div>
   {% endfor %}
@@ -433,7 +468,7 @@
         <div>
           <label>{{ t.label_photo }}</label>
           <div class="img-preview" id="winePreview">
-            📷
+            <i class="mdi mdi-camera" style="font-size:2rem; opacity:.5"></i>
             <input type="file" name="image" accept="image/*"
                    onchange="previewImg(this,'winePreview')">
           </div>
@@ -476,7 +511,7 @@
           <div class="star-input">
             {% for i in [5,4,3,2,1] %}
             <input type="radio" name="rating" id="wine_star{{ i }}" value="{{ i }}">
-            <label for="wine_star{{ i }}">★</label>
+            <label for="wine_star{{ i }}"><i class="mdi mdi-star"></i></label>
             {% endfor %}
           </div>
         </div>
@@ -561,7 +596,7 @@
       <button class="modal-close" onclick="closeModal('deleteModal')">×</button>
     </div>
     <div class="delete-confirm-body">
-      <div class="delete-confirm-icon">🍷</div>
+      <div class="delete-confirm-icon"><i class="mdi mdi-glass-wine"></i></div>
       <div class="delete-confirm-msg">
         <span class="delete-confirm-name" id="deleteWineName"></span> {{ t.delete_really }}
       </div>
@@ -589,7 +624,7 @@ const T = {{ t | tojson }};
 
 // Theme: 3-state cycle → dark → light → system
 const THEME_MODES = ['dark', 'light', 'system'];
-const THEME_ICONS = { dark: '🌙', light: '☀️', system: '💻' };
+const THEME_ICONS = { dark: '<i class="mdi mdi-weather-night"></i>', light: '<i class="mdi mdi-weather-sunny"></i>', system: '<i class="mdi mdi-laptop"></i>' };
 
 function getSystemPreference() {
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
@@ -599,7 +634,7 @@ function applyTheme(mode) {
   const effective = mode === 'system' ? getSystemPreference() : mode;
   document.documentElement.classList.toggle('light', effective === 'light');
   const btn = document.querySelector('.theme-icon');
-  if (btn) btn.textContent = THEME_ICONS[mode];
+  if (btn) btn.innerHTML = THEME_ICONS[mode];
 }
 
 function cycleTheme() {
@@ -660,7 +695,7 @@ function applyFilters() {
       emptyState = document.createElement('div');
       emptyState.className = 'empty-state';
       emptyState.style.gridColumn = '1/-1';
-      emptyState.innerHTML = '<div>🔍</div><p>' + T.empty_no_results + '</p>';
+      emptyState.innerHTML = '<div><i class="mdi mdi-magnify" style="font-size:4rem"></i></div><p>' + T.empty_no_results + '</p>';
       grid.appendChild(emptyState);
     }
     emptyState.style.display = '';
@@ -811,11 +846,13 @@ function openWineModal(id, wine) {
     preview.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
   } else {
     if (img) img.remove();
-    // Restore camera emoji
-    let hasEmoji = false;
-    preview.childNodes.forEach(n => { if (n.nodeType === 3 && n.textContent.trim()) hasEmoji = true; });
-    if (!hasEmoji) {
-      preview.insertBefore(document.createTextNode('📷'), preview.firstChild);
+    // Restore camera icon
+    let hasIcon = preview.querySelector('.mdi-camera');
+    if (!hasIcon) {
+      const cam = document.createElement('i');
+      cam.className = 'mdi mdi-camera';
+      cam.style.cssText = 'font-size:2rem; opacity:.5';
+      preview.insertBefore(cam, preview.firstChild);
     }
   }
 
@@ -910,7 +947,7 @@ function deleteFromCard(el) {
 function openDupModal(id, name, year, qty) {
   document.getElementById('dupForm').dataset.wineId = id;
   document.getElementById('dupHint').textContent =
-    '📋 ' + T.dup_template + ': ' + name + (year ? ' · ' + year : '');
+    T.dup_template + ': ' + name + (year ? ' · ' + year : '');
   document.getElementById('dup_year').value = year || '';
   document.getElementById('dup_qty').value = qty || 1;
   openModal('dupModal');
@@ -921,7 +958,7 @@ function openDupModal(id, name, year, qty) {
 function updateStats(s) {
   var pill = document.querySelector('.stats-pill');
   if (pill && s) {
-    pill.textContent = '🍾 ' + s.total + ' ' + (s.total == 1 ? T.stats_pill_bottle : T.stats_pill_bottles) +
+    pill.innerHTML = '<i class="mdi mdi-bottle-wine stat-pill-icon"></i> ' + s.total + ' ' + (s.total == 1 ? T.stats_pill_bottle : T.stats_pill_bottles) +
                        ' · ' + s.types + ' ' + (s.types == 1 ? T.stats_pill_wine : T.stats_pill_wines);
   }
 }
@@ -935,25 +972,24 @@ function highlightCard(card) {
   }, 100);
 }
 
-function wineEmoji(type) {
-  if (type === 'Rotwein') return '🍷';
-  if (type === 'Schaumwein') return '🥂';
-  return '🍷';
+function wineIcon(type) {
+  if (type === 'Schaumwein') return '<i class="mdi mdi-glass-flute"></i>';
+  return '<i class="mdi mdi-glass-wine"></i>';
 }
 
 function renderCard(w) {
   var stars = '';
   if (w.rating) {
-    stars = '<div class="stars">' + '★'.repeat(w.rating) + '☆'.repeat(5 - w.rating) + '</div>';
+    stars = '<div class="stars">' + '<i class="mdi mdi-star"></i>'.repeat(w.rating) + '<i class="mdi mdi-star-outline"></i>'.repeat(5 - w.rating) + '</div>';
   }
   var extra = '';
   if (w.price) extra += '<span class="price">' + CURRENCY + ' ' + Number(w.price).toFixed(2) + '</span>';
-  if (w.drink_from || w.drink_until) extra += '<span class="drink-window">🗓 ' + (w.drink_from || '?') + '–' + (w.drink_until || '?') + '</span>';
-  if (w.location) extra += '<span>📍 ' + w.location + '</span>';
+  if (w.drink_from || w.drink_until) extra += '<span class="drink-window"><i class="mdi mdi-calendar-range"></i> ' + (w.drink_from || '?') + '–' + (w.drink_until || '?') + '</span>';
+  if (w.location) extra += '<span><i class="mdi mdi-map-marker"></i> ' + w.location + '</span>';
 
   var imgHtml = w.image
     ? '<img src="' + INGRESS + '/uploads/' + w.image + '" alt="' + (w.name||'') + '" loading="lazy">'
-    : wineEmoji(w.type);
+    : wineIcon(w.type);
 
   var notesHtml = w.notes ? '<div class="card-notes">' + w.notes.replace(/</g,'&lt;') + '</div>' : '';
 
@@ -975,9 +1011,9 @@ function renderCard(w) {
       '<button onclick="changeQty(this,-1)" title="' + T.btn_less + '" style="padding:.5rem .65rem">−</button>' +
       '<span class="qty-display" style="flex:1;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--gold);font-weight:700;">' + w.quantity + '</span>' +
       '<button onclick="changeQty(this,1)" title="' + T.btn_more + '" style="padding:.5rem .65rem">+</button>' +
-      '<button onclick="editFromCard(this)" title="' + T.btn_edit + '" style="border-left:1px solid var(--border)">✏️</button>' +
-      '<button onclick="dupFromCard(this)" title="' + T.btn_duplicate + '">📋</button>' +
-      '<button class="danger" title="' + T.btn_delete + '" onclick="deleteFromCard(this)">🗑</button>' +
+      '<button onclick="editFromCard(this)" title="' + T.btn_edit + '" style="border-left:1px solid var(--border)"><i class="mdi mdi-pencil"></i></button>' +
+      '<button onclick="dupFromCard(this)" title="' + T.btn_duplicate + '"><i class="mdi mdi-content-copy"></i></button>' +
+      '<button class="danger" title="' + T.btn_delete + '" onclick="deleteFromCard(this)"><i class="mdi mdi-delete"></i></button>' +
     '</div>';
 }
 
@@ -1133,7 +1169,7 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
     // Show empty state if no cards left
     var grid = document.querySelector('.grid');
     if (!grid.querySelector('.card')) {
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div>🍷</div><p>' + T.empty_no_wines + '<br>' + T.empty_add_first + '</p></div>';
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div><i class="mdi mdi-glass-wine" style="font-size:4rem"></i></div><p>' + T.empty_no_wines + '<br>' + T.empty_add_first + '</p></div>';
     }
   });
 });
@@ -1151,6 +1187,8 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
   history.replaceState(null, '', window.location.pathname + (clean ? '?' + clean : ''));
 })();
 </script>
+
+<button class="fab" onclick="openWineModal()" title="{{ t.btn_add_wine }}"><i class="mdi mdi-plus"></i></button>
 
 </body>
 </html>

@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📊 {{ t.stats_title }} – Wine Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7/css/materialdesignicons.min.css">
+<title>{{ t.stats_title }} – Wine Tracker</title>
 <style>
   :root {
     --bg: #1a0a0f;
@@ -254,15 +255,21 @@
   .empty-stats {
     text-align: center; padding: 4rem 2rem; color: var(--muted);
   }
-  .empty-stats div { font-size: 4rem; margin-bottom: 1rem; }
+  .empty-stats .mdi { font-size: 4rem; }
+  .mdi { vertical-align: middle; }
+  .highlight-card .emoji .mdi { font-size: 1.8rem; }
+  .stat-card h2 .mdi { font-size: 1.1rem; }
+  .info-chip .mdi { font-size: 1rem; }
+  .rank .mdi { font-size: 1rem; }
+  .stars .mdi { font-size: .95rem; }
 </style>
 </head>
 <body>
 
 <header>
-  <a class="back-btn" href="{{ ingress }}/">← {{ t.back }}</a>
-  <h1>📊 {{ t.stats_title }}</h1>
-  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon">☀️</span></button>
+  <a class="back-btn" href="{{ ingress }}/"><i class="mdi mdi-arrow-left"></i> {{ t.back }}</a>
+  <h1><i class="mdi mdi-chart-box"></i> {{ t.stats_title }}</h1>
+  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon"><i class="mdi mdi-weather-sunny"></i></span></button>
 </header>
 
 <div class="content">
@@ -272,7 +279,7 @@
 
 {% if total_wines == 0 %}
   <div class="empty-stats">
-    <div>📊</div>
+    <div><i class="mdi mdi-chart-box"></i></div>
     <p>{{ t.stat_no_data }}<br>{{ t.stat_add_wines_first }}</p>
   </div>
 {% else %}
@@ -280,20 +287,20 @@
 <!-- ═══════ HIGHLIGHT CARDS ═══════ -->
 <div class="highlights">
   <div class="highlight-card">
-    <div class="emoji">🍾</div>
+    <div class="emoji"><i class="mdi mdi-bottle-wine"></i></div>
     <div class="big-number">{{ total_bottles }}</div>
     <div class="label">{{ t.stat_bottle if total_bottles == 1 else t.stat_bottles }} {{ t.stat_bottles_total }}</div>
   </div>
 
   <div class="highlight-card">
-    <div class="emoji">📦</div>
+    <div class="emoji"><i class="mdi mdi-package-variant"></i></div>
     <div class="big-number">{{ total_wines }}</div>
     <div class="label">{{ t.stat_wine_singular if total_wines == 1 else t.stat_different_wines }}</div>
   </div>
 
   {% if value and value['total_value'] %}
   <div class="highlight-card">
-    <div class="emoji">💰</div>
+    <div class="emoji"><i class="mdi mdi-cash-multiple"></i></div>
     <div class="big-number">{{ "%.0f"|format(value['total_value']) }}</div>
     <div class="label">{{ currency }} {{ t.stat_total_value }}</div>
   </div>
@@ -301,7 +308,7 @@
 
   {% if avg_age is not none and avg_age %}
   <div class="highlight-card">
-    <div class="emoji">⏳</div>
+    <div class="emoji"><i class="mdi mdi-timer-sand"></i></div>
     <div class="big-number">~{{ "%.0f"|format(avg_age) }}</div>
     <div class="label">{{ t.stat_avg_age_years }}</div>
   </div>
@@ -327,14 +334,14 @@
   {% endif %}
   {% if oldest %}
   <div class="info-chip">
-    <span>🏛</span>
+    <span><i class="mdi mdi-bank"></i></span>
     <span class="chip-label">{{ t.stat_oldest }}:</span>
     <span class="chip-value">{{ oldest['name'] }} {{ oldest['year'] }}</span>
   </div>
   {% endif %}
   {% if newest %}
   <div class="info-chip">
-    <span>✨</span>
+    <span><i class="mdi mdi-shimmer"></i></span>
     <span class="chip-label">{{ t.stat_newest }}:</span>
     <span class="chip-value">{{ newest['name'] }} {{ newest['year'] }}</span>
   </div>
@@ -345,7 +352,7 @@
 <!-- ═══════ HERKUNFT MAP ═══════ -->
 {% if map_points %}
 <div class="map-card">
-  <h2>🌍 {{ t.stat_wine_origin }}</h2>
+  <h2><i class="mdi mdi-earth"></i> {{ t.stat_wine_origin }}</h2>
   <div class="globe-wrap">
     <canvas id="globeCanvas"></canvas>
     <div class="globe-legend">
@@ -367,7 +374,7 @@
   {% if by_type %}
   {% set type_total = by_type|sum(attribute='qty') %}
   <div class="stat-card donut-card">
-    <h2>🍷 {{ t.stat_bottles_by_type }}</h2>
+    <h2><i class="mdi mdi-glass-wine"></i> {{ t.stat_bottles_by_type }}</h2>
     <div class="stat-body">
       <div class="donut-wrap">
         <div class="donut-svg-wrap">
@@ -411,7 +418,7 @@
 
   {% if top_regions %}
   <div class="stat-card">
-    <h2>🌍 {{ t.stat_top_regions }}</h2>
+    <h2><i class="mdi mdi-earth"></i> {{ t.stat_top_regions }}</h2>
     <div class="stat-body">
       <div class="bar-list">
         {% set region_total = top_regions|sum(attribute='qty') %}
@@ -438,7 +445,7 @@
 
   {% if best_rated %}
   <div class="stat-card">
-    <h2>⭐ {{ t.stat_best_rated }}</h2>
+    <h2><i class="mdi mdi-star"></i> {{ t.stat_best_rated }}</h2>
     <div class="stat-body">
       <div class="wine-list">
         {% for w in best_rated %}
@@ -451,7 +458,7 @@
               {% if w['type'] %} · {{ w['type'] | wine_type }}{% endif %}
             </div>
           </div>
-          <div class="stars">{{ '★' * w['rating'] }}{{ '☆' * (5 - w['rating']) }}</div>
+          <div class="stars">{% for i in range(w['rating']) %}<i class="mdi mdi-star"></i>{% endfor %}{% for i in range(5 - w['rating']) %}<i class="mdi mdi-star-outline"></i>{% endfor %}</div>
         </div>
         {% endfor %}
       </div>
@@ -461,12 +468,12 @@
 
   {% if most_expensive or cheapest %}
   <div class="stat-card">
-    <h2>💶 {{ t.stat_price_overview }}</h2>
+    <h2><i class="mdi mdi-cash"></i> {{ t.stat_price_overview }}</h2>
     <div class="stat-body">
       <div class="wine-list">
         {% if most_expensive %}
         <div class="wine-list-item">
-          <div class="rank">📈</div>
+          <div class="rank"><i class="mdi mdi-trending-up"></i></div>
           <div class="wine-info">
             <div class="wine-name">{{ most_expensive['name'] }}</div>
             <div class="wine-detail">{{ t.stat_most_expensive }}{% if most_expensive['year'] %} · {{ most_expensive['year'] }}{% endif %}</div>
@@ -476,7 +483,7 @@
         {% endif %}
         {% if cheapest %}
         <div class="wine-list-item">
-          <div class="rank">📉</div>
+          <div class="rank"><i class="mdi mdi-trending-down"></i></div>
           <div class="wine-info">
             <div class="wine-name">{{ cheapest['name'] }}</div>
             <div class="wine-detail">{{ t.stat_cheapest }}{% if cheapest['year'] %} · {{ cheapest['year'] }}{% endif %}</div>
@@ -506,7 +513,7 @@
 {% if recent %}
 <div class="stat-grid">
   <div class="stat-card">
-    <h2>🕐 {{ t.stat_recently_added }}</h2>
+    <h2><i class="mdi mdi-clock-outline"></i> {{ t.stat_recently_added }}</h2>
     <div class="stat-body">
       <div class="wine-list">
         {% for w in recent %}
@@ -619,7 +626,7 @@ function initGlobe() {
         phi += 0.003;
       }
       phi += velocity;
-      velocity *= 0.92;
+      velocity *= 0.96;
       if (Math.abs(velocity) < 0.00001) velocity = 0;
       state.phi = phi;
       state.theta = theta;
@@ -639,7 +646,7 @@ function initGlobe() {
   window.addEventListener('pointerup', () => {
     if (pointerDown) {
       pointerDown = false;
-      resumeAutoRotate = Date.now() + 2000;
+      resumeAutoRotate = Date.now() + 1000;
       canvas.style.cursor = 'grab';
     }
   });
@@ -650,14 +657,14 @@ function initGlobe() {
       pointerX = e.clientX;
       pointerY = e.clientY;
       phi += dx * 0.005;
-      theta = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, theta - dy * 0.005));
+      theta = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, theta + dy * 0.005));
     }
   });
 }
 
 // ── Theme: 3-state cycle (shared with index page) ────────────────────────────
 const THEME_MODES = ['dark', 'light', 'system'];
-const THEME_ICONS = { dark: '🌙', light: '☀️', system: '💻' };
+const THEME_ICONS = { dark: '<i class="mdi mdi-weather-night"></i>', light: '<i class="mdi mdi-weather-sunny"></i>', system: '<i class="mdi mdi-laptop"></i>' };
 
 function getSystemPreference() {
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
@@ -667,7 +674,7 @@ function applyTheme(mode) {
   const effective = mode === 'system' ? getSystemPreference() : mode;
   document.documentElement.classList.toggle('light', effective === 'light');
   const btn = document.querySelector('.theme-icon');
-  if (btn) btn.textContent = THEME_ICONS[mode];
+  if (btn) btn.innerHTML = THEME_ICONS[mode];
   // Recreate globe with theme-matching colors
   initGlobe();
 }
