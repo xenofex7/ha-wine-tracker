@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ lang }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -323,30 +323,30 @@
   {% if stats %}
   {% set total = stats['total'] or 0 %}
   {% set types = stats['types'] or 0 %}
-  <a class="stats-pill" href="{{ ingress }}/stats">🍾 {{ total }} {{ 'Flasche' if total == 1 else 'Flaschen' }} · {{ types }} {{ 'Weinsorte' if types == 1 else 'Weinsorten' }}</a>
+  <a class="stats-pill" href="{{ ingress }}/stats">🍾 {{ total }} {{ t.stats_pill_bottle if total == 1 else t.stats_pill_bottles }} · {{ types }} {{ t.stats_pill_wine if types == 1 else t.stats_pill_wines }}</a>
   {% endif %}
-  <button class="theme-toggle" onclick="cycleTheme()" title="Darstellung wechseln"><span class="theme-icon">☀️</span></button>
+  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon">☀️</span></button>
 </header>
 
 <!-- Toolbar -->
 <div class="toolbar">
   <div class="search-wrap">
-    <input type="text" id="searchInput" placeholder="Suchen…" autocomplete="off" oninput="debouncedFilter()">
-    <button type="button" class="search-clear" onclick="clearSearch()" title="Suche leeren">×</button>
+    <input type="text" id="searchInput" placeholder="{{ t.search_placeholder }}" autocomplete="off" oninput="debouncedFilter()">
+    <button type="button" class="search-clear" onclick="clearSearch()">×</button>
   </div>
 
   {% if used_types|length > 0 %}
   <div class="filter-tabs" id="filterTabs">
-    <button class="tab active" onclick="filterByType('')">Alle</button>
-    {% for t in used_types %}
-    <button class="tab" onclick="filterByType('{{ t }}')">{{ t }}</button>
+    <button class="tab active" data-type="" onclick="filterByType('')">{{ t.filter_all }}</button>
+    {% for wt in used_types %}
+    <button class="tab" data-type="{{ wt }}" onclick="filterByType('{{ wt }}')">{{ wt | wine_type }}</button>
     {% endfor %}
   </div>
   {% endif %}
 
-  <button class="toggle-empty" id="toggleEmptyBtn" onclick="toggleEmpty()">⊘ Leere ausblenden</button>
+  <button class="toggle-empty" id="toggleEmptyBtn" onclick="toggleEmpty()">{{ t.toggle_empty_hide }}</button>
 
-  <button class="btn-add" onclick="openWineModal()">+ Wein hinzufügen</button>
+  <button class="btn-add" onclick="openWineModal()">{{ t.btn_add_wine }}</button>
 </div>
 
 <!-- Wine Grid -->
@@ -354,7 +354,7 @@
   {% if not wines %}
   <div class="empty-state" style="grid-column: 1/-1">
     <div>🍷</div>
-    <p>Noch keine Weine erfasst.<br>Füge deinen ersten Wein hinzu!</p>
+    <p>{{ t.empty_no_wines }}<br>{{ t.empty_add_first }}</p>
   </div>
   {% endif %}
 
@@ -378,14 +378,14 @@
 
     <!-- Quantity badge -->
     <div class="qty-badge {% if w['quantity'] > 0 %}has{% endif %}">
-      {{ w['quantity'] }} Fl.
+      {{ w['quantity'] }} {{ t.bottles_abbr }}
     </div>
 
     <div class="card-body" onclick="editFromCard(this)">
       <div class="card-name" title="{{ w['name'] }}">{{ w['name'] }}</div>
       <div class="card-meta">
         {% if w['year'] %}<span>{{ w['year'] }}</span>{% endif %}
-        {% if w['type'] %}<span>{{ w['type'] }}</span>{% endif %}
+        {% if w['type'] %}<span>{{ w['type'] | wine_type }}</span>{% endif %}
         {% if w['region'] %}<span>{{ w['region'] }}</span>{% endif %}
       </div>
       {% if w['rating'] %}
@@ -402,17 +402,17 @@
     </div>
 
     <div class="card-actions">
-      <button onclick="changeQty(this,-1)" title="Eine Flasche weniger" style="padding:.5rem .65rem">−</button>
+      <button onclick="changeQty(this,-1)" title="{{ t.btn_less }}" style="padding:.5rem .65rem">−</button>
       <span class="qty-display" style="flex:1; display:flex; align-items:center; justify-content:center;
                    font-size:.85rem; color: var(--gold); font-weight:700;">
         {{ w['quantity'] }}
       </span>
-      <button onclick="changeQty(this,1)" title="Eine Flasche mehr" style="padding:.5rem .65rem">+</button>
+      <button onclick="changeQty(this,1)" title="{{ t.btn_more }}" style="padding:.5rem .65rem">+</button>
       <button onclick="editFromCard(this)"
-              title="Bearbeiten" style="border-left:1px solid var(--border)">✏️</button>
+              title="{{ t.btn_edit }}" style="border-left:1px solid var(--border)">✏️</button>
       <button onclick="dupFromCard(this)"
-              title="Duplizieren">📋</button>
-      <button class="danger" title="Löschen"
+              title="{{ t.btn_duplicate }}">📋</button>
+      <button class="danger" title="{{ t.btn_delete }}"
               onclick="deleteFromCard(this)">🗑</button>
     </div>
   </div>
@@ -424,14 +424,14 @@
 <div class="modal-overlay" id="wineModal">
   <div class="modal">
     <div class="modal-header">
-      <span id="wineModalTitle">🍷 Wein hinzufügen</span>
+      <span id="wineModalTitle">{{ t.modal_add_title }}</span>
       <button class="modal-close" onclick="tryCloseWineModal()">×</button>
     </div>
     <form method="post" id="wineForm" enctype="multipart/form-data">
       <div class="modal-body">
 
         <div>
-          <label>Foto (Etikett)</label>
+          <label>{{ t.label_photo }}</label>
           <div class="img-preview" id="winePreview">
             📷
             <input type="file" name="image" accept="image/*"
@@ -440,39 +440,39 @@
         </div>
 
         <div>
-          <label>Name *</label>
-          <input type="text" name="name" id="wine_name" required placeholder="z.B. Barolo Riserva">
+          <label>{{ t.label_name }}</label>
+          <input type="text" name="name" id="wine_name" required placeholder="{{ t.placeholder_name }}">
         </div>
 
         <div class="row2">
           <div>
-            <label>Jahrgang</label>
+            <label>{{ t.label_vintage }}</label>
             <input type="number" name="year" id="wine_year" min="1900" max="2099" placeholder="2020">
           </div>
           <div>
-            <label>Anzahl Flaschen</label>
+            <label>{{ t.label_quantity }}</label>
             <input type="number" name="quantity" id="wine_qty" min="0" value="1">
           </div>
         </div>
 
         <div class="row2">
           <div>
-            <label>Typ</label>
+            <label>{{ t.label_type }}</label>
             <select name="type" id="wine_type">
-              <option value="">— wählen —</option>
-              {% for t in wine_types %}
-              <option>{{ t }}</option>
+              <option value="">{{ t.type_select_default }}</option>
+              {% for wt in wine_types %}
+              <option value="{{ wt }}">{{ wt | wine_type }}</option>
               {% endfor %}
             </select>
           </div>
           <div>
-            <label>Region / Herkunft</label>
-            <input type="text" name="region" id="wine_region" placeholder="z.B. Piemont, IT">
+            <label>{{ t.label_region }}</label>
+            <input type="text" name="region" id="wine_region" placeholder="{{ t.placeholder_region }}">
           </div>
         </div>
 
         <div>
-          <label>Bewertung</label>
+          <label>{{ t.label_rating }}</label>
           <div class="star-input">
             {% for i in [5,4,3,2,1] %}
             <input type="radio" name="rating" id="wine_star{{ i }}" value="{{ i }}">
@@ -483,37 +483,37 @@
 
         <div class="row2">
           <div>
-            <label>Gekauft bei</label>
-            <input type="text" name="purchased_at" id="wine_purchased_at" placeholder="z.B. Globus">
+            <label>{{ t.label_purchased_at }}</label>
+            <input type="text" name="purchased_at" id="wine_purchased_at" placeholder="{{ t.placeholder_purchased }}">
           </div>
           <div>
-            <label>Kaufpreis ({{ currency }})</label>
+            <label>{{ t.label_price }} ({{ currency }})</label>
             <input type="number" name="price" id="wine_price" min="0" step="0.01" placeholder="54.90">
           </div>
         </div>
 
         <div class="row2">
           <div>
-            <label>Trinkfenster von</label>
+            <label>{{ t.label_drink_from }}</label>
             <input type="number" name="drink_from" id="wine_drink_from" min="2000" max="2099" placeholder="2025">
           </div>
           <div>
-            <label>Trinkfenster bis</label>
+            <label>{{ t.label_drink_until }}</label>
             <input type="number" name="drink_until" id="wine_drink_until" min="2000" max="2099" placeholder="2030">
           </div>
         </div>
 
         <div>
-          <label>Lagerort</label>
-          <input type="text" name="location" id="wine_location" placeholder="z.B. Regal 2, Fach oben">
+          <label>{{ t.label_location }}</label>
+          <input type="text" name="location" id="wine_location" placeholder="{{ t.placeholder_location }}">
         </div>
 
         <div>
-          <label>Notizen</label>
-          <textarea name="notes" id="wine_notes" placeholder="Aromen, Anlass…"></textarea>
+          <label>{{ t.label_notes }}</label>
+          <textarea name="notes" id="wine_notes" placeholder="{{ t.placeholder_notes }}"></textarea>
         </div>
 
-        <button type="submit" class="btn-submit" id="wineSubmitBtn">Wein speichern</button>
+        <button type="submit" class="btn-submit" id="wineSubmitBtn">{{ t.btn_save }}</button>
       </div>
     </form>
   </div>
@@ -524,7 +524,7 @@
 <div class="modal-overlay" id="dupModal">
   <div class="modal">
     <div class="modal-header">
-      📋 Wein duplizieren
+      {{ t.dup_title }}
       <button class="modal-close" onclick="closeModal('dupModal')">×</button>
     </div>
     <form method="post" id="dupForm">
@@ -533,20 +533,20 @@
 
         <div class="row2">
           <div>
-            <label>Neuer Jahrgang</label>
+            <label>{{ t.dup_new_vintage }}</label>
             <input type="number" name="new_year" id="dup_year" min="1900" max="2099">
           </div>
           <div>
-            <label>Anzahl Flaschen</label>
+            <label>{{ t.dup_qty }}</label>
             <input type="number" name="quantity" id="dup_qty" min="0" value="1">
           </div>
         </div>
 
         <p style="font-size:.8rem; color: var(--muted)">
-          Alle anderen Felder (Typ, Region, Bewertung, Notizen, Foto) werden übernommen.
+          {{ t.dup_hint }}
         </p>
 
-        <button type="submit" class="btn-submit">Duplikat anlegen</button>
+        <button type="submit" class="btn-submit">{{ t.btn_create_dup }}</button>
       </div>
     </form>
   </div>
@@ -557,19 +557,19 @@
 <div class="modal-overlay" id="deleteModal">
   <div class="modal" style="max-width:360px">
     <div class="modal-header">
-      🗑 Wein löschen
+      {{ t.delete_title }}
       <button class="modal-close" onclick="closeModal('deleteModal')">×</button>
     </div>
     <div class="delete-confirm-body">
       <div class="delete-confirm-icon">🍷</div>
       <div class="delete-confirm-msg">
-        <span class="delete-confirm-name" id="deleteWineName"></span> wirklich löschen?
+        <span class="delete-confirm-name" id="deleteWineName"></span> {{ t.delete_really }}
       </div>
     </div>
     <div class="delete-confirm-actions">
-      <button class="btn-cancel" onclick="closeModal('deleteModal')">Abbrechen</button>
+      <button class="btn-cancel" onclick="closeModal('deleteModal')">{{ t.btn_cancel }}</button>
       <form method="post" id="deleteForm" style="flex:1; display:contents">
-        <button type="submit" class="btn-delete">Löschen</button>
+        <button type="submit" class="btn-delete">{{ t.btn_confirm_delete }}</button>
       </form>
     </div>
   </div>
@@ -579,12 +579,13 @@
 <!-- ═══════════════ LIGHTBOX ═══════════════ -->
 <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
-  <img id="lightboxImg" src="" alt="Etikett">
+  <img id="lightboxImg" src="" alt="{{ t.lightbox_alt }}">
 </div>
 
 <script>
 const INGRESS = '{{ ingress }}';
 const CURRENCY = '{{ currency }}';
+const T = {{ t | tojson }};
 
 // Theme: 3-state cycle → dark → light → system
 const THEME_MODES = ['dark', 'light', 'system'];
@@ -659,7 +660,7 @@ function applyFilters() {
       emptyState = document.createElement('div');
       emptyState.className = 'empty-state';
       emptyState.style.gridColumn = '1/-1';
-      emptyState.innerHTML = '<div>🔍</div><p>Keine Weine gefunden.</p>';
+      emptyState.innerHTML = '<div>🔍</div><p>' + T.empty_no_results + '</p>';
       grid.appendChild(emptyState);
     }
     emptyState.style.display = '';
@@ -677,7 +678,7 @@ function filterByType(type) {
   // Update tab active states
   var tabs = document.querySelectorAll('#filterTabs .tab');
   tabs.forEach(function(tab) {
-    var tabType = tab.textContent === 'Alle' ? '' : tab.textContent;
+    var tabType = tab.dataset.type !== undefined ? tab.dataset.type : '';
     tab.classList.toggle('active', tabType === activeType);
   });
   applyFilters();
@@ -686,7 +687,7 @@ function filterByType(type) {
 function toggleEmpty() {
   showEmpty = !showEmpty;
   var btn = document.getElementById('toggleEmptyBtn');
-  btn.textContent = showEmpty ? '⊘ Leere ausblenden' : '◎ Leere anzeigen';
+  btn.textContent = showEmpty ? T.toggle_empty_hide : T.toggle_empty_show;
   applyFilters();
 }
 
@@ -703,18 +704,19 @@ function ensureFilterTab(type) {
     tabs = document.createElement('div');
     tabs.className = 'filter-tabs';
     tabs.id = 'filterTabs';
-    tabs.innerHTML = '<button class="tab active" onclick="filterByType(\'\')">Alle</button>';
+    tabs.innerHTML = '<button class="tab active" data-type="" onclick="filterByType(\'\')">'+T.filter_all+'</button>';
     var searchWrap = document.querySelector('.search-wrap');
     searchWrap.parentNode.insertBefore(tabs, searchWrap.nextSibling);
   }
   // Check if tab for this type already exists
   var existing = tabs.querySelectorAll('.tab');
   for (var i = 0; i < existing.length; i++) {
-    if (existing[i].textContent === type) return;
+    if (existing[i].dataset.type === type) return;
   }
   var btn = document.createElement('button');
   btn.className = 'tab';
-  btn.textContent = type;
+  btn.dataset.type = type;
+  btn.textContent = T['wine_type_' + type] || type;
   btn.onclick = function() { filterByType(type); };
   tabs.appendChild(btn);
 }
@@ -771,8 +773,8 @@ function openWineModal(id, wine) {
   const preview = document.getElementById('winePreview');
 
   // Title & button text
-  document.getElementById('wineModalTitle').textContent = isEdit ? '✏️ Wein bearbeiten' : '🍷 Wein hinzufügen';
-  document.getElementById('wineSubmitBtn').textContent = isEdit ? 'Änderungen speichern' : 'Wein speichern';
+  document.getElementById('wineModalTitle').textContent = isEdit ? T.modal_edit_title : T.modal_add_title;
+  document.getElementById('wineSubmitBtn').textContent = isEdit ? T.btn_save_changes : T.btn_save;
 
   // Form action
   form.action = isEdit ? INGRESS + '/edit/' + id : INGRESS + '/add';
@@ -848,7 +850,7 @@ function isWineFormDirty() {
 
 function tryCloseWineModal() {
   if (isWineFormDirty()) {
-    if (!confirm('Änderungen verwerfen?')) return;
+    if (!confirm(T.confirm_discard)) return;
   }
   closeModal('wineModal');
 }
@@ -908,7 +910,7 @@ function deleteFromCard(el) {
 function openDupModal(id, name, year, qty) {
   document.getElementById('dupForm').dataset.wineId = id;
   document.getElementById('dupHint').textContent =
-    '📋 Vorlage: ' + name + (year ? ' · ' + year : '');
+    '📋 ' + T.dup_template + ': ' + name + (year ? ' · ' + year : '');
   document.getElementById('dup_year').value = year || '';
   document.getElementById('dup_qty').value = qty || 1;
   openModal('dupModal');
@@ -919,8 +921,8 @@ function openDupModal(id, name, year, qty) {
 function updateStats(s) {
   var pill = document.querySelector('.stats-pill');
   if (pill && s) {
-    pill.textContent = '🍾 ' + s.total + (s.total == 1 ? ' Flasche' : ' Flaschen') +
-                       ' · ' + s.types + (s.types == 1 ? ' Weinsorte' : ' Weinsorten');
+    pill.textContent = '🍾 ' + s.total + ' ' + (s.total == 1 ? T.stats_pill_bottle : T.stats_pill_bottles) +
+                       ' · ' + s.types + ' ' + (s.types == 1 ? T.stats_pill_wine : T.stats_pill_wines);
   }
 }
 
@@ -957,11 +959,11 @@ function renderCard(w) {
 
   var metaParts = '';
   if (w.year) metaParts += '<span>' + w.year + '</span>';
-  if (w.type) metaParts += '<span>' + w.type + '</span>';
+  if (w.type) metaParts += '<span>' + (T['wine_type_' + w.type] || w.type) + '</span>';
   if (w.region) metaParts += '<span>' + w.region + '</span>';
 
   return '<div class="card-img" onclick="cardImgClick(this)">' + imgHtml + '</div>' +
-    '<div class="qty-badge ' + (w.quantity > 0 ? 'has' : '') + '">' + w.quantity + ' Fl.</div>' +
+    '<div class="qty-badge ' + (w.quantity > 0 ? 'has' : '') + '">' + w.quantity + ' ' + T.bottles_abbr + '</div>' +
     '<div class="card-body" onclick="editFromCard(this)">' +
       '<div class="card-name" title="' + (w.name||'') + '">' + (w.name||'') + '</div>' +
       '<div class="card-meta">' + metaParts + '</div>' +
@@ -970,12 +972,12 @@ function renderCard(w) {
       notesHtml +
     '</div>' +
     '<div class="card-actions">' +
-      '<button onclick="changeQty(this,-1)" title="Eine Flasche weniger" style="padding:.5rem .65rem">−</button>' +
+      '<button onclick="changeQty(this,-1)" title="' + T.btn_less + '" style="padding:.5rem .65rem">−</button>' +
       '<span class="qty-display" style="flex:1;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--gold);font-weight:700;">' + w.quantity + '</span>' +
-      '<button onclick="changeQty(this,1)" title="Eine Flasche mehr" style="padding:.5rem .65rem">+</button>' +
-      '<button onclick="editFromCard(this)" title="Bearbeiten" style="border-left:1px solid var(--border)">✏️</button>' +
-      '<button onclick="dupFromCard(this)" title="Duplizieren">📋</button>' +
-      '<button class="danger" title="Löschen" onclick="deleteFromCard(this)">🗑</button>' +
+      '<button onclick="changeQty(this,1)" title="' + T.btn_more + '" style="padding:.5rem .65rem">+</button>' +
+      '<button onclick="editFromCard(this)" title="' + T.btn_edit + '" style="border-left:1px solid var(--border)">✏️</button>' +
+      '<button onclick="dupFromCard(this)" title="' + T.btn_duplicate + '">📋</button>' +
+      '<button class="danger" title="' + T.btn_delete + '" onclick="deleteFromCard(this)">🗑</button>' +
     '</div>';
 }
 
@@ -1061,7 +1063,7 @@ function changeQty(el, delta) {
   // Optimistic UI update
   card.dataset.quantity = newQty;
   card.querySelector('.qty-display').textContent = newQty;
-  card.querySelector('.qty-badge').textContent = newQty + ' Fl.';
+  card.querySelector('.qty-badge').textContent = newQty + ' ' + T.bottles_abbr;
   card.querySelector('.qty-badge').classList.toggle('has', newQty > 0);
   card.classList.toggle('empty', newQty == 0);
   applyFilters();
@@ -1131,7 +1133,7 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
     // Show empty state if no cards left
     var grid = document.querySelector('.grid');
     if (!grid.querySelector('.card')) {
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div>🍷</div><p>Noch keine Weine erfasst.<br>Füge deinen ersten Wein hinzu!</p></div>';
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div>🍷</div><p>' + T.empty_no_wines + '<br>' + T.empty_add_first + '</p></div>';
     }
   });
 });

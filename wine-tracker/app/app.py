@@ -5,6 +5,7 @@ import sqlite3
 import uuid
 from datetime import date
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, g
+from translations import TRANSLATIONS
 
 app = Flask(__name__)
 
@@ -13,7 +14,7 @@ OPTIONS_PATH = "/data/options.json"
 
 def load_options():
     """Read HA add-on options with sensible defaults."""
-    defaults = {"currency": "CHF"}
+    defaults = {"currency": "CHF", "language": "de"}
     try:
         with open(OPTIONS_PATH, "r") as f:
             opts = json.load(f)
@@ -127,11 +128,25 @@ def set_ingress_path():
     g.ingress = request.headers.get("X-Ingress-Path", "")
 
 
+# ── i18n ──────────────────────────────────────────────────────────────────────
+LANG = HA_OPTIONS.get("language", "de")
+T = TRANSLATIONS.get(LANG, TRANSLATIONS["de"])
+
+
+@app.template_filter('wine_type')
+def translate_wine_type(value):
+    """Translate DB wine type (e.g. 'Rotwein') to the active language."""
+    key = f"wine_type_{value}"
+    return T.get(key, value)
+
+
 @app.context_processor
 def inject_globals():
     return {
         "ingress": g.get("ingress", ""),
         "currency": HA_OPTIONS.get("currency", "CHF"),
+        "t": T,
+        "lang": LANG,
     }
 
 

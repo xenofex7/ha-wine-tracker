@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ lang }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📊 Statistiken – Wine Tracker</title>
+<title>📊 {{ t.stats_title }} – Wine Tracker</title>
 <style>
   :root {
     --bg: #1a0a0f;
@@ -260,9 +260,9 @@
 <body>
 
 <header>
-  <a class="back-btn" href="{{ ingress }}/">← Zurück</a>
-  <h1>📊 Statistiken</h1>
-  <button class="theme-toggle" onclick="cycleTheme()" title="Darstellung wechseln"><span class="theme-icon">☀️</span></button>
+  <a class="back-btn" href="{{ ingress }}/">← {{ t.back }}</a>
+  <h1>📊 {{ t.stats_title }}</h1>
+  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon">☀️</span></button>
 </header>
 
 <div class="content">
@@ -273,7 +273,7 @@
 {% if total_wines == 0 %}
   <div class="empty-stats">
     <div>📊</div>
-    <p>Noch keine Daten vorhanden.<br>Füge zuerst Weine hinzu!</p>
+    <p>{{ t.stat_no_data }}<br>{{ t.stat_add_wines_first }}</p>
   </div>
 {% else %}
 
@@ -282,20 +282,20 @@
   <div class="highlight-card">
     <div class="emoji">🍾</div>
     <div class="big-number">{{ total_bottles }}</div>
-    <div class="label">{{ 'Flasche' if total_bottles == 1 else 'Flaschen' }} gesamt</div>
+    <div class="label">{{ t.stat_bottle if total_bottles == 1 else t.stat_bottles }} {{ t.stat_bottles_total }}</div>
   </div>
 
   <div class="highlight-card">
     <div class="emoji">📦</div>
     <div class="big-number">{{ total_wines }}</div>
-    <div class="label">{{ 'Wein' if total_wines == 1 else 'Verschiedene Weine' }}</div>
+    <div class="label">{{ t.stat_wine_singular if total_wines == 1 else t.stat_different_wines }}</div>
   </div>
 
   {% if value and value['total_value'] %}
   <div class="highlight-card">
     <div class="emoji">💰</div>
     <div class="big-number">{{ "%.0f"|format(value['total_value']) }}</div>
-    <div class="label">{{ currency }} Gesamtwert</div>
+    <div class="label">{{ currency }} {{ t.stat_total_value }}</div>
   </div>
   {% endif %}
 
@@ -303,7 +303,7 @@
   <div class="highlight-card">
     <div class="emoji">⏳</div>
     <div class="big-number">~{{ "%.0f"|format(avg_age) }}</div>
-    <div class="label">Jahre Ø Alter</div>
+    <div class="label">{{ t.stat_avg_age_years }}</div>
   </div>
   {% endif %}
 </div>
@@ -312,30 +312,30 @@
 <!-- ═══════ INFO CHIPS ═══════ -->
 <div class="info-row">
   <div class="info-chip">
-    <span class="chip-label">Auf Lager:</span>
-    <span class="chip-value">{{ in_stock }} Fl.</span>
+    <span class="chip-label">{{ t.stat_in_stock }}:</span>
+    <span class="chip-value">{{ in_stock }} {{ t.bottles_abbr }}</span>
   </div>
   <div class="info-chip">
-    <span class="chip-label">Ausgetrunken:</span>
-    <span class="chip-value">{{ out_of_stock }} {{ 'Wein' if out_of_stock == 1 else 'Weine' }}</span>
+    <span class="chip-label">{{ t.stat_drunk }}:</span>
+    <span class="chip-value">{{ out_of_stock }} {{ t.stat_wine_drunk_singular if out_of_stock == 1 else t.stat_wines_drunk_plural }}</span>
   </div>
   {% if value and value['avg_price'] %}
   <div class="info-chip">
-    <span class="chip-label">Ø Preis:</span>
+    <span class="chip-label">{{ t.stat_avg_price }}:</span>
     <span class="chip-value">{{ currency }} {{ "%.2f"|format(value['avg_price']) }}</span>
   </div>
   {% endif %}
   {% if oldest %}
   <div class="info-chip">
     <span>🏛</span>
-    <span class="chip-label">Ältester:</span>
+    <span class="chip-label">{{ t.stat_oldest }}:</span>
     <span class="chip-value">{{ oldest['name'] }} {{ oldest['year'] }}</span>
   </div>
   {% endif %}
   {% if newest %}
   <div class="info-chip">
     <span>✨</span>
-    <span class="chip-label">Neuester:</span>
+    <span class="chip-label">{{ t.stat_newest }}:</span>
     <span class="chip-value">{{ newest['name'] }} {{ newest['year'] }}</span>
   </div>
   {% endif %}
@@ -345,7 +345,7 @@
 <!-- ═══════ HERKUNFT MAP ═══════ -->
 {% if map_points %}
 <div class="map-card">
-  <h2>🌍 Herkunft deiner Weine</h2>
+  <h2>🌍 {{ t.stat_wine_origin }}</h2>
   <div class="globe-wrap">
     <canvas id="globeCanvas"></canvas>
     <div class="globe-legend">
@@ -367,7 +367,7 @@
   {% if by_type %}
   {% set type_total = by_type|sum(attribute='qty') %}
   <div class="stat-card donut-card">
-    <h2>🍷 Flaschen pro Typ</h2>
+    <h2>🍷 {{ t.stat_bottles_by_type }}</h2>
     <div class="stat-body">
       <div class="donut-wrap">
         <div class="donut-svg-wrap">
@@ -390,7 +390,7 @@
           </svg>
           <div class="donut-center">
             <div class="big">{{ type_total }}</div>
-            <div class="sub">Flaschen</div>
+            <div class="sub">{{ t.stat_bottles_label }}</div>
           </div>
         </div>
         <div class="donut-legend">
@@ -399,7 +399,7 @@
           {% set pct = (item['qty'] / type_total * 100)|round|int if type_total > 0 else 0 %}
           <div class="donut-legend-item">
             <span class="donut-dot" style="background:{{ colors[loop.index0 % 6] }}"></span>
-            <span class="donut-legend-label">{{ item['type'] }}</span>
+            <span class="donut-legend-label">{{ item['type'] | wine_type }}</span>
             <span class="donut-legend-value">{{ pct }}%</span>
           </div>
           {% endfor %}
@@ -411,7 +411,7 @@
 
   {% if top_regions %}
   <div class="stat-card">
-    <h2>🌍 Top Regionen</h2>
+    <h2>🌍 {{ t.stat_top_regions }}</h2>
     <div class="stat-body">
       <div class="bar-list">
         {% set region_total = top_regions|sum(attribute='qty') %}
@@ -438,7 +438,7 @@
 
   {% if best_rated %}
   <div class="stat-card">
-    <h2>⭐ Beste Bewertungen</h2>
+    <h2>⭐ {{ t.stat_best_rated }}</h2>
     <div class="stat-body">
       <div class="wine-list">
         {% for w in best_rated %}
@@ -448,7 +448,7 @@
             <div class="wine-name">{{ w['name'] }}</div>
             <div class="wine-detail">
               {% if w['year'] %}{{ w['year'] }}{% endif %}
-              {% if w['type'] %} · {{ w['type'] }}{% endif %}
+              {% if w['type'] %} · {{ w['type'] | wine_type }}{% endif %}
             </div>
           </div>
           <div class="stars">{{ '★' * w['rating'] }}{{ '☆' * (5 - w['rating']) }}</div>
@@ -461,7 +461,7 @@
 
   {% if most_expensive or cheapest %}
   <div class="stat-card">
-    <h2>💶 Preisübersicht</h2>
+    <h2>💶 {{ t.stat_price_overview }}</h2>
     <div class="stat-body">
       <div class="wine-list">
         {% if most_expensive %}
@@ -469,7 +469,7 @@
           <div class="rank">📈</div>
           <div class="wine-info">
             <div class="wine-name">{{ most_expensive['name'] }}</div>
-            <div class="wine-detail">Teuerster Wein{% if most_expensive['year'] %} · {{ most_expensive['year'] }}{% endif %}</div>
+            <div class="wine-detail">{{ t.stat_most_expensive }}{% if most_expensive['year'] %} · {{ most_expensive['year'] }}{% endif %}</div>
           </div>
           <div class="wine-price">{{ currency }} {{ "%.2f"|format(most_expensive['price']) }}</div>
         </div>
@@ -479,7 +479,7 @@
           <div class="rank">📉</div>
           <div class="wine-info">
             <div class="wine-name">{{ cheapest['name'] }}</div>
-            <div class="wine-detail">Günstigster Wein{% if cheapest['year'] %} · {{ cheapest['year'] }}{% endif %}</div>
+            <div class="wine-detail">{{ t.stat_cheapest }}{% if cheapest['year'] %} · {{ cheapest['year'] }}{% endif %}</div>
           </div>
           <div class="wine-price">{{ currency }} {{ "%.2f"|format(cheapest['price']) }}</div>
         </div>
@@ -488,8 +488,8 @@
         <div class="wine-list-item">
           <div class="rank">Ø</div>
           <div class="wine-info">
-            <div class="wine-name">Durchschnittspreis</div>
-            <div class="wine-detail">Über alle Weine mit Preis</div>
+            <div class="wine-name">{{ t.stat_avg_price_label }}</div>
+            <div class="wine-detail">{{ t.stat_across_all }}</div>
           </div>
           <div class="wine-price">{{ currency }} {{ "%.2f"|format(value['avg_price']) }}</div>
         </div>
@@ -506,7 +506,7 @@
 {% if recent %}
 <div class="stat-grid">
   <div class="stat-card">
-    <h2>🕐 Zuletzt hinzugefügt</h2>
+    <h2>🕐 {{ t.stat_recently_added }}</h2>
     <div class="stat-body">
       <div class="wine-list">
         {% for w in recent %}
@@ -515,7 +515,7 @@
           <div class="wine-info">
             <div class="wine-name">{{ w['name'] }}</div>
             <div class="wine-detail">
-              {% if w['type'] %}{{ w['type'] }}{% endif %}
+              {% if w['type'] %}{{ w['type'] | wine_type }}{% endif %}
               {% if w['year'] %} · {{ w['year'] }}{% endif %}
               {% if w['added'] %} · {{ w['added'] }}{% endif %}
             </div>
