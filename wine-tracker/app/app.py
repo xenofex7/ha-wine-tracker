@@ -295,11 +295,19 @@ def index():
         ).fetchall()
     ]
 
+    # Distinct locations for datalist autocomplete
+    used_locations = [
+        row[0] for row in db.execute(
+            "SELECT DISTINCT location FROM wines WHERE location IS NOT NULL AND location != '' ORDER BY location"
+        ).fetchall()
+    ]
+
     return render_template(
         "index.html",
         wines=wines,
         wine_types=WINE_TYPES,
         used_types=used_types,
+        used_locations=used_locations,
         query=q,
         active_type=t,
         show_empty=show_empty,

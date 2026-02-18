@@ -22,7 +22,9 @@ panel_icon: mdi:bottle-wine
 panel_title: "Wine Tracker"
 options:
   currency: "CHF"
+  language: "de"
 schema:
   currency: str
+  language: str
 map:
   - share:rw

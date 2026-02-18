@@ -105,14 +105,6 @@
   .toggle-empty:hover { color: var(--text); }
 
   /* Add button */
-  .btn-add {
-    background: var(--accent); color: white; border: none;
-    padding: 0 1.1rem; height: 35px; border-radius: 8px; font-size: .9rem;
-    cursor: pointer; font-weight: 600; white-space: nowrap;
-    transition: background .2s; display: inline-flex; align-items: center;
-    margin-left: auto;
-  }
-  .btn-add:hover { background: #e74c3c; }
 
   /* Grid */
   .grid {
@@ -321,9 +313,11 @@
   .lightbox-close:hover { color: #fff; }
   .card-img img { cursor: zoom-in; }
 
-  /* FAB – hidden on desktop, shown on mobile */
+  /* FAB – always visible (HA-style) */
   .fab {
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: fixed;
     bottom: 1.5rem;
     right: 1.5rem;
@@ -333,21 +327,15 @@
     background: var(--accent);
     color: white;
     border: none;
-    font-size: 1.8rem;
-    font-weight: 300;
+    font-size: 1.6rem;
     cursor: pointer;
     box-shadow: 0 4px 16px rgba(0,0,0,.4);
     z-index: 150;
     transition: transform .2s, box-shadow .2s;
-    line-height: 1;
   }
+  .fab:hover { background: #e74c3c; transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,.5); }
   .fab:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
-
-  @media (max-width: 600px) {
-    .btn-add { display: none; }
-    .fab { display: flex; align-items: center; justify-content: center; }
-    .grid { padding-bottom: 5rem; }
-  }
+  .grid { padding-bottom: 5rem; }
 </style>
 </head>
 <body>
@@ -380,8 +368,6 @@
   {% endif %}
 
   <button class="toggle-empty" id="toggleEmptyBtn" onclick="toggleEmpty()">{{ t.toggle_empty_hide }}</button>
-
-  <button class="btn-add" onclick="openWineModal()">{{ t.btn_add_wine }}</button>
 </div>
 
 <!-- Wine Grid -->
@@ -540,7 +526,12 @@
 
         <div>
           <label>{{ t.label_location }}</label>
-          <input type="text" name="location" id="wine_location" placeholder="{{ t.placeholder_location }}">
+          <input type="text" name="location" id="wine_location" placeholder="{{ t.placeholder_location }}" list="locationList" autocomplete="off">
+          <datalist id="locationList">
+            {% for loc in used_locations %}
+            <option value="{{ loc }}">
+            {% endfor %}
+          </datalist>
         </div>
 
         <div>
@@ -972,6 +963,19 @@ function highlightCard(card) {
   }, 100);
 }
 
+// ── Update location datalist with new locations from cards ─────────────────
+function refreshLocationList() {
+  var dl = document.getElementById('locationList');
+  if (!dl) return;
+  var locs = new Set();
+  document.querySelectorAll('.card').forEach(function(c) {
+    var loc = (c.dataset.location || '').trim();
+    if (loc) locs.add(loc);
+  });
+  var sorted = Array.from(locs).sort(function(a, b) { return a.localeCompare(b); });
+  dl.innerHTML = sorted.map(function(l) { return '<option value="' + l.replace(/"/g, '&quot;') + '">'; }).join('');
+}
+
 function wineIcon(type) {
   if (type === 'Schaumwein') return '<i class="mdi mdi-glass-flute"></i>';
   return '<i class="mdi mdi-glass-wine"></i>';
@@ -1068,6 +1072,7 @@ document.getElementById('wineForm').addEventListener('submit', function(e) {
     }
     ensureFilterTab(w.type);
     updateStats(data.stats);
+    refreshLocationList();
     closeModal('wineModal');
     applyFilters();
     highlightCard(card);
@@ -1142,6 +1147,7 @@ document.getElementById('dupForm').addEventListener('submit', function(e) {
     }
     ensureFilterTab(w.type);
     updateStats(data.stats);
+    refreshLocationList();
     closeModal('dupModal');
     applyFilters();
     highlightCard(card);
@@ -1165,6 +1171,7 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
     var card = document.querySelector('.card[data-id="' + id + '"]');
     if (card) card.remove();
     updateStats(data.stats);
+    refreshLocationList();
     closeModal('deleteModal');
     // Show empty state if no cards left
     var grid = document.querySelector('.grid');
