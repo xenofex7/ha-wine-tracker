@@ -14,14 +14,43 @@ OPTIONS_PATH = "/data/options.json"
 
 def load_options():
     """Read HA add-on options with sensible defaults."""
-    defaults = {"currency": "CHF", "language": "de"}
+    defaults = {
+        "currency": "CHF",
+        "language": "de",
+        "ai_provider": "none",
+        "anthropic_api_key": "",
+        "anthropic_model": "claude-opus-4-6",
+        "openai_api_key": "",
+        "openai_model": "gpt-5.2",
+        "openrouter_api_key": "",
+        "openrouter_model": "anthropic/claude-opus-4.6",
+        "ollama_host": "http://localhost:11434",
+        "ollama_model": "llava",
+    }
     try:
         with open(OPTIONS_PATH, "r") as f:
             opts = json.load(f)
         defaults.update(opts)
     except (FileNotFoundError, json.JSONDecodeError):
         pass
+    # Backward compat: auto-detect Anthropic from old config (pre-multi-provider)
+    if defaults.get("ai_provider", "none") == "none" and defaults.get("anthropic_api_key", "").strip():
+        defaults["ai_provider"] = "anthropic"
     return defaults
+
+def _is_ai_configured(opts):
+    """Check if the selected AI provider is properly configured."""
+    provider = opts.get("ai_provider", "none").strip().lower()
+    if provider == "anthropic":
+        return bool(opts.get("anthropic_api_key", "").strip())
+    elif provider == "openai":
+        return bool(opts.get("openai_api_key", "").strip())
+    elif provider == "openrouter":
+        return bool(opts.get("openrouter_api_key", "").strip())
+    elif provider == "ollama":
+        return bool(opts.get("ollama_host", "").strip())
+    return False
+
 
 HA_OPTIONS = load_options()
 
@@ -142,11 +171,13 @@ def translate_wine_type(value):
 
 @app.context_processor
 def inject_globals():
+    ai_enabled = _is_ai_configured(load_options())
     return {
         "ingress": g.get("ingress", ""),
         "currency": HA_OPTIONS.get("currency", "CHF"),
         "t": T,
         "lang": LANG,
+        "ai_enabled": ai_enabled,
     }
 
 
@@ -319,6 +350,11 @@ def index():
 def add():
     db = get_db()
     image = save_image(request.files.get("image"))
+    # If no new image uploaded but AI already saved one, use that
+    if not image:
+        ai_img = request.form.get("ai_image", "").strip()
+        if ai_img and os.path.isfile(os.path.join(UPLOAD_DIR, ai_img)):
+            image = ai_img
     price_raw = request.form.get("price", "").strip()
     cur = db.execute(
         """INSERT INTO wines
@@ -562,6 +598,181 @@ def stats_page():
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_DIR, filename)
+
+
+# ── AI Provider Functions ─────────────────────────────────────────────────────
+
+def _call_anthropic(image_b64, media_type, prompt, opts):
+    """Call Anthropic Claude Vision API."""
+    import anthropic
+    api_key = opts.get("anthropic_api_key", "").strip()
+    model = opts.get("anthropic_model", "claude-opus-4-6").strip() or "claude-opus-4-6"
+    client = anthropic.Anthropic(api_key=api_key)
+    message = client.messages.create(
+        model=model,
+        max_tokens=1024,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": image_b64}},
+                {"type": "text", "text": prompt},
+            ],
+        }],
+    )
+    return message.content[0].text
+
+
+def _call_openai(image_b64, media_type, prompt, opts):
+    """Call OpenAI Vision API."""
+    from openai import OpenAI
+    api_key = opts.get("openai_api_key", "").strip()
+    model = opts.get("openai_model", "gpt-5.2").strip() or "gpt-5.2"
+    client = OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
+                {"type": "text", "text": prompt},
+            ],
+        }],
+        max_tokens=1024,
+    )
+    return response.choices[0].message.content
+
+
+def _call_openrouter(image_b64, media_type, prompt, opts):
+    """Call OpenRouter API (OpenAI-compatible with custom base_url)."""
+    from openai import OpenAI
+    api_key = opts.get("openrouter_api_key", "").strip()
+    model = opts.get("openrouter_model", "anthropic/claude-opus-4.6").strip() or "anthropic/claude-opus-4.6"
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+    )
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
+                {"type": "text", "text": prompt},
+            ],
+        }],
+        max_tokens=1024,
+    )
+    return response.choices[0].message.content
+
+
+def _call_ollama(image_b64, media_type, prompt, opts):
+    """Call local Ollama Vision API."""
+    import requests as req
+    host = opts.get("ollama_host", "http://localhost:11434").strip().rstrip("/")
+    model = opts.get("ollama_model", "llava").strip() or "llava"
+    response = req.post(
+        f"{host}/api/chat",
+        json={
+            "model": model,
+            "messages": [{
+                "role": "user",
+                "content": prompt,
+                "images": [image_b64],
+            }],
+            "stream": False,
+        },
+        timeout=120,
+    )
+    response.raise_for_status()
+    return response.json()["message"]["content"]
+
+
+# ── AI Wine Label Analysis ───────────────────────────────────────────────────
+
+@app.route("/api/analyze-wine", methods=["POST"])
+def analyze_wine():
+    """Receive a wine label photo, save it, and call AI Vision to extract details."""
+    import base64
+
+    opts = load_options()
+    provider = opts.get("ai_provider", "none").strip().lower()
+
+    if provider == "none" or not _is_ai_configured(opts):
+        return jsonify({"ok": False, "error": "no_api_key"}), 400
+
+    file = request.files.get("image")
+    if not file or not file.filename:
+        return jsonify({"ok": False, "error": "no_image"}), 400
+
+    # Save image first (persisted even if API fails)
+    image_filename = save_image(file)
+    if not image_filename:
+        return jsonify({"ok": False, "error": "no_image"}), 400
+
+    # Read saved file as base64
+    image_path = os.path.join(UPLOAD_DIR, image_filename)
+    with open(image_path, "rb") as f:
+        image_data = base64.standard_b64encode(f.read()).decode("utf-8")
+
+    ext = image_filename.rsplit(".", 1)[1].lower()
+    media_type = {
+        "jpg": "image/jpeg", "jpeg": "image/jpeg",
+        "png": "image/png", "webp": "image/webp", "gif": "image/gif",
+    }.get(ext, "image/jpeg")
+
+    # Prompt is identical for all providers
+    prompt = """Analyze this wine bottle label image. Extract the following fields and return ONLY valid JSON:
+{
+  "name": "wine name",
+  "wine_type": "one of: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Anderes",
+  "vintage": year as integer or null,
+  "region": "wine region",
+  "grape": "grape variety/varieties",
+  "price": number or null,
+  "notes": "brief tasting notes if visible on label"
+}
+Rules:
+- wine_type MUST be exactly one of the 6 listed values
+- vintage must be a 4-digit year or null
+- price as number without currency symbol, or null if not visible
+- If a field cannot be determined, set it to null or empty string
+- Return ONLY the JSON object, no markdown, no explanation"""
+
+    # Dispatch to the selected provider
+    try:
+        dispatch = {
+            "anthropic": _call_anthropic,
+            "openai": _call_openai,
+            "openrouter": _call_openrouter,
+            "ollama": _call_ollama,
+        }
+        call_fn = dispatch.get(provider)
+        if not call_fn:
+            return jsonify({"ok": False, "error": "invalid_provider", "image_filename": image_filename}), 400
+
+        raw = call_fn(image_data, media_type, prompt, opts).strip()
+
+        # Strip markdown fences if present
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[-1]
+            if raw.endswith("```"):
+                raw = raw[:-3].strip()
+
+        fields = json.loads(raw)
+
+        # Validate wine_type
+        if fields.get("wine_type") and fields["wine_type"] not in WINE_TYPES:
+            fields["wine_type"] = ""
+
+        return jsonify({"ok": True, "fields": fields, "image_filename": image_filename})
+
+    except json.JSONDecodeError:
+        return jsonify({"ok": False, "error": "parse_error", "image_filename": image_filename}), 500
+    except Exception as e:
+        error_msg = str(e)
+        if "timeout" in error_msg.lower():
+            return jsonify({"ok": False, "error": "timeout", "image_filename": image_filename}), 500
+        return jsonify({"ok": False, "error": "api_error", "message": error_msg, "image_filename": image_filename}), 500
 
 
 # ── API for Home Assistant sensors ───────────────────────────────────────────

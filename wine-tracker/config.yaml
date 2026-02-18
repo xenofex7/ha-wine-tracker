@@ -1,6 +1,6 @@
 name: "Wine Tracker"
-description: "Für alle, die den Weinkeller im Griff haben wollen"
-version: "0.2.3"
+description: "Track and manage your wine cellar"
+version: "0.3.0"
 slug: "wine_tracker"
 url: "https://github.com/xenofex7/ha-wine-tracker"
 init: false
@@ -23,8 +23,26 @@ panel_title: "Wine Tracker"
 options:
   currency: "CHF"
   language: "de"
+  ai_provider: "none"
+  anthropic_api_key: ""
+  anthropic_model: "claude-opus-4-6"
+  openai_api_key: ""
+  openai_model: "gpt-5.2"
+  openrouter_api_key: ""
+  openrouter_model: "anthropic/claude-opus-4.6"
+  ollama_host: "http://localhost:11434"
+  ollama_model: "llava"
 schema:
   currency: str
   language: str
+  ai_provider: list(none|anthropic|openai|openrouter|ollama)
+  anthropic_api_key: str?
+  anthropic_model: str?
+  openai_api_key: str?
+  openai_model: str?
+  openrouter_api_key: str?
+  openrouter_model: str?
+  ollama_host: str?
+  ollama_model: str?
 map:
   - share:rw

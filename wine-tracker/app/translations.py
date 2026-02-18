@@ -86,6 +86,16 @@ TRANSLATIONS = {
     "empty_add_first": "Füge deinen ersten Wein hinzu!",
     "empty_no_results": "Keine Weine gefunden.",
 
+    # AI label recognition
+    "ai_step_title": "Weinetikett fotografieren",
+    "ai_step_subtitle": "Laden Sie ein Foto des Weinetiketts hoch und die KI erkennt die Details automatisch.",
+    "ai_upload_btn": "Foto aufnehmen oder hochladen",
+    "ai_analyzing": "Etikett wird analysiert\u2026",
+    "ai_skip": "Manuell erfassen",
+    "ai_error": "Analyse fehlgeschlagen. Bitte manuell ausfüllen.",
+    "ai_retry": "Erneut versuchen",
+    "ai_change_photo": "Anderes Foto",
+
     # Discard
     "confirm_discard": "Änderungen verwerfen?",
 
@@ -196,6 +206,16 @@ TRANSLATIONS = {
     "empty_add_first": "Add your first wine!",
     "empty_no_results": "No wines found.",
 
+    # AI label recognition
+    "ai_step_title": "Photograph wine label",
+    "ai_step_subtitle": "Upload a photo of the wine label and AI will automatically detect the details.",
+    "ai_upload_btn": "Take photo or upload",
+    "ai_analyzing": "Analyzing label\u2026",
+    "ai_skip": "Enter manually",
+    "ai_error": "Analysis failed. Please fill in manually.",
+    "ai_retry": "Try again",
+    "ai_change_photo": "Change photo",
+
     "confirm_discard": "Discard changes?",
 
     "lightbox_alt": "Label",
@@ -302,6 +322,16 @@ TRANSLATIONS = {
     "empty_no_wines": "Aucun vin enregistré.",
     "empty_add_first": "Ajoutez votre premier vin !",
     "empty_no_results": "Aucun vin trouvé.",
+
+    # AI label recognition
+    "ai_step_title": "Photographier l'étiquette",
+    "ai_step_subtitle": "Téléchargez une photo de l'étiquette et l'IA détectera automatiquement les détails.",
+    "ai_upload_btn": "Prendre une photo ou télécharger",
+    "ai_analyzing": "Analyse de l'étiquette\u2026",
+    "ai_skip": "Saisir manuellement",
+    "ai_error": "Analyse échouée. Veuillez remplir manuellement.",
+    "ai_retry": "Réessayer",
+    "ai_change_photo": "Autre photo",
 
     "confirm_discard": "Annuler les modifications ?",
 
@@ -410,6 +440,16 @@ TRANSLATIONS = {
     "empty_add_first": "Aggiungi il tuo primo vino!",
     "empty_no_results": "Nessun vino trovato.",
 
+    # AI label recognition
+    "ai_step_title": "Fotografa l'etichetta",
+    "ai_step_subtitle": "Carica una foto dell'etichetta e l'IA rileverà automaticamente i dettagli.",
+    "ai_upload_btn": "Scatta foto o carica",
+    "ai_analyzing": "Analisi dell'etichetta\u2026",
+    "ai_skip": "Inserisci manualmente",
+    "ai_error": "Analisi fallita. Compilare manualmente.",
+    "ai_retry": "Riprova",
+    "ai_change_photo": "Altra foto",
+
     "confirm_discard": "Annullare le modifiche?",
 
     "lightbox_alt": "Etichetta",
@@ -516,6 +556,16 @@ TRANSLATIONS = {
     "empty_no_wines": "No hay vinos registrados.",
     "empty_add_first": "¡Añade tu primer vino!",
     "empty_no_results": "No se encontraron vinos.",
+
+    # AI label recognition
+    "ai_step_title": "Fotografiar etiqueta",
+    "ai_step_subtitle": "Sube una foto de la etiqueta y la IA detectará automáticamente los detalles.",
+    "ai_upload_btn": "Tomar foto o subir",
+    "ai_analyzing": "Analizando etiqueta\u2026",
+    "ai_skip": "Introducir manualmente",
+    "ai_error": "Análisis fallido. Por favor, rellene manualmente.",
+    "ai_retry": "Reintentar",
+    "ai_change_photo": "Otra foto",
 
     "confirm_discard": "¿Descartar cambios?",
 
@@ -624,6 +674,16 @@ TRANSLATIONS = {
     "empty_add_first": "Adicione seu primeiro vinho!",
     "empty_no_results": "Nenhum vinho encontrado.",
 
+    # AI label recognition
+    "ai_step_title": "Fotografar rótulo do vinho",
+    "ai_step_subtitle": "Carregue uma foto do rótulo e a IA detectará automaticamente os detalhes.",
+    "ai_upload_btn": "Tirar foto ou carregar",
+    "ai_analyzing": "Analisando rótulo\u2026",
+    "ai_skip": "Inserir manualmente",
+    "ai_error": "Análise falhou. Por favor, preencha manualmente.",
+    "ai_retry": "Tentar novamente",
+    "ai_change_photo": "Outra foto",
+
     "confirm_discard": "Descartar alterações?",
 
     "lightbox_alt": "Rótulo",
@@ -730,6 +790,16 @@ TRANSLATIONS = {
     "empty_no_wines": "Nog geen wijnen geregistreerd.",
     "empty_add_first": "Voeg je eerste wijn toe!",
     "empty_no_results": "Geen wijnen gevonden.",
+
+    # AI label recognition
+    "ai_step_title": "Wijnlabel fotograferen",
+    "ai_step_subtitle": "Upload een foto van het wijnlabel en de AI herkent automatisch de details.",
+    "ai_upload_btn": "Foto maken of uploaden",
+    "ai_analyzing": "Label wordt geanalyseerd\u2026",
+    "ai_skip": "Handmatig invoeren",
+    "ai_error": "Analyse mislukt. Vul a.u.b. handmatig in.",
+    "ai_retry": "Opnieuw proberen",
+    "ai_change_photo": "Andere foto",
 
     "confirm_discard": "Wijzigingen verwerpen?",
 

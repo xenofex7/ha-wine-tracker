@@ -336,6 +336,51 @@
   .fab:hover { background: #e74c3c; transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,.5); }
   .fab:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
   .grid { padding-bottom: 5rem; }
+
+  /* AI Step (two-step modal) */
+  .ai-step { text-align: center; padding: 2rem 1.5rem; }
+  .ai-step h3 { font-size: 1.1rem; margin-bottom: .35rem; }
+  .ai-step p { font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
+  .ai-upload-area {
+    border: 2px dashed var(--border); border-radius: 12px;
+    padding: 3rem 1.5rem; cursor: pointer; transition: border-color .2s, background .2s;
+    position: relative; overflow: hidden;
+  }
+  .ai-upload-area:hover { border-color: var(--accent); background: rgba(192,57,43,.05); }
+  .ai-upload-area input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+  .ai-upload-area .mdi { font-size: 2.5rem; color: var(--muted); display: block; margin-bottom: .5rem; }
+  .ai-upload-area span { font-size: .9rem; color: var(--muted); }
+  .ai-preview-wrap { margin: 1.25rem auto; position: relative; display: inline-block; }
+  .ai-preview-wrap img {
+    max-height: 220px; max-width: 100%; border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .ai-loading { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 1rem 0; }
+  .ai-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ai-loading span { font-size: .9rem; color: var(--muted); }
+  .ai-error-msg { color: #e74c3c; font-size: .9rem; margin: 1rem 0; }
+  .ai-btn-row { display: flex; gap: .75rem; justify-content: center; margin-top: 1rem; }
+  .ai-btn {
+    padding: .5rem 1.2rem; border-radius: 8px; font-size: .85rem;
+    cursor: pointer; border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); transition: all .2s;
+  }
+  .ai-btn:hover { border-color: var(--accent); }
+  .ai-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .ai-btn.primary:hover { background: #e74c3c; }
+  .ai-skip-link {
+    margin-top: 1.5rem; color: var(--muted); cursor: pointer;
+    font-size: .85rem; display: inline-flex; align-items: center; gap: .3rem;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .ai-skip-link:hover { color: var(--text); }
 </style>
 </head>
 <body>
@@ -448,8 +493,46 @@
       <span id="wineModalTitle">{{ t.modal_add_title }}</span>
       <button class="modal-close" onclick="tryCloseWineModal()">×</button>
     </div>
+    {% if ai_enabled %}
+    <div id="aiStep" class="ai-step" style="display:none;">
+      <h3>{{ t.ai_step_title }}</h3>
+      <p>{{ t.ai_step_subtitle }}</p>
+
+      <!-- Upload area -->
+      <div class="ai-upload-area" id="aiUploadArea">
+        <i class="mdi mdi-camera"></i>
+        <span>{{ t.ai_upload_btn }}</span>
+        <input type="file" accept="image/*" capture="environment" onchange="handleAiImage(this.files[0])">
+      </div>
+
+      <!-- Preview (hidden initially) -->
+      <div class="ai-preview-wrap" id="aiPreviewWrap" style="display:none;">
+        <img id="aiPreviewImg" src="" alt="">
+      </div>
+
+      <!-- Loading state (hidden initially) -->
+      <div class="ai-loading" id="aiLoading" style="display:none;">
+        <div class="ai-spinner"></div>
+        <span>{{ t.ai_analyzing }}</span>
+      </div>
+
+      <!-- Error state (hidden initially) -->
+      <div id="aiError" style="display:none;">
+        <div class="ai-error-msg">{{ t.ai_error }}</div>
+        <div class="ai-btn-row">
+          <button type="button" class="ai-btn" onclick="aiRetry()">{{ t.ai_retry }}</button>
+          <button type="button" class="ai-btn" onclick="aiChangePhoto()">{{ t.ai_change_photo }}</button>
+          <button type="button" class="ai-btn primary" onclick="skipToManual()">{{ t.ai_skip }}</button>
+        </div>
+      </div>
+
+      <div class="ai-skip-link" onclick="skipToManual()"><i class="mdi mdi-pencil"></i> {{ t.ai_skip }}</div>
+    </div>
+    {% endif %}
+
     <form method="post" id="wineForm" enctype="multipart/form-data">
-      <div class="modal-body">
+      <input type="hidden" name="ai_image" id="aiImageField" value="">
+      <div class="modal-body" id="formStep">
 
         <div>
           <label>{{ t.label_photo }}</label>
@@ -793,6 +876,9 @@ function previewImg(input, previewId) {
   reader.readAsDataURL(file);
 }
 
+const AI_ENABLED = {{ 'true' if ai_enabled else 'false' }};
+var _aiLastFile = null; // track file for retry
+
 function openWineModal(id, wine) {
   const isEdit = !!id;
   const form = document.getElementById('wineForm');
@@ -805,9 +891,10 @@ function openWineModal(id, wine) {
   // Form action
   form.action = isEdit ? INGRESS + '/edit/' + id : INGRESS + '/add';
 
-  // Reset file input
+  // Reset file input & AI image field
   const fileInput = preview.querySelector('input[type=file]');
   if (fileInput) fileInput.value = '';
+  document.getElementById('aiImageField').value = '';
 
   // Fill fields (empty for add, data for edit)
   const w = wine || {};
@@ -847,10 +934,146 @@ function openWineModal(id, wine) {
     }
   }
 
+  // Two-step modal: show AI step for add mode (not edit)
+  if (AI_ENABLED && !isEdit) {
+    showAiStep();
+  } else {
+    showFormStep();
+  }
+
   openModal('wineModal');
 
   // Snapshot form state for dirty-tracking (after a tick so DOM settles)
   setTimeout(function() { wineFormSnapshot = getWineFormState(); }, 0);
+}
+
+// ── AI Two-Step Modal Functions ─────────────────────────────────────────────
+
+function showAiStep() {
+  var aiStep = document.getElementById('aiStep');
+  var formStep = document.getElementById('formStep');
+  if (aiStep) {
+    aiStep.style.display = '';
+    // Reset AI step to upload state
+    document.getElementById('aiUploadArea').style.display = '';
+    document.getElementById('aiPreviewWrap').style.display = 'none';
+    document.getElementById('aiLoading').style.display = 'none';
+    document.getElementById('aiError').style.display = 'none';
+    var aiFileInput = aiStep.querySelector('input[type=file]');
+    if (aiFileInput) aiFileInput.value = '';
+    _aiLastFile = null;
+  }
+  if (formStep) formStep.style.display = 'none';
+  // Also hide the submit button when showing AI step
+  var submitBtn = document.getElementById('wineSubmitBtn');
+  if (submitBtn) submitBtn.style.display = 'none';
+}
+
+function showFormStep() {
+  var aiStep = document.getElementById('aiStep');
+  var formStep = document.getElementById('formStep');
+  if (aiStep) aiStep.style.display = 'none';
+  if (formStep) formStep.style.display = '';
+  var submitBtn = document.getElementById('wineSubmitBtn');
+  if (submitBtn) submitBtn.style.display = '';
+}
+
+function skipToManual() {
+  showFormStep();
+}
+
+function handleAiImage(file) {
+  if (!file) return;
+  _aiLastFile = file;
+
+  // Show preview
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('aiPreviewImg').src = e.target.result;
+    document.getElementById('aiPreviewWrap').style.display = '';
+    document.getElementById('aiUploadArea').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+
+  // Start analysis
+  startAiAnalysis(file);
+}
+
+function startAiAnalysis(file) {
+  // Show loading, hide error
+  document.getElementById('aiLoading').style.display = '';
+  document.getElementById('aiError').style.display = 'none';
+
+  var fd = new FormData();
+  fd.append('image', file);
+
+  fetch(INGRESS + '/api/analyze-wine', {
+    method: 'POST',
+    body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    document.getElementById('aiLoading').style.display = 'none';
+
+    if (data.ok) {
+      populateFormFromAi(data.fields, data.image_filename);
+    } else {
+      // Even on error, save the image filename if returned
+      if (data.image_filename) {
+        document.getElementById('aiImageField').value = data.image_filename;
+      }
+      document.getElementById('aiError').style.display = '';
+    }
+  })
+  .catch(function() {
+    document.getElementById('aiLoading').style.display = 'none';
+    document.getElementById('aiError').style.display = '';
+  });
+}
+
+function populateFormFromAi(fields, imageFilename) {
+  // Set form fields from AI response
+  if (fields.name) document.getElementById('wine_name').value = fields.name;
+  if (fields.vintage) document.getElementById('wine_year').value = fields.vintage;
+  if (fields.wine_type) document.getElementById('wine_type').value = fields.wine_type;
+  if (fields.region) document.getElementById('wine_region').value = fields.region;
+  if (fields.price) document.getElementById('wine_price').value = fields.price;
+  if (fields.notes) document.getElementById('wine_notes').value = fields.notes;
+
+  // Set the AI image hidden field
+  if (imageFilename) {
+    document.getElementById('aiImageField').value = imageFilename;
+
+    // Show the image in the form's preview area
+    var preview = document.getElementById('winePreview');
+    var img = preview.querySelector('img');
+    if (!img) { img = document.createElement('img'); preview.prepend(img); }
+    img.src = INGRESS + '/uploads/' + imageFilename;
+    // Hide camera icon
+    var cam = preview.querySelector('.mdi-camera');
+    if (cam) cam.style.display = 'none';
+  }
+
+  // Switch to form step
+  showFormStep();
+}
+
+function aiRetry() {
+  if (_aiLastFile) {
+    startAiAnalysis(_aiLastFile);
+  }
+}
+
+function aiChangePhoto() {
+  // Reset to upload state
+  document.getElementById('aiUploadArea').style.display = '';
+  document.getElementById('aiPreviewWrap').style.display = 'none';
+  document.getElementById('aiLoading').style.display = 'none';
+  document.getElementById('aiError').style.display = 'none';
+  var aiFileInput = document.querySelector('#aiStep input[type=file]');
+  if (aiFileInput) aiFileInput.value = '';
+  _aiLastFile = null;
 }
 
 // ── Dirty-tracking for wineModal ──────────────────────────────────────────────
