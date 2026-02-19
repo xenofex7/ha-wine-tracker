@@ -24,7 +24,9 @@ A sleek, modern wine cellar tracker running as a Home Assistant add-on. Manage y
 
 - **Wine cards** with photo, vintage, type, region, grape variety, rating & notes
 - **Photo upload** — snap a label photo from your phone
-- **AI wine label recognition** — automatically extract wine details from a label photo (supports 4 AI providers)
+- **AI wine label recognition** — snap a label photo and let AI fill in all fields (supports 4 AI providers)
+- **Vivino wine search** — search by name, see ratings, region & price, and import directly
+- **Reload missing data** — re-analyze wines with incomplete fields via AI or Vivino
 - **Star rating** (1–5 stars)
 - **Quick quantity buttons** (+/−) directly on the card
 - **Duplicate wines** — perfect when only the vintage changes
@@ -33,7 +35,8 @@ A sleek, modern wine cellar tracker running as a Home Assistant add-on. Manage y
 - **Drink window** (from/until year)
 - **Purchase price** with configurable currency
 - **Storage location** with autocomplete from existing entries
-- **Grape variety** (e.g. Merlot, Pinot Noir, Chardonnay)
+- **Region & purchase source** autocomplete from existing entries
+- **Grape variety** (e.g. Merlot, Pinot Noir, Chardonnay) with autocomplete
 - **Interactive globe** — see your wine regions on a 3D globe (COBE)
 - **Statistics** — donut charts for wine types + total bottle count
 - **Multi-language** — 7 languages supported
@@ -54,6 +57,8 @@ A sleek, modern wine cellar tracker running as a Home Assistant add-on. Manage y
 | 🇳🇱 Dutch | `nl` |
 
 Set your preferred language in the add-on configuration (`language` option).
+
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ## Installation
 
@@ -138,6 +143,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 | `drink_from` | Integer | Drink window start (year) |
 | `drink_until` | Integer | Drink window end (year) |
 | `location` | Text | Storage location |
+| `vivino_id` | Text | Vivino wine ID (linked when imported via Vivino search) |
 
 ## Technology
 
@@ -159,7 +165,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 
 MIT
 
-[version-badge]: https://img.shields.io/badge/version-v0.3.5-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v0.4.1-blue.svg
 [stage-badge]: https://img.shields.io/badge/project%20stage-experimental-orange.svg
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-green.svg

@@ -853,7 +853,10 @@ def vivino_search():
                 "page": 1,
                 "per_page": 8,
             },
-            headers={"User-Agent": "WineTracker/1.0"},
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                "Accept": "application/json",
+            },
             timeout=10,
         )
         resp.raise_for_status()
@@ -925,7 +928,9 @@ def vivino_image():
         return jsonify({"ok": False, "error": "no_url"}), 400
 
     try:
-        resp = req.get(url, timeout=10, headers={"User-Agent": "WineTracker/1.0"})
+        resp = req.get(url, timeout=10, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        })
         resp.raise_for_status()
         # Determine extension from content-type
         ct = resp.headers.get("Content-Type", "image/jpeg")
