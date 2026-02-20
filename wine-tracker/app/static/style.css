@@ -18,11 +18,11 @@
   --radius: 12px;
   --shadow: 0 4px 24px rgba(0,0,0,.5);
   /* Wine type colors */
-  --wine-rotwein: #ba1628;
-  --wine-weisswein: #fbcf4e;
+  --wine-rotwein: #803039;
+  --wine-weisswein: #f4ca4f;
   --wine-rose: #ffd1d8;
   --wine-schaumwein: #f3efaf;
-  --wine-dessertwein: #fd7907;
+  --wine-dessertwein: #eb7a17;
   --wine-likoerwein: #800f1c;
   --wine-anderes: #6c3461;
   --wine-empty: #aaa;
@@ -381,6 +381,44 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
   transition: background .2s;
 }
 .btn-submit:hover { background: #e74c3c; }
+
+/* ── Form Footer (Submit + Reload Popover) ─────────────────────────────────── */
+.form-footer {
+  display: flex; align-items: center; gap: .75rem;
+  margin-top: .5rem; position: relative;
+}
+.form-footer .btn-submit { width: auto; flex: 1; margin-top: 0; }
+
+.reload-popover-wrap { position: relative; }
+.btn-reload-trigger {
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+  padding: .55rem 1rem; border-radius: 8px; font-size: .85rem;
+  font-weight: 600; cursor: pointer; white-space: nowrap;
+  display: flex; align-items: center; gap: .4rem;
+  transition: background .2s, border-color .2s;
+}
+.btn-reload-trigger:hover { border-color: var(--accent); background: var(--surface); }
+.btn-reload-trigger.loading { opacity: .7; cursor: wait; }
+.btn-reload-trigger .mdi-spin {
+  animation: mdi-spin 1s linear infinite;
+}
+@keyframes mdi-spin { to { transform: rotate(360deg); } }
+
+.reload-popover {
+  position: absolute; bottom: calc(100% + .5rem); left: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: .4rem; min-width: 220px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  z-index: 100;
+}
+.reload-popover-option {
+  display: flex; align-items: center; gap: .5rem;
+  width: 100%; padding: .6rem .75rem; border: none; background: none;
+  color: var(--text); font-size: .88rem; cursor: pointer;
+  border-radius: 6px; transition: background .15s; text-align: left;
+}
+.reload-popover-option:hover { background: rgba(192,57,43,.1); }
+.reload-popover-option .mdi { font-size: 1.15rem; opacity: .8; }
 
 /* ── Source Step (AI + Vivino + Manual) ─────────────────────────────────────── */
 .source-step { padding: 1.5rem; max-width: 360px; margin: 0 auto; }

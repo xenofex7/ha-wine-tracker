@@ -954,6 +954,9 @@ def vivino_image():
     url = body.get("url", "").strip()
     if not url:
         return jsonify({"ok": False, "error": "no_url"}), 400
+    # Protocol-relative URLs (//images.vivino.com/...) need a scheme
+    if url.startswith("//"):
+        url = "https:" + url
 
     try:
         resp = req.get(url, timeout=10, headers={

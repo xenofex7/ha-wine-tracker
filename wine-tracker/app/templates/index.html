@@ -112,8 +112,6 @@
               title="{{ t.btn_edit }}" style="border-left:1px solid var(--border)"><i class="mdi mdi-pencil"></i></button>
       <button onclick="dupFromCard(this)"
               title="{{ t.btn_duplicate }}"><i class="mdi mdi-content-copy"></i></button>
-      <button onclick="reloadFromCard(this)"
-              title="{{ t.btn_reload }}"><i class="mdi mdi-refresh"></i></button>
       <button class="danger" title="{{ t.btn_delete }}"
               onclick="deleteFromCard(this)"><i class="mdi mdi-delete"></i></button>
     </div>
@@ -165,7 +163,7 @@
     <!-- AI Panel (shown after clicking AI option) -->
     {% if ai_enabled %}
     <div id="aiStep" class="ai-step" style="display:none;">
-      <div class="step-link" onclick="_reloadMode ? showReloadStep() : showSourceStep()"><i class="mdi mdi-arrow-left"></i> {{ t.back }}</div>
+      <div class="step-link" onclick="_reloadMode ? showFormStep() : showSourceStep()"><i class="mdi mdi-arrow-left"></i> {{ t.back }}</div>
       <h3>{{ t.ai_step_title }}</h3>
       <p>{{ t.ai_step_subtitle }}</p>
 
@@ -199,7 +197,7 @@
 
     <!-- Vivino Panel (shown after clicking Vivino option) -->
     <div id="vivinoStep" class="vivino-panel" style="display:none;">
-      <div class="step-link" onclick="_reloadMode ? showReloadStep() : showSourceStep()"><i class="mdi mdi-arrow-left"></i> {{ t.back }}</div>
+      <div class="step-link" onclick="_reloadMode ? showFormStep() : showSourceStep()"><i class="mdi mdi-arrow-left"></i> {{ t.back }}</div>
       <h3><i class="mdi mdi-magnify"></i> {{ t.vivino_title }}</h3>
       <input type="text" class="vivino-search-input" id="vivinoSearchInput"
              placeholder="{{ t.vivino_placeholder }}" oninput="debouncedVivinoSearch()">
@@ -325,7 +323,24 @@
           <textarea name="notes" id="wine_notes" placeholder="{{ t.placeholder_notes }}"></textarea>
         </div>
 
-        <button type="submit" class="btn-submit" id="wineSubmitBtn">{{ t.btn_save }}</button>
+        <div class="form-footer" id="formFooter">
+          <div class="reload-popover-wrap" id="reloadPopoverWrap" style="display:none">
+            <button type="button" class="btn-reload-trigger" id="reloadTriggerBtn" onclick="toggleReloadPopover()">
+              <i class="mdi mdi-refresh"></i> {{ t.btn_reload }}
+            </button>
+            <div class="reload-popover" id="reloadPopover" style="display:none">
+              {% if ai_enabled %}
+              <button type="button" class="reload-popover-option" onclick="reloadViaAi(); closeReloadPopover();">
+                <i class="mdi mdi-robot"></i> {{ t.reload_ai_desc }}
+              </button>
+              {% endif %}
+              <button type="button" class="reload-popover-option" onclick="reloadViaVivino(); closeReloadPopover();">
+                <i class="mdi mdi-web"></i> {{ t.reload_vivino_desc }}
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" id="wineSubmitBtn">{{ t.btn_save }}</button>
+        </div>
         </div><!-- /form-fields-panel -->
       </div>
     </form>
@@ -644,6 +659,11 @@ function openWineModal(id, wine) {
       preview.insertBefore(cam, preview.firstChild);
     }
   }
+
+  // Show/hide reload button (only in edit mode)
+  var reloadWrap = document.getElementById('reloadPopoverWrap');
+  if (reloadWrap) reloadWrap.style.display = isEdit ? '' : 'none';
+  closeReloadPopover();
 
   // Source step: show source selection for add mode (not edit)
   if (!isEdit) {
@@ -1098,49 +1118,6 @@ function deleteFromCard(el) {
   openModal('deleteModal');
 }
 
-function reloadFromCard(el) {
-  const { id, wine } = getCardData(el);
-  _reloadMode = true;
-  // Open modal in edit mode (populates all fields), then show reload source step
-  openWineModal(id, wine);
-  showReloadStep();
-}
-
-function showReloadStep() {
-  var sourceStep = document.getElementById('sourceStep');
-  var aiStep = document.getElementById('aiStep');
-  var vivinoStep = document.getElementById('vivinoStep');
-  var formStep = document.getElementById('formStep');
-  if (aiStep) aiStep.style.display = 'none';
-  if (vivinoStep) vivinoStep.style.display = 'none';
-  if (formStep) formStep.style.display = 'none';
-  if (sourceStep) {
-    sourceStep.style.display = '';
-    // Override titles for reload mode
-    var h3 = sourceStep.querySelector('.source-step-header h3');
-    var p = sourceStep.querySelector('.source-step-header p');
-    if (h3) h3.textContent = T.reload_step_title;
-    if (p) p.textContent = T.reload_step_subtitle;
-    // Override descriptions + hide manual option in reload mode
-    var opts = sourceStep.querySelectorAll('.source-option');
-    opts.forEach(function(opt) {
-      var desc = opt.querySelector('.source-desc');
-      var icon = opt.querySelector('.mdi');
-      if (icon && icon.classList.contains('mdi-camera') && desc) {
-        desc.textContent = T.reload_ai_desc;
-      }
-      if (icon && icon.classList.contains('mdi-magnify') && desc) {
-        desc.textContent = T.reload_vivino_desc;
-      }
-      if (icon && icon.classList.contains('mdi-pencil')) {
-        opt.style.display = 'none';
-      }
-    });
-  }
-  var submitBtn = document.getElementById('wineSubmitBtn');
-  if (submitBtn) submitBtn.style.display = 'none';
-}
-
 function populateFormMerge(fields, imageFilename) {
   // Only fill empty fields — never overwrite existing values
   var filled = 0;
@@ -1217,6 +1194,37 @@ function showReloadToast(msg, success) {
   }, 2500);
 }
 
+// ── Reload Popover ────────────────────────────────────────────────────────────
+
+function toggleReloadPopover() {
+  var pop = document.getElementById('reloadPopover');
+  if (pop) pop.style.display = pop.style.display === 'none' ? '' : 'none';
+}
+function closeReloadPopover() {
+  var pop = document.getElementById('reloadPopover');
+  if (pop) pop.style.display = 'none';
+}
+// Close popover on outside click
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('reloadPopoverWrap');
+  if (wrap && !wrap.contains(e.target)) closeReloadPopover();
+});
+
+function setReloadLoading(on) {
+  var btn = document.getElementById('reloadTriggerBtn');
+  if (!btn) return;
+  var icon = btn.querySelector('.mdi');
+  if (on) {
+    btn.disabled = true;
+    btn.classList.add('loading');
+    if (icon) { icon.className = 'mdi mdi-loading mdi-spin'; }
+  } else {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    if (icon) { icon.className = 'mdi mdi-refresh'; }
+  }
+}
+
 function reloadViaAi() {
   // Re-analyze existing image with AI
   var imageFilename = document.getElementById('aiImageField').value;
@@ -1231,21 +1239,13 @@ function reloadViaAi() {
   }
   if (!imageFilename) {
     // No image — show AI panel for new upload, but in merge mode
+    _reloadMode = true;
     showAiPanel();
     return;
   }
 
-  // Show loading in source step
-  var sourceStep = document.getElementById('sourceStep');
-  if (sourceStep) {
-    var opts = sourceStep.querySelector('.source-options');
-    var skipLink = sourceStep.querySelector('.step-link');
-    if (opts) opts.style.display = 'none';
-    if (skipLink) skipLink.style.display = 'none';
-    var h3 = sourceStep.querySelector('.source-step-header h3');
-    var p = sourceStep.querySelector('.source-step-header p');
-    if (p) p.innerHTML = '<div class="ai-spinner" style="display:inline-block;width:18px;height:18px;margin-right:8px;vertical-align:middle"></div>' + T.ai_analyzing;
-  }
+  // Show loading on trigger button
+  setReloadLoading(true);
 
   fetch(INGRESS + '/api/reanalyze-wine', {
     method: 'POST',
@@ -1254,18 +1254,15 @@ function reloadViaAi() {
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    // Restore source step appearance
-    restoreSourceStepAppearance();
+    setReloadLoading(false);
     if (data.ok && data.fields) {
       populateFormMerge(data.fields, null);
     } else {
-      showFormStep();
       showReloadToast(T.ai_error, false);
     }
   })
   .catch(function() {
-    restoreSourceStepAppearance();
-    showFormStep();
+    setReloadLoading(false);
     showReloadToast(T.ai_error, false);
   });
 }
@@ -1276,25 +1273,18 @@ function reloadViaVivino() {
   var wineYear = document.getElementById('wine_year').value.trim();
   var query = wineName + (wineYear ? ' ' + wineYear : '');
   if (!query) {
+    _reloadMode = true;
     showVivinoPanel();
     return;
   }
 
-  // Show loading in source step
-  var sourceStep = document.getElementById('sourceStep');
-  if (sourceStep) {
-    var opts = sourceStep.querySelector('.source-options');
-    var skipLink = sourceStep.querySelector('.step-link');
-    if (opts) opts.style.display = 'none';
-    if (skipLink) skipLink.style.display = 'none';
-    var p = sourceStep.querySelector('.source-step-header p');
-    if (p) p.innerHTML = '<div class="ai-spinner" style="display:inline-block;width:18px;height:18px;margin-right:8px;vertical-align:middle"></div>' + T.vivino_searching;
-  }
+  // Show loading on trigger button
+  setReloadLoading(true);
 
   fetch(INGRESS + '/api/vivino-search?q=' + encodeURIComponent(query))
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    restoreSourceStepAppearance();
+    setReloadLoading(false);
     if (data.ok && data.results && data.results.length > 0) {
       // Use the first result (best match)
       var item = data.results[0];
@@ -1321,25 +1311,12 @@ function reloadViaVivino() {
 
       populateFormMerge(fields, null);
     } else {
-      showFormStep();
       showReloadToast(T.vivino_no_results, false);
     }
   })
   .catch(function() {
-    restoreSourceStepAppearance();
-    showFormStep();
+    setReloadLoading(false);
     showReloadToast(T.vivino_error, false);
-  });
-}
-
-function restoreSourceStepAppearance() {
-  var sourceStep = document.getElementById('sourceStep');
-  if (!sourceStep) return;
-  var opts = sourceStep.querySelector('.source-options');
-  if (opts) opts.style.display = '';
-  // Restore manual option visibility
-  sourceStep.querySelectorAll('.source-option').forEach(function(opt) {
-    opt.style.display = '';
   });
 }
 
@@ -1460,7 +1437,6 @@ function renderCard(w) {
       '<button onclick="changeQty(this,1)" title="' + T.btn_more + '" style="padding:.5rem .65rem">+</button>' +
       '<button onclick="editFromCard(this)" title="' + T.btn_edit + '" style="border-left:1px solid var(--border)"><i class="mdi mdi-pencil"></i></button>' +
       '<button onclick="dupFromCard(this)" title="' + T.btn_duplicate + '"><i class="mdi mdi-content-copy"></i></button>' +
-      '<button onclick="reloadFromCard(this)" title="' + T.btn_reload + '"><i class="mdi mdi-refresh"></i></button>' +
       '<button class="danger" title="' + T.btn_delete + '" onclick="deleteFromCard(this)"><i class="mdi mdi-delete"></i></button>' +
     '</div>';
 }

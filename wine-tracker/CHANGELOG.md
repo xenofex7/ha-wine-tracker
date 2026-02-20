@@ -4,6 +4,12 @@ All notable changes to **Wine Tracker** are documented here.
 
 ---
 
+## 0.4.4
+
+- **"Daten ergänzen" moved into edit modal** — popover next to save button with AI / Vivino options (removed from card actions)
+- Fixed **Vivino image download** — protocol-relative URLs now handled correctly
+- Updated **wine-type colors** to match Vivino palette
+
 ## 0.4.3
 
 - Fixed **Vivino search** — rewrote to scrape HTML search page (explore API no longer supports text queries)
