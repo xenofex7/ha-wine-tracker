@@ -55,7 +55,8 @@ def _is_ai_configured(opts):
 HA_OPTIONS = load_options()
 
 # Persist data in /share so it survives app restarts/updates
-DATA_DIR = "/share/wine-tracker"
+# Falls /share nicht existiert (lokale Entwicklung), nutze ./data stattdessen
+DATA_DIR = "/share/wine-tracker" if os.path.isdir("/share") else os.path.join(os.path.dirname(__file__), "data")
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 DB_PATH = os.path.join(DATA_DIR, "wine.db")
 
@@ -167,6 +168,21 @@ def translate_wine_type(value):
     """Translate DB wine type (e.g. 'Rotwein') to the active language."""
     key = f"wine_type_{value}"
     return T.get(key, value)
+
+
+@app.template_filter('format_date')
+def format_date_filter(value):
+    """Format ISO date string according to active language."""
+    if not value:
+        return ""
+    try:
+        d = date.fromisoformat(value)
+    except (ValueError, TypeError):
+        return value
+    formats = {"de": "%d.%m.%Y", "fr": "%d/%m/%Y", "it": "%d/%m/%Y",
+               "es": "%d/%m/%Y", "pt": "%d/%m/%Y", "nl": "%d-%m-%Y",
+               "en": "%m/%d/%Y"}
+    return d.strftime(formats.get(LANG, "%Y-%m-%d"))
 
 
 @app.context_processor
@@ -606,12 +622,12 @@ def stats_page():
 
     # Most expensive wine
     most_expensive = db.execute(
-        "SELECT name, year, price FROM wines WHERE price IS NOT NULL ORDER BY price DESC LIMIT 1"
+        "SELECT name, year, type, price FROM wines WHERE price IS NOT NULL ORDER BY price DESC LIMIT 1"
     ).fetchone()
 
     # Cheapest wine
     cheapest = db.execute(
-        "SELECT name, year, price FROM wines WHERE price IS NOT NULL AND price > 0 ORDER BY price ASC LIMIT 1"
+        "SELECT name, year, type, price FROM wines WHERE price IS NOT NULL AND price > 0 ORDER BY price ASC LIMIT 1"
     ).fetchone()
 
     # Best rated wines
@@ -777,8 +793,11 @@ def analyze_wine():
     }.get(ext, "image/jpeg")
 
     # Prompt is identical for all providers
-    prompt = """Analyze this wine bottle label image. Extract the following fields and return ONLY valid JSON:
-{
+    lang_names = {"de": "German", "en": "English", "fr": "French", "it": "Italian",
+                  "es": "Spanish", "pt": "Portuguese", "nl": "Dutch"}
+    lang_name = lang_names.get(LANG, "English")
+    prompt = f"""Analyze this wine bottle label image. Extract the following fields and return ONLY valid JSON:
+{{
   "name": "wine name",
   "wine_type": "one of: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Likörwein, Anderes",
   "vintage": year as integer or null,
@@ -788,13 +807,14 @@ def analyze_wine():
   "drink_from": year as integer or null,
   "drink_until": year as integer or null,
   "notes": "brief tasting notes if visible on label"
-}
+}}
 Rules:
-- wine_type MUST be exactly one of the 6 listed values
+- wine_type MUST be exactly one of the listed values
 - vintage must be a 4-digit year or null
 - drink_from/drink_until: drinking window years. If mentioned on label, use those. Otherwise ESTIMATE a reasonable drinking window based on the wine type, grape variety, region, and vintage using your wine expertise. For example, a simple Pinot Grigio 2023 might be 2024-2026, while a Barolo 2018 might be 2025-2035. Only return null if you cannot determine enough about the wine to estimate.
 - price as number without currency symbol, or null if not visible
 - If a field cannot be determined, set it to null or empty string
+- The "notes" field MUST be written in {lang_name}
 - Return ONLY the JSON object, no markdown, no explanation"""
 
     # Dispatch to the selected provider
@@ -927,7 +947,7 @@ def vivino_search():
             image_url = vintage.get("image", {}).get("location", "") if vintage.get("image") else ""
 
             results.append({
-                "vivino_id": wine.get("id"),
+                "vivino_id": vintage.get("id"),
                 "name": f"{winery.get('name', '')} {wine.get('name', '')}".strip(),
                 "year": vintage.get("year") or None,
                 "wine_type": wine_type,
@@ -996,13 +1016,17 @@ def _wine_json_schema():
 }"""
 
 
-def _wine_json_rules():
-    return """Rules:
+def _wine_json_rules(lang="en"):
+    lang_names = {"de": "German", "en": "English", "fr": "French", "it": "Italian",
+                  "es": "Spanish", "pt": "Portuguese", "nl": "Dutch"}
+    lang_name = lang_names.get(lang, "English")
+    return f"""Rules:
 - wine_type MUST be exactly one of the listed values
 - vintage must be a 4-digit year or null
 - drink_from/drink_until: estimate a reasonable drinking window based on wine type, grape, region, and vintage using your wine expertise. For example, a simple Pinot Grigio 2023 might be 2024-2026, while a Barolo 2018 might be 2025-2035. Only return null if you cannot determine enough about the wine to estimate.
 - price as number without currency symbol, or null
 - If a field cannot be determined, set it to null or empty string
+- The "notes" field MUST be written in {lang_name}
 - Return ONLY the JSON object, no markdown, no explanation"""
 
 
@@ -1047,7 +1071,7 @@ def reanalyze_wine():
         return jsonify({"ok": False, "error": "no_data"}), 400
 
     schema = _wine_json_schema()
-    rules = _wine_json_rules()
+    rules = _wine_json_rules(LANG)
 
     if image_b64 and context_parts:
         ctx = "\n".join(context_parts)

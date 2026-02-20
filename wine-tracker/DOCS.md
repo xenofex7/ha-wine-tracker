@@ -16,6 +16,7 @@ A sleek, modern wine cellar tracker running directly in your Home Assistant side
 - **Vivino wine search** — search by name, see ratings, region & price, and import directly
 - **Reload missing data** — re-analyze wines with incomplete fields via AI or Vivino
 - **Star rating** (1–5 stars), quick quantity buttons & duplicate wines
+- **Unified navigation** — consistent header with filter dropdown across all pages
 - **Search & filter** by wine type (Red, White, Rosé, Sparkling, ...)
 - **Drink window** (from/until year) with AI estimation
 - **Purchase price** with configurable currency
@@ -45,7 +46,6 @@ All data (SQLite database + photos) is stored under `/share/wine-tracker/` — p
 ## Roadmap
 
 - Export / Import function
-- Bugfixes for themes
 - Custom sorting options
 - Display modes — list view or portal
 
@@ -53,5 +53,5 @@ All data (SQLite database + photos) is stored under `/share/wine-tracker/` — p
 
 See the full documentation and changelog on [GitHub](https://github.com/xenofex7/ha-wine-tracker).
 
-[version-badge]: https://img.shields.io/badge/version-v0.4.5-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v1.0.0-blue.svg
 [ai-badge]: https://img.shields.io/badge/AI%20powered-label%20recognition-blueviolet.svg

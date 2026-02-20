@@ -1,1 +1,4 @@
+RUN_LOCAL_INFO.md
 .claude/
+wine-tracker/app/__pycache__/
+wine-tracker/app/data/

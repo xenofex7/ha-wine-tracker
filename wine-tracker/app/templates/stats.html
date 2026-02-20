@@ -10,8 +10,12 @@
 <body>
 
 <header>
-  <a class="back-btn" href="{{ ingress }}/"><i class="mdi mdi-arrow-left"></i> {{ t.back }}</a>
-  <h1><i class="mdi mdi-chart-box"></i> {{ t.stats_title }}</h1>
+  <a class="nav-brand" href="{{ ingress }}/"><i class="mdi mdi-glass-wine"></i></a>
+  <nav class="nav-links">
+    <a class="nav-link" href="{{ ingress }}/">{{ t.nav_cellar }}</a>
+    <a class="nav-link active" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
+  </nav>
+  <div class="header-spacer"></div>
   <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon"><i class="mdi mdi-weather-sunny"></i></span></button>
 </header>
 
@@ -59,39 +63,6 @@
 </div>
 
 
-<!-- ═══════ INFO CHIPS ═══════ -->
-<div class="info-row">
-  <div class="info-chip">
-    <span class="chip-label">{{ t.stat_in_stock }}:</span>
-    <span class="chip-value">{{ in_stock }} {{ t.bottles_abbr }}</span>
-  </div>
-  <div class="info-chip">
-    <span class="chip-label">{{ t.stat_drunk }}:</span>
-    <span class="chip-value">{{ out_of_stock }} {{ t.stat_wine_drunk_singular if out_of_stock == 1 else t.stat_wines_drunk_plural }}</span>
-  </div>
-  {% if value and value['avg_price'] %}
-  <div class="info-chip">
-    <span class="chip-label">{{ t.stat_avg_price }}:</span>
-    <span class="chip-value">{{ currency }} {{ "%.2f"|format(value['avg_price']) }}</span>
-  </div>
-  {% endif %}
-  {% if oldest %}
-  <div class="info-chip">
-    <span><i class="mdi mdi-bank"></i></span>
-    <span class="chip-label">{{ t.stat_oldest }}:</span>
-    <span class="chip-value">{{ oldest['name'] }} {{ oldest['year'] }}</span>
-  </div>
-  {% endif %}
-  {% if newest %}
-  <div class="info-chip">
-    <span><i class="mdi mdi-shimmer"></i></span>
-    <span class="chip-label">{{ t.stat_newest }}:</span>
-    <span class="chip-value">{{ newest['name'] }} {{ newest['year'] }}</span>
-  </div>
-  {% endif %}
-</div>
-
-
 <!-- ═══════ HERKUNFT MAP ═══════ -->
 {% if map_points %}
 <div class="map-card">
@@ -99,7 +70,7 @@
   <div class="globe-wrap">
     <canvas id="globeCanvas"></canvas>
     <div class="globe-legend">
-      {% for p in map_points|sort(attribute='qty', reverse=True) %}
+      {% for p in map_points|sort(attribute='region')|sort(attribute='qty', reverse=True) %}
       <div class="globe-legend-item">
         <span class="globe-legend-dot"></span>
         <span>{{ p.region }}</span>
@@ -197,12 +168,12 @@
       <div class="wine-list">
         {% for w in best_rated %}
         <div class="wine-list-item">
+          {% if w['type'] %}<span class="type-corner type-{{ w['type']|lower|replace('é','e')|replace('ö','oe') }}"></span>{% endif %}
           <div class="rank">{{ loop.index }}</div>
           <div class="wine-info">
             <div class="wine-name">{{ w['name'] }}</div>
             <div class="wine-detail">
               {% if w['year'] %}{{ w['year'] }}{% endif %}
-              {% if w['type'] %} · {{ w['type'] | wine_type }}{% endif %}
             </div>
           </div>
           <div class="stars">{% for i in range(w['rating']) %}<i class="mdi mdi-star"></i>{% endfor %}{% for i in range(5 - w['rating']) %}<i class="mdi mdi-star-outline"></i>{% endfor %}</div>
@@ -220,6 +191,7 @@
       <div class="wine-list">
         {% if most_expensive %}
         <div class="wine-list-item">
+          {% if most_expensive['type'] %}<span class="type-corner type-{{ most_expensive['type']|lower|replace('é','e')|replace('ö','oe') }}"></span>{% endif %}
           <div class="rank"><i class="mdi mdi-trending-up"></i></div>
           <div class="wine-info">
             <div class="wine-name">{{ most_expensive['name'] }}</div>
@@ -230,6 +202,7 @@
         {% endif %}
         {% if cheapest %}
         <div class="wine-list-item">
+          {% if cheapest['type'] %}<span class="type-corner type-{{ cheapest['type']|lower|replace('é','e')|replace('ö','oe') }}"></span>{% endif %}
           <div class="rank"><i class="mdi mdi-trending-down"></i></div>
           <div class="wine-info">
             <div class="wine-name">{{ cheapest['name'] }}</div>
@@ -265,13 +238,13 @@
       <div class="wine-list">
         {% for w in recent %}
         <div class="wine-list-item">
+          {% if w['type'] %}<span class="type-corner type-{{ w['type']|lower|replace('é','e')|replace('ö','oe') }}"></span>{% endif %}
           <div class="rank">{{ loop.index }}</div>
           <div class="wine-info">
             <div class="wine-name">{{ w['name'] }}</div>
             <div class="wine-detail">
-              {% if w['type'] %}{{ w['type'] | wine_type }}{% endif %}
-              {% if w['year'] %} · {{ w['year'] }}{% endif %}
-              {% if w['added'] %} · {{ w['added'] }}{% endif %}
+              {% if w['year'] %}{{ w['year'] }}{% endif %}
+              {% if w['added'] %} · {{ w['added'] | format_date }}{% endif %}
             </div>
           </div>
         </div>

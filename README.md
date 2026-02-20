@@ -134,7 +134,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 |-------|------|-------------|
 | `name` | Text | Wine name (required) |
 | `year` | Integer | Vintage year |
-| `type` | Text | Wine type: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Anderes |
+| `type` | Text | Wine type: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Likörwein, Anderes |
 | `region` | Text | Origin (e.g. Piemont, IT) |
 | `grape` | Text | Grape variety (e.g. Merlot, Pinot Noir) |
 | `quantity` | Integer | Number of bottles (0 = placeholder) |
@@ -147,7 +147,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 | `drink_from` | Integer | Drink window start (year) |
 | `drink_until` | Integer | Drink window end (year) |
 | `location` | Text | Storage location |
-| `vivino_id` | Text | Vivino wine ID (linked when imported via Vivino search) |
+| `vivino_id` | Integer | Vivino vintage ID (linked when imported via Vivino search) |
 
 ## Technology
 
@@ -161,7 +161,6 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 ## Roadmap
 
 - Export / Import function
-- Bugfixes for themes
 - Custom sorting options
 - Display modes — list view or portal
 
@@ -169,8 +168,8 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 
 MIT
 
-[version-badge]: https://img.shields.io/badge/version-v0.4.5-blue.svg
-[stage-badge]: https://img.shields.io/badge/project%20stage-experimental-orange.svg
+[version-badge]: https://img.shields.io/badge/version-v1.0.0-blue.svg
+[stage-badge]: https://img.shields.io/badge/project%20stage-stable-brightgreen.svg
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-green.svg
 [languages-badge]: https://img.shields.io/badge/languages-7-blue.svg

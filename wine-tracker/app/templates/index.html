@@ -10,35 +10,40 @@
 <body>
 
 <header>
-  <span style="font-size:1.5rem"><i class="mdi mdi-glass-wine"></i></span>
-  <h1>Wine Tracker</h1>
-  {% if stats %}
-  {% set total = stats['total'] or 0 %}
-  {% set types = stats['types'] or 0 %}
-  <a class="stats-pill" href="{{ ingress }}/stats"><i class="mdi mdi-bottle-wine stat-pill-icon"></i> {{ total }} {{ t.stats_pill_bottle if total == 1 else t.stats_pill_bottles }} · {{ types }} {{ t.stats_pill_wine if types == 1 else t.stats_pill_wines }}</a>
-  {% endif %}
-  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon"><i class="mdi mdi-weather-sunny"></i></span></button>
-</header>
-
-<!-- Toolbar -->
-<div class="toolbar">
+  <a class="nav-brand" href="{{ ingress }}/"><i class="mdi mdi-glass-wine"></i></a>
+  <nav class="nav-links">
+    <a class="nav-link active" href="{{ ingress }}/">{{ t.nav_cellar }}</a>
+    <a class="nav-link" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
+  </nav>
+  <div class="header-spacer"></div>
   <div class="search-wrap">
     <i class="mdi mdi-magnify search-icon"></i>
     <input type="text" id="searchInput" placeholder="{{ t.search_placeholder }}" autocomplete="off" oninput="debouncedFilter()">
     <button type="button" class="search-clear" onclick="clearSearch()">×</button>
   </div>
-
   {% if used_types|length > 0 %}
-  <div class="filter-tabs" id="filterTabs">
-    <button class="tab active" data-type="" onclick="filterByType('')">{{ t.filter_all }}</button>
-    {% for wt in used_types %}
-    <button class="tab" data-type="{{ wt }}" onclick="filterByType('{{ wt }}')">{{ wt | wine_type }}</button>
-    {% endfor %}
+  <div class="filter-dropdown-wrap">
+    <button class="filter-btn" onclick="toggleFilterDropdown()" title="Filter"><i class="mdi mdi-filter-variant"></i></button>
+    <div class="filter-dropdown" id="filterDropdown">
+      <div class="filter-list" id="filterTabs">
+        <label class="filter-option active" data-type="">
+          <input type="radio" name="wineType" value="" checked onchange="filterByType('')"> {{ t.filter_all }}
+        </label>
+        {% for wt in used_types %}
+        <label class="filter-option" data-type="{{ wt }}">
+          <input type="radio" name="wineType" value="{{ wt }}" onchange="filterByType('{{ wt }}')"> {{ wt | wine_type }}
+        </label>
+        {% endfor %}
+      </div>
+      <hr class="filter-divider">
+      <label class="filter-option toggle-empty-option" id="toggleEmptyBtn" onclick="toggleEmpty()">
+        {{ t.toggle_empty_show }}
+      </label>
+    </div>
   </div>
   {% endif %}
-
-  <button class="toggle-empty" id="toggleEmptyBtn" onclick="toggleEmpty()">{{ t.toggle_empty_show }}</button>
-</div>
+  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon"><i class="mdi mdi-weather-sunny"></i></span></button>
+</header>
 
 <!-- Wine Grid -->
 <div class="grid">
@@ -94,7 +99,7 @@
         {% if w['drink_from'] or w['drink_until'] %}<span class="drink-window"><i class="mdi mdi-calendar-range"></i> {{ w['drink_from'] or '?' }}–{{ w['drink_until'] or '?' }}</span>{% endif %}
         {% if w['grape'] %}<span><i class="mdi mdi-fruit-grapes"></i> {{ w['grape'] }}</span>{% endif %}
         {% if w['location'] %}<span><i class="mdi mdi-map-marker"></i> {{ w['location'] }}</span>{% endif %}
-        {% if w['vivino_id'] %}<a class="card-vivino-link" href="https://www.vivino.com/wines/{{ w['vivino_id'] }}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Vivino"><i class="mdi mdi-open-in-new"></i> Vivino</a>{% endif %}
+        {% if w['vivino_id'] %}<a class="card-vivino-link" href="https://www.vivino.com/w/{{ w['vivino_id'] }}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Vivino"><i class="mdi mdi-open-in-new"></i> Vivino</a>{% endif %}
       </div>
       {% if w['notes'] %}
       <div class="card-notes">{{ w['notes'] }}</div>
@@ -499,15 +504,57 @@ function applyFilters() {
   // Update search-clear button visibility
   var clearBtn = document.querySelector('.search-clear');
   if (clearBtn) clearBtn.style.display = query ? 'block' : '';
+
+  // Update tab counts
+  updateTabCounts();
+}
+
+function updateTabCounts() {
+  var opts = document.querySelectorAll('#filterTabs .filter-option');
+  if (!opts.length) return;
+  var cards = document.querySelectorAll('.grid .card');
+  var query = document.getElementById('searchInput').value.trim().toLowerCase();
+
+  // Count cards per type (respecting search + empty filter, ignoring type filter)
+  var counts = {};
+  var total = 0;
+  cards.forEach(function(card) {
+    var d = card.dataset;
+    var searchOk = !query ||
+      (d.name || '').toLowerCase().indexOf(query) !== -1 ||
+      (d.region || '').toLowerCase().indexOf(query) !== -1 ||
+      (d.notes || '').toLowerCase().indexOf(query) !== -1;
+    var emptyOk = showEmpty || parseInt(d.quantity) > 0;
+    if (searchOk && emptyOk) {
+      total++;
+      var t = d.type || '';
+      counts[t] = (counts[t] || 0) + 1;
+    }
+  });
+
+  opts.forEach(function(opt) {
+    if (opt.classList.contains('toggle-empty-option')) return; // skip empty-toggle
+    var type = opt.dataset.type !== undefined ? opt.dataset.type : '';
+    var radio = opt.querySelector('input[type="radio"]');
+    var label = opt.dataset.label || opt.textContent.replace(/\s*\(\d+\)\s*$/, '').trim();
+    if (!opt.dataset.label) opt.dataset.label = label;
+    var count = type === '' ? total : (counts[type] || 0);
+    // Preserve the radio input, update only the text
+    if (radio) {
+      opt.textContent = '';
+      opt.appendChild(radio);
+      opt.appendChild(document.createTextNode(' ' + label + ' (' + count + ')'));
+    }
+  });
 }
 
 function filterByType(type) {
   activeType = type;
-  // Update tab active states
-  var tabs = document.querySelectorAll('#filterTabs .tab');
-  tabs.forEach(function(tab) {
-    var tabType = tab.dataset.type !== undefined ? tab.dataset.type : '';
-    tab.classList.toggle('active', tabType === activeType);
+  // Update active states
+  var opts = document.querySelectorAll('#filterTabs .filter-option');
+  opts.forEach(function(opt) {
+    var optType = opt.dataset.type !== undefined ? opt.dataset.type : '';
+    opt.classList.toggle('active', optType === activeType);
   });
   applyFilters();
 }
@@ -524,29 +571,38 @@ function clearSearch() {
   applyFilters();
 }
 
+function toggleFilterDropdown() {
+  var dd = document.getElementById('filterDropdown');
+  if (dd) dd.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  var wrap = document.querySelector('.filter-dropdown-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    var dd = document.getElementById('filterDropdown');
+    if (dd) dd.classList.remove('open');
+  }
+});
+
 function ensureFilterTab(type) {
   if (!type) return;
-  var tabs = document.getElementById('filterTabs');
-  if (!tabs) {
-    // Create the filter-tabs container (first wine with a type)
-    tabs = document.createElement('div');
-    tabs.className = 'filter-tabs';
-    tabs.id = 'filterTabs';
-    tabs.innerHTML = '<button class="tab active" data-type="" onclick="filterByType(\'\')">'+T.filter_all+'</button>';
-    var searchWrap = document.querySelector('.search-wrap');
-    searchWrap.parentNode.insertBefore(tabs, searchWrap.nextSibling);
-  }
-  // Check if tab for this type already exists
-  var existing = tabs.querySelectorAll('.tab');
+  var list = document.getElementById('filterTabs');
+  if (!list) return; // filter dropdown not rendered (no wines yet)
+  // Check if option for this type already exists
+  var existing = list.querySelectorAll('.filter-option');
   for (var i = 0; i < existing.length; i++) {
     if (existing[i].dataset.type === type) return;
   }
-  var btn = document.createElement('button');
-  btn.className = 'tab';
-  btn.dataset.type = type;
-  btn.textContent = T['wine_type_' + type] || type;
-  btn.onclick = function() { filterByType(type); };
-  tabs.appendChild(btn);
+  var lbl = document.createElement('label');
+  lbl.className = 'filter-option';
+  lbl.dataset.type = type;
+  var radio = document.createElement('input');
+  radio.type = 'radio';
+  radio.name = 'wineType';
+  radio.value = type;
+  radio.onchange = function() { filterByType(type); };
+  lbl.appendChild(radio);
+  lbl.appendChild(document.createTextNode(' ' + (T['wine_type_' + type] || type)));
+  list.appendChild(lbl);
 }
 
 function openModal(id) {
@@ -699,6 +755,7 @@ function showSourceStep() {
   var aiStep = document.getElementById('aiStep');
   var vivinoStep = document.getElementById('vivinoStep');
   var formStep = document.getElementById('formStep');
+  document.getElementById('wineModal').classList.remove('form-active');
   if (sourceStep) {
     sourceStep.style.display = '';
     // Reset titles to default (in case they were overridden by reload mode)
@@ -781,6 +838,7 @@ function showFormStep() {
   var aiStep = document.getElementById('aiStep');
   var vivinoStep = document.getElementById('vivinoStep');
   var formStep = document.getElementById('formStep');
+  document.getElementById('wineModal').classList.add('form-active');
   if (sourceStep) sourceStep.style.display = 'none';
   if (aiStep) aiStep.style.display = 'none';
   if (vivinoStep) vivinoStep.style.display = 'none';
@@ -1357,11 +1415,7 @@ function openDupModal(id, name, year, qty) {
 // ── AJAX helpers ──────────────────────────────────────────────────────────────
 
 function updateStats(s) {
-  var pill = document.querySelector('.stats-pill');
-  if (pill && s) {
-    pill.innerHTML = '<i class="mdi mdi-bottle-wine stat-pill-icon"></i> ' + s.total + ' ' + (s.total == 1 ? T.stats_pill_bottle : T.stats_pill_bottles) +
-                       ' · ' + s.types + ' ' + (s.types == 1 ? T.stats_pill_wine : T.stats_pill_wines);
-  }
+  // Stats pill was removed in v1.0.0 — kept as no-op for API compatibility
 }
 
 function highlightCard(card) {
@@ -1425,7 +1479,7 @@ function renderCard(w) {
   if (w.drink_from || w.drink_until) extra += '<span class="drink-window"><i class="mdi mdi-calendar-range"></i> ' + (w.drink_from || '?') + '–' + (w.drink_until || '?') + '</span>';
   if (w.grape) extra += '<span><i class="mdi mdi-fruit-grapes"></i> ' + w.grape + '</span>';
   if (w.location) extra += '<span><i class="mdi mdi-map-marker"></i> ' + w.location + '</span>';
-  if (w.vivino_id) extra += '<a class="card-vivino-link" href="https://www.vivino.com/wines/' + w.vivino_id + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Vivino"><i class="mdi mdi-open-in-new"></i> Vivino</a>';
+  if (w.vivino_id) extra += '<a class="card-vivino-link" href="https://www.vivino.com/w/' + w.vivino_id + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Vivino"><i class="mdi mdi-open-in-new"></i> Vivino</a>';
 
   var imgHtml = w.image
     ? '<img src="' + INGRESS + '/uploads/' + w.image + '" alt="' + (w.name||'') + '" loading="lazy">'

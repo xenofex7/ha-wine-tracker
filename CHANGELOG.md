@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.0.0
+
+### 🎉 Major UI Overhaul
+
+- **Unified navigation header** — single consistent nav bar across all pages replaces the old header + toolbar layout
+- **Filter dropdown** — wine-type filter moved into a dropdown popup with radio-button list (replaces inline tab chips)
+- **"Leere ausblenden" toggle** integrated into the filter dropdown
+- Removed stats-pill, back button, and separate toolbar row
+
+### 🎨 Visual Refinements
+
+- **Flat header** with clean `var(--surface)` background (no more gradient)
+- **Fixed 55 px header height** for consistent appearance across pages
+- Header buttons (filter + theme toggle) now share identical styling
+- Wine-glass logo icon enlarged for better visibility
+- Globe legend repositioned to **upper-left corner** with solid background, hidden on mobile
+- Removed info-chips section from statistics page
+
+### 🐛 Bug Fixes
+
+- **Vivino links now point to the correct wine** — stores vintage ID instead of generic wine ID, URL changed from `/wines/` to `/w/`
+- Type-corner ribbon no longer clipped at the bottom edge
+
+### 🌍 Translations
+
+- Added `nav_cellar` translation key to all 7 languages (DE, EN, FR, IT, ES, PT, NL)
+
 ## 0.4.5
 
 - **AI reload works without image** — text-only mode uses wine name, region, grape etc. to fill missing fields; image + text combined for best results

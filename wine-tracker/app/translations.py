@@ -10,6 +10,7 @@ TRANSLATIONS = {
 "de": {
     # Header / navigation
     "app_title": "Wine Tracker",
+    "nav_cellar": "Weinkeller",
     "back": "Zurück",
     "toggle_theme": "Darstellung wechseln",
 
@@ -163,6 +164,7 @@ TRANSLATIONS = {
 # ══════════════════════════════════════════════════════════════════════════════
 "en": {
     "app_title": "Wine Tracker",
+    "nav_cellar": "Wine Cellar",
     "back": "Back",
     "toggle_theme": "Toggle theme",
 
@@ -305,6 +307,7 @@ TRANSLATIONS = {
 # ══════════════════════════════════════════════════════════════════════════════
 "fr": {
     "app_title": "Wine Tracker",
+    "nav_cellar": "Cave à vin",
     "back": "Retour",
     "toggle_theme": "Changer le thème",
 
@@ -447,6 +450,7 @@ TRANSLATIONS = {
 # ══════════════════════════════════════════════════════════════════════════════
 "it": {
     "app_title": "Wine Tracker",
+    "nav_cellar": "Cantina",
     "back": "Indietro",
     "toggle_theme": "Cambia tema",
 
@@ -589,6 +593,7 @@ TRANSLATIONS = {
 # ══════════════════════════════════════════════════════════════════════════════
 "es": {
     "app_title": "Wine Tracker",
+    "nav_cellar": "Bodega",
     "back": "Volver",
     "toggle_theme": "Cambiar tema",
 
@@ -731,6 +736,7 @@ TRANSLATIONS = {
 # ══════════════════════════════════════════════════════════════════════════════
 "pt": {
     "app_title": "Wine Tracker",
+    "nav_cellar": "Adega",
     "back": "Voltar",
     "toggle_theme": "Mudar tema",
 
@@ -873,6 +879,7 @@ TRANSLATIONS = {
 # ══════════════════════════════════════════════════════════════════════════════
 "nl": {
     "app_title": "Wine Tracker",
+    "nav_cellar": "Wijnkelder",
     "back": "Terug",
     "toggle_theme": "Thema wisselen",
 
