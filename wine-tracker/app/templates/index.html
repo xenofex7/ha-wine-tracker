@@ -599,6 +599,14 @@ const AI_ENABLED = {{ 'true' if ai_enabled else 'false' }};
 var _aiLastFile = null; // track file for retry
 var _reloadMode = false; // true = filling only empty fields in edit mode
 
+// Store original placeholders so we can hide them in edit mode
+var _placeholders = {};
+['wine_name','wine_year','wine_region','wine_grape','wine_purchased_at',
+ 'wine_price','wine_drink_from','wine_drink_until','wine_location','wine_notes'].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) _placeholders[id] = el.placeholder || '';
+});
+
 function openWineModal(id, wine) {
   _reloadMode = false;
   const isEdit = !!id;
@@ -638,6 +646,12 @@ function openWineModal(id, wine) {
     const el = document.getElementById('wine_star' + i);
     if (el) el.checked = isEdit ? (w.rating == i) : false;
   }
+
+  // Placeholders: show in add mode, hide in edit mode
+  Object.keys(_placeholders).forEach(function(pid) {
+    var el = document.getElementById(pid);
+    if (el) el.placeholder = isEdit ? '' : _placeholders[pid];
+  });
 
   // Image preview
   let img = preview.querySelector('img');
@@ -1226,10 +1240,9 @@ function setReloadLoading(on) {
 }
 
 function reloadViaAi() {
-  // Re-analyze existing image with AI
+  // Collect image filename if available
   var imageFilename = document.getElementById('aiImageField').value;
   if (!imageFilename) {
-    // Fallback: check if there's an image in the preview
     var preview = document.getElementById('winePreview');
     var img = preview ? preview.querySelector('img') : null;
     if (img && img.src) {
@@ -1237,10 +1250,19 @@ function reloadViaAi() {
       if (parts.length > 1) imageFilename = parts[1];
     }
   }
-  if (!imageFilename) {
-    // No image — show AI panel for new upload, but in merge mode
-    _reloadMode = true;
-    showAiPanel();
+
+  // Collect known fields as text context
+  var context = {};
+  var v;
+  v = document.getElementById('wine_name').value.trim();    if (v) context.name = v;
+  v = document.getElementById('wine_year').value.trim();    if (v) context.year = v;
+  v = document.getElementById('wine_type').value;           if (v) context.type = v;
+  v = document.getElementById('wine_region').value.trim();  if (v) context.region = v;
+  v = document.getElementById('wine_grape').value.trim();   if (v) context.grape = v;
+
+  // Need at least image or text context
+  if (!imageFilename && Object.keys(context).length === 0) {
+    showReloadToast(T.ai_no_data || 'Kein Bild und kein Weinname vorhanden', false);
     return;
   }
 
@@ -1250,7 +1272,10 @@ function reloadViaAi() {
   fetch(INGRESS + '/api/reanalyze-wine', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image_filename: imageFilename })
+    body: JSON.stringify({
+      image_filename: imageFilename || null,
+      wine_context: context
+    })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {

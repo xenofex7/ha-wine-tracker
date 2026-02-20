@@ -62,6 +62,10 @@ See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ## Installation
 
+[![Add Repository to My Home Assistant][my-ha-badge]][my-ha-url]
+
+Or install manually:
+
 1. Go to **Settings → Add-ons → Add-on Store**
 2. Top right: **⋮ → Repositories**
 3. Add the repository URL: `https://github.com/xenofex7/ha-wine-tracker`
@@ -165,7 +169,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 
 MIT
 
-[version-badge]: https://img.shields.io/badge/version-v0.4.4-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v0.4.5-blue.svg
 [stage-badge]: https://img.shields.io/badge/project%20stage-experimental-orange.svg
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-green.svg
@@ -177,3 +181,5 @@ MIT
 [issues-badge]: https://img.shields.io/github/issues/xenofex7/ha-wine-tracker?style=flat&logo=github
 [commit-badge]: https://img.shields.io/github/last-commit/xenofex7/ha-wine-tracker?style=flat&logo=github
 [activity-badge]: https://img.shields.io/github/commit-activity/y/xenofex7/ha-wine-tracker?style=flat&logo=github
+[my-ha-badge]: https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg
+[my-ha-url]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fxenofex7%2Fha-wine-tracker

@@ -454,6 +454,16 @@ def edit(wine_id):
             except FileNotFoundError:
                 pass
         image = new_image
+    # If no file upload but AI/Vivino downloaded an image, use that
+    if not new_image:
+        ai_img = request.form.get("ai_image", "").strip()
+        if ai_img and ai_img != image and os.path.isfile(os.path.join(UPLOAD_DIR, ai_img)):
+            if image:
+                try:
+                    os.remove(os.path.join(UPLOAD_DIR, image))
+                except FileNotFoundError:
+                    pass
+            image = ai_img
 
     price_raw = request.form.get("price", "").strip()
     vivino_raw = request.form.get("vivino_id", "").strip()
@@ -660,40 +670,36 @@ def uploaded_file(filename):
 # ── AI Provider Functions ─────────────────────────────────────────────────────
 
 def _call_anthropic(image_b64, media_type, prompt, opts):
-    """Call Anthropic Claude Vision API."""
+    """Call Anthropic Claude API (vision or text-only)."""
     import anthropic
     api_key = opts.get("anthropic_api_key", "").strip()
     model = opts.get("anthropic_model", "claude-opus-4-6").strip() or "claude-opus-4-6"
     client = anthropic.Anthropic(api_key=api_key)
+    content = []
+    if image_b64:
+        content.append({"type": "image", "source": {"type": "base64", "media_type": media_type, "data": image_b64}})
+    content.append({"type": "text", "text": prompt})
     message = client.messages.create(
         model=model,
         max_tokens=1024,
-        messages=[{
-            "role": "user",
-            "content": [
-                {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": image_b64}},
-                {"type": "text", "text": prompt},
-            ],
-        }],
+        messages=[{"role": "user", "content": content}],
     )
     return message.content[0].text
 
 
 def _call_openai(image_b64, media_type, prompt, opts):
-    """Call OpenAI Vision API."""
+    """Call OpenAI API (vision or text-only)."""
     from openai import OpenAI
     api_key = opts.get("openai_api_key", "").strip()
     model = opts.get("openai_model", "gpt-5.2").strip() or "gpt-5.2"
     client = OpenAI(api_key=api_key)
+    content = []
+    if image_b64:
+        content.append({"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}})
+    content.append({"type": "text", "text": prompt})
     response = client.chat.completions.create(
         model=model,
-        messages=[{
-            "role": "user",
-            "content": [
-                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
-                {"type": "text", "text": prompt},
-            ],
-        }],
+        messages=[{"role": "user", "content": content}],
         max_tokens=1024,
     )
     return response.choices[0].message.content
@@ -708,36 +714,29 @@ def _call_openrouter(image_b64, media_type, prompt, opts):
         api_key=api_key,
         base_url="https://openrouter.ai/api/v1",
     )
+    content = []
+    if image_b64:
+        content.append({"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}})
+    content.append({"type": "text", "text": prompt})
     response = client.chat.completions.create(
         model=model,
-        messages=[{
-            "role": "user",
-            "content": [
-                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
-                {"type": "text", "text": prompt},
-            ],
-        }],
+        messages=[{"role": "user", "content": content}],
         max_tokens=1024,
     )
     return response.choices[0].message.content
 
 
 def _call_ollama(image_b64, media_type, prompt, opts):
-    """Call local Ollama Vision API."""
+    """Call local Ollama API (vision or text-only)."""
     import requests as req
     host = opts.get("ollama_host", "http://localhost:11434").strip().rstrip("/")
     model = opts.get("ollama_model", "llava").strip() or "llava"
+    msg = {"role": "user", "content": prompt}
+    if image_b64:
+        msg["images"] = [image_b64]
     response = req.post(
         f"{host}/api/chat",
-        json={
-            "model": model,
-            "messages": [{
-                "role": "user",
-                "content": prompt,
-                "images": [image_b64],
-            }],
-            "stream": False,
-        },
+        json={"model": model, "messages": [msg], "stream": False},
         timeout=120,
     )
     response.raise_for_status()
@@ -981,38 +980,10 @@ def vivino_image():
         return jsonify({"ok": False, "error": "download_failed"}), 500
 
 
-# ── AI Re-analysis (reload existing image) ───────────────────────────────────
+# ── AI Re-analysis (image, text, or both) ─────────────────────────────────────
 
-@app.route("/api/reanalyze-wine", methods=["POST"])
-def reanalyze_wine():
-    """Re-analyze an existing wine image to fill missing fields."""
-    import base64
-
-    opts = load_options()
-    provider = opts.get("ai_provider", "none").strip().lower()
-
-    if provider == "none" or not _is_ai_configured(opts):
-        return jsonify({"ok": False, "error": "no_api_key"}), 400
-
-    image_filename = request.json.get("image_filename", "").strip() if request.is_json else ""
-    if not image_filename:
-        return jsonify({"ok": False, "error": "no_image"}), 400
-
-    image_path = os.path.join(UPLOAD_DIR, image_filename)
-    if not os.path.isfile(image_path):
-        return jsonify({"ok": False, "error": "image_not_found"}), 404
-
-    with open(image_path, "rb") as f:
-        image_data = base64.standard_b64encode(f.read()).decode("utf-8")
-
-    ext = image_filename.rsplit(".", 1)[-1].lower() if "." in image_filename else "jpg"
-    media_type = {
-        "jpg": "image/jpeg", "jpeg": "image/jpeg",
-        "png": "image/png", "webp": "image/webp", "gif": "image/gif",
-    }.get(ext, "image/jpeg")
-
-    prompt = """Analyze this wine bottle label image. Extract the following fields and return ONLY valid JSON:
-{
+def _wine_json_schema():
+    return """{
   "name": "wine name",
   "wine_type": "one of: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Likörwein, Anderes",
   "vintage": year as integer or null,
@@ -1021,15 +992,71 @@ def reanalyze_wine():
   "price": number or null,
   "drink_from": year as integer or null,
   "drink_until": year as integer or null,
-  "notes": "brief tasting notes if visible on label"
-}
-Rules:
-- wine_type MUST be exactly one of the 6 listed values
+  "notes": "brief tasting notes"
+}"""
+
+
+def _wine_json_rules():
+    return """Rules:
+- wine_type MUST be exactly one of the listed values
 - vintage must be a 4-digit year or null
-- drink_from/drink_until: drinking window years. If mentioned on label, use those. Otherwise ESTIMATE a reasonable drinking window based on the wine type, grape variety, region, and vintage using your wine expertise. For example, a simple Pinot Grigio 2023 might be 2024-2026, while a Barolo 2018 might be 2025-2035. Only return null if you cannot determine enough about the wine to estimate.
-- price as number without currency symbol, or null if not visible
+- drink_from/drink_until: estimate a reasonable drinking window based on wine type, grape, region, and vintage using your wine expertise. For example, a simple Pinot Grigio 2023 might be 2024-2026, while a Barolo 2018 might be 2025-2035. Only return null if you cannot determine enough about the wine to estimate.
+- price as number without currency symbol, or null
 - If a field cannot be determined, set it to null or empty string
 - Return ONLY the JSON object, no markdown, no explanation"""
+
+
+@app.route("/api/reanalyze-wine", methods=["POST"])
+def reanalyze_wine():
+    """Re-analyze a wine using image, text context, or both."""
+    import base64
+
+    opts = load_options()
+    provider = opts.get("ai_provider", "none").strip().lower()
+
+    if provider == "none" or not _is_ai_configured(opts):
+        return jsonify({"ok": False, "error": "no_api_key"}), 400
+
+    body = request.get_json(silent=True) or {}
+    image_filename = (body.get("image_filename") or "").strip()
+    wine_context = body.get("wine_context") or {}
+
+    # Prepare image if available
+    image_b64 = None
+    media_type = "image/jpeg"
+    if image_filename:
+        image_path = os.path.join(UPLOAD_DIR, image_filename)
+        if os.path.isfile(image_path):
+            with open(image_path, "rb") as f:
+                image_b64 = base64.standard_b64encode(f.read()).decode("utf-8")
+            ext = image_filename.rsplit(".", 1)[-1].lower() if "." in image_filename else "jpg"
+            media_type = {
+                "jpg": "image/jpeg", "jpeg": "image/jpeg",
+                "png": "image/png", "webp": "image/webp", "gif": "image/gif",
+            }.get(ext, "image/jpeg")
+
+    # Build context string from known fields
+    context_parts = []
+    if wine_context.get("name"):   context_parts.append(f"Name: {wine_context['name']}")
+    if wine_context.get("year"):   context_parts.append(f"Vintage: {wine_context['year']}")
+    if wine_context.get("type"):   context_parts.append(f"Type: {wine_context['type']}")
+    if wine_context.get("region"): context_parts.append(f"Region: {wine_context['region']}")
+    if wine_context.get("grape"):  context_parts.append(f"Grape: {wine_context['grape']}")
+
+    if not image_b64 and not context_parts:
+        return jsonify({"ok": False, "error": "no_data"}), 400
+
+    schema = _wine_json_schema()
+    rules = _wine_json_rules()
+
+    if image_b64 and context_parts:
+        ctx = "\n".join(context_parts)
+        prompt = f"Analyze this wine bottle label image. The user already knows:\n{ctx}\n\nExtract/verify the following fields and return ONLY valid JSON:\n{schema}\n{rules}"
+    elif image_b64:
+        prompt = f"Analyze this wine bottle label image. Extract the following fields and return ONLY valid JSON:\n{schema}\n{rules}"
+    else:
+        ctx = "\n".join(context_parts)
+        prompt = f"Based on the following wine information, fill in as many missing details as possible using your wine expertise. Known information:\n{ctx}\n\nReturn ONLY valid JSON with these fields (fill in what you can determine):\n{schema}\n{rules}"
 
     try:
         dispatch = {
@@ -1042,7 +1069,7 @@ Rules:
         if not call_fn:
             return jsonify({"ok": False, "error": "invalid_provider"}), 400
 
-        raw = call_fn(image_data, media_type, prompt, opts).strip()
+        raw = call_fn(image_b64, media_type, prompt, opts).strip()
 
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[-1]

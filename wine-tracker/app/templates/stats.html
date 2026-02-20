@@ -336,8 +336,8 @@ function initGlobe() {
 
   // Determine initial rotation to center on the first/biggest region
   const biggest = points.reduce((a, b) => a.qty > b.qty ? a : b);
-  const startPhi = -((biggest.lon * Math.PI) / 180);
-  const startTheta = (biggest.lat * Math.PI) / 180;
+  const startPhi = -((10 * Math.PI) / 180);   // start centered on Europe (~10°E)
+  const startTheta = 0.15;                      // horizon slightly above equator
   phi = startPhi;
   theta = startTheta;
 

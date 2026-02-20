@@ -1,8 +1,11 @@
 # Changelog
 
-All notable changes to **Wine Tracker** are documented here.
+## 0.4.5
 
----
+- **AI reload works without image** — text-only mode uses wine name, region, grape etc. to fill missing fields; image + text combined for best results
+- Fixed **Vivino image not saved** on edit — `/edit/` endpoint now checks `ai_image` field
+- **Placeholders hidden** in edit mode (shown only when adding new wines)
+- Renamed AI reload label to "Fehlende Daten von der KI laden"
 
 ## 0.4.4
 
