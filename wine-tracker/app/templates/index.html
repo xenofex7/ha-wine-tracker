@@ -1534,6 +1534,19 @@ function updateCardData(card, w) {
   card.classList.toggle('empty', w.quantity == 0);
 }
 
+function sortGrid() {
+  var grid = document.querySelector('.grid');
+  var cards = Array.from(grid.querySelectorAll('.card'));
+  cards.sort(function(a, b) {
+    var t = (a.dataset.type || '').localeCompare(b.dataset.type || '');
+    if (t !== 0) return t;
+    var n = (a.dataset.name || '').localeCompare(b.dataset.name || '');
+    if (n !== 0) return n;
+    return (parseInt(a.dataset.year) || 0) - (parseInt(b.dataset.year) || 0);
+  });
+  cards.forEach(function(c) { grid.appendChild(c); });
+}
+
 // ── AJAX form submit (wineModal) ──────────────────────────────────────────────
 
 document.getElementById('wineForm').addEventListener('submit', function(e) {
@@ -1573,6 +1586,7 @@ document.getElementById('wineForm').addEventListener('submit', function(e) {
     refreshRegionList();
     closeModal('wineModal');
     applyFilters();
+    sortGrid();
     highlightCard(card);
   });
 });
@@ -1652,6 +1666,7 @@ document.getElementById('dupForm').addEventListener('submit', function(e) {
     refreshRegionList();
     closeModal('dupModal');
     applyFilters();
+    sortGrid();
     highlightCard(card);
   });
 });
