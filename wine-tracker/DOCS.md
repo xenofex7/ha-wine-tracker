@@ -1,13 +1,26 @@
 # Home Assistant App: Wine Tracker
 
 <p align="center">
-  <img src="logo.png" alt="Wine Tracker Logo" width="128">
+  <img src="https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/logo.png" alt="Wine Tracker Logo" width="128">
 </p>
 
 ![version][version-badge]
 ![ai powered][ai-badge]
 
 A sleek, modern wine cellar tracker running directly in your Home Assistant sidebar. Manage your entire collection — from label photo to tasting notes.
+
+## Screenshots
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_main_screen.png" alt="Wine Cellar Overview" width="800">
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_statistics_screen.png" alt="Statistics with Globe & Charts" width="800">
+</p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_add_wine_screen.png" alt="Add Wine — AI, Vivino or Manual" width="800">
+  <img src="https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_wine_edit_screen.png" alt="Edit Wine Details" width="800">
+</p>
 
 ## Features
 

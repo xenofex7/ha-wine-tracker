@@ -20,6 +20,19 @@
 
 A sleek, modern wine cellar tracker running as a Home Assistant add-on. Manage your entire collection — from label photo to tasting notes — directly in the HA sidebar.
 
+## Screenshots
+
+<p align="center">
+  <img src="assets/260220_main_screen.png" alt="Wine Cellar Overview" width="800">
+</p>
+<p align="center">
+  <img src="assets/260220_statistics_screen.png" alt="Statistics with Globe & Charts" width="800">
+</p>
+<p align="center">
+  <img src="assets/260220_add_wine_screen.png" alt="Add Wine — AI, Vivino or Manual" width="800">
+  <img src="assets/260220_wine_edit_screen.png" alt="Edit Wine Details" width="800">
+</p>
+
 ## Features
 
 - **Wine cards** with photo, vintage, type, region, grape variety, rating & notes
