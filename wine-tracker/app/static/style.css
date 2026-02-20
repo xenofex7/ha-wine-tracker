@@ -148,7 +148,7 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
 /* ── Header: Mobile ───────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   header { padding: 0 .75rem; gap: .5rem; }
-  .nav-brand span, .nav-brand-text { display: none; }
+  .nav-brand { display: none; }
   .nav-link { font-size: .78rem; padding: .3rem .5rem; }
   .search-wrap { width: 120px; height: 30px; }
   .search-wrap input { font-size: .8rem; }
@@ -488,7 +488,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .ai-step h3 { font-size: 1.1rem; margin-bottom: .35rem; }
 .ai-step p { font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
 .ai-upload-area {
-  border: 2px dashed var(--border); border-radius: 12px;
+  border: 1px solid var(--border); border-radius: 12px;
   padding: 3rem 1.5rem; cursor: pointer; transition: border-color .2s, background .2s;
   position: relative; overflow: hidden;
 }
@@ -527,11 +527,11 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
   text-decoration: underline; text-underline-offset: 2px;
 }
 .step-link:hover { color: var(--text); }
-.ai-step .step-link:last-child { margin-top: 1.5rem; }
 
 /* ── Vivino Search Panel ───────────────────────────────────────────────────── */
 .vivino-panel { padding: 1.5rem; }
-.vivino-panel h3 { text-align: center; font-size: 1.05rem; margin-bottom: 1rem; }
+.vivino-panel h3 { text-align: center; font-size: 1.1rem; margin-bottom: .35rem; }
+.vivino-panel p { font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; text-align: center; }
 .vivino-search-input {
   width: 100%; padding: .65rem .85rem; border-radius: 8px;
   border: 1px solid var(--border); background: var(--bg); color: var(--text);
@@ -556,8 +556,6 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .vivino-result-rating { color: var(--gold); font-size: .78rem; }
 .vivino-status { text-align: center; padding: 1.5rem 0; color: var(--muted); font-size: .9rem; }
 .vivino-status .ai-spinner { margin: 0 auto .75rem; }
-.vivino-panel .step-link { margin-bottom: 1rem; }
-.ai-step .step-link:first-child { margin-bottom: 0; }
 
 /* ── Reload Toast ──────────────────────────────────────────────────────────── */
 .reload-toast {

@@ -168,7 +168,6 @@
     <!-- AI Panel (shown after clicking AI option) -->
     {% if ai_enabled %}
     <div id="aiStep" class="ai-step" style="display:none;">
-      <div class="step-link" onclick="_reloadMode ? showFormStep() : showSourceStep()"><i class="mdi mdi-arrow-left"></i> {{ t.back }}</div>
       <h3>{{ t.ai_step_title }}</h3>
       <p>{{ t.ai_step_subtitle }}</p>
 
@@ -195,22 +194,17 @@
           <button type="button" class="ai-btn primary" onclick="skipToManual()">{{ t.ai_skip }}</button>
         </div>
       </div>
-
-      <div class="step-link" onclick="skipToManual()"><i class="mdi mdi-pencil"></i> {{ t.ai_skip }}</div>
     </div>
     {% endif %}
 
     <!-- Vivino Panel (shown after clicking Vivino option) -->
     <div id="vivinoStep" class="vivino-panel" style="display:none;">
-      <div class="step-link" onclick="_reloadMode ? showFormStep() : showSourceStep()"><i class="mdi mdi-arrow-left"></i> {{ t.back }}</div>
       <h3><i class="mdi mdi-magnify"></i> {{ t.vivino_title }}</h3>
+      <p>{{ t.vivino_desc }}</p>
       <input type="text" class="vivino-search-input" id="vivinoSearchInput"
              placeholder="{{ t.vivino_placeholder }}" oninput="debouncedVivinoSearch()">
       <div id="vivinoStatus" class="vivino-status" style="display:none;"></div>
       <div id="vivinoResults" class="vivino-results"></div>
-      <div class="step-link" onclick="skipToManual()" style="text-align:center; margin-top:1rem;">
-        <i class="mdi mdi-pencil"></i> {{ t.ai_skip }}
-      </div>
     </div>
 
     <form method="post" id="wineForm" enctype="multipart/form-data">

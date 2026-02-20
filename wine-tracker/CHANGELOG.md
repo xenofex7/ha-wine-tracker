@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2
+
+- **Cleaner add-wine dialogs** — AI and Vivino steps now share a unified, streamlined layout
+- **Mobile space saver** — navigation icon hidden on small screens to free up header room
+
 ## 1.0.1
 
 - **Your photos stay yours** — reloading data from Vivino no longer replaces your own wine photos
