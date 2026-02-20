@@ -59,6 +59,7 @@ TRANSLATIONS = {
     "wine_type_Rosé": "Rosé",
     "wine_type_Schaumwein": "Schaumwein",
     "wine_type_Dessertwein": "Dessertwein",
+    "wine_type_Likörwein": "Likörwein",
     "wine_type_Anderes": "Anderes",
 
     # Card
@@ -206,6 +207,7 @@ TRANSLATIONS = {
     "wine_type_Rosé": "Rosé",
     "wine_type_Schaumwein": "Sparkling Wine",
     "wine_type_Dessertwein": "Dessert Wine",
+    "wine_type_Likörwein": "Fortified Wine",
     "wine_type_Anderes": "Other",
 
     "bottles_abbr": "btl.",
@@ -346,6 +348,7 @@ TRANSLATIONS = {
     "wine_type_Rosé": "Rosé",
     "wine_type_Schaumwein": "Vin mousseux",
     "wine_type_Dessertwein": "Vin de dessert",
+    "wine_type_Likörwein": "Vin muté",
     "wine_type_Anderes": "Autre",
 
     "bottles_abbr": "bout.",
@@ -486,6 +489,7 @@ TRANSLATIONS = {
     "wine_type_Rosé": "Rosé",
     "wine_type_Schaumwein": "Spumante",
     "wine_type_Dessertwein": "Vino da dessert",
+    "wine_type_Likörwein": "Vino liquoroso",
     "wine_type_Anderes": "Altro",
 
     "bottles_abbr": "bott.",
@@ -626,6 +630,7 @@ TRANSLATIONS = {
     "wine_type_Rosé": "Rosado",
     "wine_type_Schaumwein": "Vino espumoso",
     "wine_type_Dessertwein": "Vino de postre",
+    "wine_type_Likörwein": "Vino generoso",
     "wine_type_Anderes": "Otro",
 
     "bottles_abbr": "bot.",
@@ -766,6 +771,7 @@ TRANSLATIONS = {
     "wine_type_Rosé": "Rosé",
     "wine_type_Schaumwein": "Espumante",
     "wine_type_Dessertwein": "Vinho de sobremesa",
+    "wine_type_Likörwein": "Vinho generoso",
     "wine_type_Anderes": "Outro",
 
     "bottles_abbr": "gar.",
@@ -906,6 +912,7 @@ TRANSLATIONS = {
     "wine_type_Rosé": "Rosé",
     "wine_type_Schaumwein": "Mousserende wijn",
     "wine_type_Dessertwein": "Dessertwijn",
+    "wine_type_Likörwein": "Versterkte wijn",
     "wine_type_Anderes": "Overig",
 
     "bottles_abbr": "fl.",

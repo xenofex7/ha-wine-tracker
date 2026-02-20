@@ -62,7 +62,7 @@ DB_PATH = os.path.join(DATA_DIR, "wine.db")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ALLOWED_EXT = {"jpg", "jpeg", "png", "webp", "gif"}
-WINE_TYPES = ["Rotwein", "Weisswein", "Rosé", "Schaumwein", "Dessertwein", "Anderes"]
+WINE_TYPES = ["Rotwein", "Weisswein", "Rosé", "Schaumwein", "Dessertwein", "Likörwein", "Anderes"]
 
 # ── Region → Coordinates lookup (for stats map) ──────────────────────────────
 # Covers major wine countries and regions.  Keys are matched case-insensitively.
@@ -285,11 +285,32 @@ def allowed(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
 
 
+MAX_IMAGE_PX = 1800  # downscale images so longest edge ≤ this
+
+
+def _downscale(filepath):
+    """Resize an image file in-place so its longest edge ≤ MAX_IMAGE_PX."""
+    try:
+        from PIL import Image
+        with Image.open(filepath) as img:
+            w, h = img.size
+            if max(w, h) <= MAX_IMAGE_PX:
+                return
+            ratio = MAX_IMAGE_PX / max(w, h)
+            new_size = (int(w * ratio), int(h * ratio))
+            img = img.resize(new_size, Image.LANCZOS)
+            img.save(filepath, quality=85, optimize=True)
+    except Exception as e:
+        app.logger.warning("Image downscale failed: %s", e)
+
+
 def save_image(file):
     if file and file.filename and allowed(file.filename):
         ext = file.filename.rsplit(".", 1)[1].lower()
         fname = f"{uuid.uuid4().hex}.{ext}"
-        file.save(os.path.join(UPLOAD_DIR, fname))
+        path = os.path.join(UPLOAD_DIR, fname)
+        file.save(path)
+        _downscale(path)
         return fname
     return None
 
@@ -760,7 +781,7 @@ def analyze_wine():
     prompt = """Analyze this wine bottle label image. Extract the following fields and return ONLY valid JSON:
 {
   "name": "wine name",
-  "wine_type": "one of: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Anderes",
+  "wine_type": "one of: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Likörwein, Anderes",
   "vintage": year as integer or null,
   "region": "wine region",
   "grape": "grape variety/varieties",
@@ -818,7 +839,7 @@ Rules:
 
 # ── Vivino Wine Search ──────────────────────────────────────────────────────
 
-VIVINO_WINE_TYPES = {1: "Rotwein", 2: "Weisswein", 3: "Schaumwein", 4: "Rosé", 7: "Dessertwein"}
+VIVINO_WINE_TYPES = {1: "Rotwein", 2: "Weisswein", 3: "Schaumwein", 4: "Rosé", 7: "Dessertwein", 24: "Likörwein"}
 
 def _vivino_country_code(currency):
     """Map currency to Vivino country/currency codes."""
@@ -833,34 +854,41 @@ def _vivino_country_code(currency):
 
 @app.route("/api/vivino-search")
 def vivino_search():
-    """Proxy search to Vivino explore API."""
+    """Search wines on Vivino by scraping their search page.
+
+    The Vivino explore API no longer supports free-text search (returns 400
+    "At least one filter should be set").  The web search page, however,
+    embeds its results as JSON inside a ``data-preloaded-state`` attribute
+    on the ``#search-page`` div — we parse that instead.
+    """
+    import html as htmlmod
+    import re
     import requests as req
 
     query = request.args.get("q", "").strip()
     if len(query) < 2:
         return jsonify({"ok": False, "error": "query_too_short"}), 400
 
-    opts = load_options()
-    country, currency = _vivino_country_code(opts.get("currency", "CHF"))
-
     try:
         resp = req.get(
-            "https://www.vivino.com/api/explore/explore",
-            params={
-                "q": query,
-                "country_code": country,
-                "currency_code": currency,
-                "page": 1,
-                "per_page": 8,
-            },
+            "https://www.vivino.com/search/wines",
+            params={"q": query},
             headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                "Accept": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                              "AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/131.0.0.0 Safari/537.36",
+                "Accept": "text/html",
             },
             timeout=10,
         )
         resp.raise_for_status()
-        data = resp.json()
+
+        # Extract the JSON blob from data-preloaded-state="..."
+        m = re.search(r'data-preloaded-state="([^"]+)"', resp.text)
+        if not m:
+            return jsonify({"ok": False, "error": "parse_error"}), 502
+        data = json.loads(htmlmod.unescape(m.group(1)))
+
     except req.exceptions.Timeout:
         return jsonify({"ok": False, "error": "timeout"}), 504
     except Exception as e:
@@ -869,7 +897,7 @@ def vivino_search():
 
     results = []
     try:
-        for match in data.get("explore_vintage", {}).get("matches", []):
+        for match in data.get("search_results", {}).get("matches", []):
             vintage = match.get("vintage", {})
             wine = vintage.get("wine", {}) or {}
             winery = wine.get("winery", {}) or {}
@@ -884,7 +912,7 @@ def vivino_search():
                     grapes.append(grape_obj["name"])
 
             # Price
-            price_obj = vintage.get("price", {}) or match.get("price", {}) or {}
+            price_obj = match.get("price", {}) or {}
             price_val = price_obj.get("amount")
 
             # Wine type
@@ -902,7 +930,7 @@ def vivino_search():
             results.append({
                 "vivino_id": wine.get("id"),
                 "name": f"{winery.get('name', '')} {wine.get('name', '')}".strip(),
-                "year": vintage.get("year"),
+                "year": vintage.get("year") or None,
                 "wine_type": wine_type,
                 "region": region_str,
                 "grape": ", ".join(grapes),
@@ -943,6 +971,7 @@ def vivino_image():
         filepath = os.path.join(UPLOAD_DIR, filename)
         with open(filepath, "wb") as f:
             f.write(resp.content)
+        _downscale(filepath)
         return jsonify({"ok": True, "filename": filename})
     except Exception as e:
         app.logger.exception("Vivino image download error: %s", e)
@@ -982,7 +1011,7 @@ def reanalyze_wine():
     prompt = """Analyze this wine bottle label image. Extract the following fields and return ONLY valid JSON:
 {
   "name": "wine name",
-  "wine_type": "one of: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Anderes",
+  "wine_type": "one of: Rotwein, Weisswein, Rosé, Schaumwein, Dessertwein, Likörwein, Anderes",
   "vintage": year as integer or null,
   "region": "wine region",
   "grape": "grape variety/varieties",

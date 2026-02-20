@@ -18,11 +18,12 @@
   --radius: 12px;
   --shadow: 0 4px 24px rgba(0,0,0,.5);
   /* Wine type colors */
-  --wine-rotwein: #722f37;
-  --wine-weisswein: #d4a843;
-  --wine-rose: #e8a0b4;
-  --wine-schaumwein: #2c8c99;
-  --wine-dessertwein: #e67e22;
+  --wine-rotwein: #ba1628;
+  --wine-weisswein: #fbcf4e;
+  --wine-rose: #ffd1d8;
+  --wine-schaumwein: #f3efaf;
+  --wine-dessertwein: #fd7907;
+  --wine-likoerwein: #800f1c;
   --wine-anderes: #6c3461;
   --wine-empty: #aaa;
 }
@@ -139,19 +140,20 @@ html.light .stats-pill:hover { background: rgba(0,0,0,.12); }
 
 /* ── Corner Ribbon ──────────────────────────────────────── */
 .ribbon {
-  position: absolute; top: 18px; right: -35px;
+  position: absolute; top: 18px; left: -35px;
   width: 130px; text-align: center;
   padding: 4px 0; font-size: .65rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: .5px;
   color: #fff; z-index: 2;
-  transform: rotate(45deg);
+  transform: rotate(-45deg);
   box-shadow: 0 2px 4px rgba(0,0,0,.18);
 }
 .ribbon-rotwein     { background: var(--wine-rotwein); }
 .ribbon-weisswein   { background: var(--wine-weisswein); color: #333; }
 .ribbon-rose        { background: var(--wine-rose); color: #333; }
-.ribbon-schaumwein  { background: var(--wine-schaumwein); }
+.ribbon-schaumwein  { background: var(--wine-schaumwein); color: #333; }
 .ribbon-dessertwein { background: var(--wine-dessertwein); }
+.ribbon-likoerwein  { background: var(--wine-likoerwein); }
 .ribbon-anderes     { background: var(--wine-anderes); }
 .ribbon-empty       { background: var(--wine-empty); }
 

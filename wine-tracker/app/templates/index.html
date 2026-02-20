@@ -64,7 +64,7 @@
     {% if w['quantity'] == 0 %}
       <div class="ribbon ribbon-empty">{{ t.ribbon_empty }}</div>
     {% elif w['type'] %}
-      <div class="ribbon ribbon-{{ w['type']|lower|replace('é','e') }}">{{ w['type'] | wine_type }}</div>
+      <div class="ribbon ribbon-{{ w['type']|lower|replace('é','e')|replace('ö','oe') }}">{{ w['type'] | wine_type }}</div>
     {% endif %}
 
     <div class="card-img" onclick="cardImgClick(this)">
@@ -1435,7 +1435,17 @@ function renderCard(w) {
   if (w.year) metaParts += '<span>' + w.year + '</span>';
   if (w.region) metaParts += '<span>' + w.region + '</span>';
 
-  return '<div class="card-img" onclick="cardImgClick(this)">' + imgHtml + '</div>' +
+  // Ribbon
+  var ribbonHtml = '';
+  if (w.quantity == 0) {
+    ribbonHtml = '<div class="ribbon ribbon-empty">' + (T.ribbon_empty || '') + '</div>';
+  } else if (w.type) {
+    var ribbonCls = w.type.toLowerCase().replace(/é/g,'e').replace(/ö/g,'oe');
+    ribbonHtml = '<div class="ribbon ribbon-' + ribbonCls + '">' + (T['wine_type_' + w.type] || w.type) + '</div>';
+  }
+
+  return ribbonHtml +
+    '<div class="card-img" onclick="cardImgClick(this)">' + imgHtml + '</div>' +
     '<div class="qty-badge ' + (w.quantity > 0 ? 'has' : '') + '">' + w.quantity + ' ' + T.bottles_abbr + '</div>' +
     '<div class="card-body" onclick="editFromCard(this)">' +
       '<div class="card-name" title="' + (w.name||'') + '">' + (w.name||'') + '</div>' +
@@ -1637,6 +1647,9 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
   const clean = params.toString();
   history.replaceState(null, '', window.location.pathname + (clean ? '?' + clean : ''));
 })();
+
+// Apply filters on initial load (hides empty bottles when showEmpty is false)
+applyFilters();
 </script>
 
 <button class="fab" onclick="openWineModal()" title="{{ t.btn_add_wine }}"><i class="mdi mdi-plus"></i></button>

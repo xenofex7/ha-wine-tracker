@@ -127,7 +127,8 @@
             {% set type_colors = {
               'Rotwein': 'var(--wine-rotwein)', 'Weisswein': 'var(--wine-weisswein)',
               'Rosé': 'var(--wine-rose)', 'Schaumwein': 'var(--wine-schaumwein)',
-              'Dessertwein': 'var(--wine-dessertwein)', 'Anderes': 'var(--wine-anderes)'
+              'Dessertwein': 'var(--wine-dessertwein)', 'Likörwein': 'var(--wine-likoerwein)',
+              'Anderes': 'var(--wine-anderes)'
             } %}
             {% for item in by_type %}
             {% set pct = (item['qty'] / type_total * 100) if type_total > 0 else 0 %}
