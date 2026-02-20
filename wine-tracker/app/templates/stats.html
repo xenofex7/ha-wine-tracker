@@ -124,13 +124,17 @@
           <svg viewBox="0 0 100 100">
             {# Donut segments via stroke-dasharray on circles #}
             {% set ns = namespace(offset=0) %}
-            {% set colors = ['#c0392b', '#d4a843', '#8b1a2a', '#e67e22', '#6c3461', '#2c8c99'] %}
+            {% set type_colors = {
+              'Rotwein': 'var(--wine-rotwein)', 'Weisswein': 'var(--wine-weisswein)',
+              'Rosé': 'var(--wine-rose)', 'Schaumwein': 'var(--wine-schaumwein)',
+              'Dessertwein': 'var(--wine-dessertwein)', 'Anderes': 'var(--wine-anderes)'
+            } %}
             {% for item in by_type %}
             {% set pct = (item['qty'] / type_total * 100) if type_total > 0 else 0 %}
             {% set gap = 1.2 %}
             {% set seg = pct - gap if pct > gap else pct %}
             <circle cx="50" cy="50" r="35"
-                    fill="none" stroke="{{ colors[loop.index0 % 6] }}"
+                    fill="none" stroke="{{ type_colors[item['type']] or 'var(--wine-anderes)' }}"
                     stroke-width="12"
                     stroke-dasharray="{{ seg * 2.199 }} {{ 219.9 - seg * 2.199 }}"
                     stroke-dashoffset="{{ -ns.offset * 2.199 }}"
@@ -145,10 +149,9 @@
         </div>
         <div class="donut-legend">
           {% for item in by_type %}
-          {% set colors = ['#c0392b', '#d4a843', '#8b1a2a', '#e67e22', '#6c3461', '#2c8c99'] %}
           {% set pct = (item['qty'] / type_total * 100)|round|int if type_total > 0 else 0 %}
           <div class="donut-legend-item">
-            <span class="donut-dot" style="background:{{ colors[loop.index0 % 6] }}"></span>
+            <span class="donut-dot" style="background:{{ type_colors[item['type']] or 'var(--wine-anderes)' }}"></span>
             <span class="donut-legend-label">{{ item['type'] | wine_type }}</span>
             <span class="donut-legend-value">{{ pct }}%</span>
           </div>
@@ -333,7 +336,7 @@ function initGlobe() {
   // Determine initial rotation to center on the first/biggest region
   const biggest = points.reduce((a, b) => a.qty > b.qty ? a : b);
   const startPhi = -((biggest.lon * Math.PI) / 180);
-  const startTheta = 0.1;
+  const startTheta = (biggest.lat * Math.PI) / 180;
   phi = startPhi;
   theta = startTheta;
 

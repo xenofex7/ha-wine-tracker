@@ -17,6 +17,14 @@
   --empty: #3a2a30;
   --radius: 12px;
   --shadow: 0 4px 24px rgba(0,0,0,.5);
+  /* Wine type colors */
+  --wine-rotwein: #722f37;
+  --wine-weisswein: #d4a843;
+  --wine-rose: #e8a0b4;
+  --wine-schaumwein: #2c8c99;
+  --wine-dessertwein: #e67e22;
+  --wine-anderes: #6c3461;
+  --wine-empty: #aaa;
 }
 html.light {
   --bg: #f5f0eb;
@@ -78,9 +86,13 @@ html.light .stats-pill:hover { background: rgba(0,0,0,.12); }
   border-bottom: 1px solid var(--border);
 }
 .search-wrap { position: relative; width: 220px; flex-shrink: 0; }
+.search-icon {
+  position: absolute; left: .6rem; top: 50%; transform: translateY(-50%);
+  color: var(--muted); font-size: 1.1rem; pointer-events: none;
+}
 .search-wrap input {
   width: 100%; background: var(--bg); border: 1px solid var(--border);
-  border-radius: 8px; padding: .5rem 2rem .5rem .75rem;
+  border-radius: 8px; padding: .5rem 2rem .5rem 2rem;
   color: var(--text); font-size: .9rem; height: 35px;
 }
 .search-clear {
@@ -91,7 +103,7 @@ html.light .stats-pill:hover { background: rgba(0,0,0,.12); }
 .search-clear:hover { color: var(--text); }
 .search-wrap input:not(:placeholder-shown) + .search-clear { display: block; }
 
-.filter-tabs { display: flex; gap: .4rem; flex-wrap: wrap; }
+.filter-tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-left: auto; }
 .tab {
   padding: 0 .75rem; border-radius: 20px; font-size: .8rem; cursor: pointer;
   border: 1px solid var(--border); background: var(--bg); color: var(--muted);
@@ -124,6 +136,25 @@ html.light .stats-pill:hover { background: rgba(0,0,0,.12); }
   display: flex; flex-direction: column;
 }
 .card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+/* ── Corner Ribbon ──────────────────────────────────────── */
+.ribbon {
+  position: absolute; top: 18px; right: -35px;
+  width: 130px; text-align: center;
+  padding: 4px 0; font-size: .65rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: #fff; z-index: 2;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 4px rgba(0,0,0,.18);
+}
+.ribbon-rotwein     { background: var(--wine-rotwein); }
+.ribbon-weisswein   { background: var(--wine-weisswein); color: #333; }
+.ribbon-rose        { background: var(--wine-rose); color: #333; }
+.ribbon-schaumwein  { background: var(--wine-schaumwein); }
+.ribbon-dessertwein { background: var(--wine-dessertwein); }
+.ribbon-anderes     { background: var(--wine-anderes); }
+.ribbon-empty       { background: var(--wine-empty); }
+
 .card.empty { opacity: .5; background: var(--empty); border-style: dashed; }
 .card.empty:hover { opacity: .75; }
 .card.highlight { animation: glow 2s ease-out forwards; }
@@ -262,7 +293,7 @@ html.light .stats-pill:hover { background: rgba(0,0,0,.12); }
 }
 .modal {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); width: 100%; max-width: 480px;
+  border-radius: var(--radius); width: 100%; max-width: 360px;
   max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow);
 }
 .modal-header {
@@ -350,7 +381,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .btn-submit:hover { background: #e74c3c; }
 
 /* ── Source Step (AI + Vivino + Manual) ─────────────────────────────────────── */
-.source-step { padding: 1.5rem; }
+.source-step { padding: 1.5rem; max-width: 360px; margin: 0 auto; }
 .source-step-header { text-align: center; margin-bottom: 1.25rem; }
 .source-step-header h3 { font-size: 1.1rem; margin-bottom: .25rem; }
 .source-step-header p { font-size: .85rem; color: var(--muted); }
@@ -454,7 +485,8 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .reload-toast.success { background: var(--gold, #c8a951); color: #1a1a1a; }
 .reload-toast.neutral { background: var(--card-bg, #2a2a2a); color: var(--muted, #999); border: 1px solid var(--border, #444); }
 
-/* ── Wide-screen Form Layout ───────────────────────────────────────────────── */
+/* ── Wine Modal: wider for form ────────────────────────────────────────────── */
+#wineModal .modal { max-width: 480px; }
 @media (min-width: 700px) {
   #wineModal .modal { max-width: 900px; }
   #wineModal .modal-body {

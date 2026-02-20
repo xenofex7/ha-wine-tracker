@@ -53,5 +53,5 @@ All data (SQLite database + photos) is stored under `/share/wine-tracker/` — p
 
 See the full documentation and changelog on [GitHub](https://github.com/xenofex7/ha-wine-tracker).
 
-[version-badge]: https://img.shields.io/badge/version-v0.4.1-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v0.4.2-blue.svg
 [ai-badge]: https://img.shields.io/badge/AI%20powered-label%20recognition-blueviolet.svg
