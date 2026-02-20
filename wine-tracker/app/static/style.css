@@ -50,7 +50,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 /* ── Header (shared) ──────────────────────────────────────────────────────── */
 header {
   background: var(--surface);
-  height: 55px; padding: 0 1.5rem;
+  height: 56px; padding: 0 1.5rem;
   display: flex; align-items: center; gap: .75rem;
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 100;
@@ -422,7 +422,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 /* Submit button */
 .btn-submit {
   background: var(--accent); color: white; border: none;
-  padding: .65rem 1.5rem; border-radius: 8px; font-size: .95rem;
+  height: 42px; padding: 0 1.5rem; border-radius: 8px; font-size: .95rem;
   font-weight: 700; cursor: pointer; width: 100%; margin-top: .25rem;
   transition: background .2s;
 }
@@ -438,10 +438,9 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .reload-popover-wrap { position: relative; }
 .btn-reload-trigger {
   background: var(--surface2); color: var(--text); border: 1px solid var(--border);
-  padding: .55rem 1rem; border-radius: 8px; font-size: .85rem;
-  font-weight: 600; cursor: pointer; white-space: nowrap;
-  display: flex; align-items: center; gap: .4rem;
-  transition: background .2s, border-color .2s;
+  width: 42px; height: 42px; border-radius: 8px; font-size: 1.1rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .2s, border-color .2s;
 }
 .btn-reload-trigger:hover { border-color: var(--accent); background: var(--surface); }
 .btn-reload-trigger.loading { opacity: .7; cursor: wait; }

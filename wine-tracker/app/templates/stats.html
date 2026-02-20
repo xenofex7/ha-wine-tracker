@@ -16,7 +16,7 @@
     <a class="nav-link active" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
   </nav>
   <div class="header-spacer"></div>
-  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon"><i class="mdi mdi-weather-sunny"></i></span></button>
+  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon"><i class="mdi mdi-laptop"></i></span></button>
 </header>
 
 <div class="content">
@@ -383,7 +383,7 @@ function initGlobe() {
 }
 
 // ── Theme: 3-state cycle (shared with index page) ────────────────────────────
-const THEME_MODES = ['dark', 'light', 'system'];
+const THEME_MODES = ['system', 'dark', 'light'];
 const THEME_ICONS = { dark: '<i class="mdi mdi-weather-night"></i>', light: '<i class="mdi mdi-weather-sunny"></i>', system: '<i class="mdi mdi-laptop"></i>' };
 
 function getSystemPreference() {
@@ -400,7 +400,7 @@ function applyTheme(mode) {
 }
 
 window.cycleTheme = function() {
-  const current = localStorage.getItem('wine-theme') || 'dark';
+  const current = localStorage.getItem('wine-theme') || 'system';
   const idx = THEME_MODES.indexOf(current);
   const next = THEME_MODES[(idx + 1) % THEME_MODES.length];
   localStorage.setItem('wine-theme', next);
@@ -409,10 +409,10 @@ window.cycleTheme = function() {
 
 // Init theme
 (function() {
-  const saved = localStorage.getItem('wine-theme') || 'dark';
+  const saved = localStorage.getItem('wine-theme') || 'system';
   applyTheme(saved);
   window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
-    if (localStorage.getItem('wine-theme') === 'system') applyTheme('system');
+    if ((localStorage.getItem('wine-theme') || 'system') === 'system') applyTheme('system');
   });
 })();
 </script>

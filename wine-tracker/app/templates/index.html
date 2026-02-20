@@ -42,7 +42,7 @@
     </div>
   </div>
   {% endif %}
-  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon"><i class="mdi mdi-weather-sunny"></i></span></button>
+  <button class="theme-toggle" onclick="cycleTheme()" title="{{ t.toggle_theme }}"><span class="theme-icon"><i class="mdi mdi-laptop"></i></span></button>
 </header>
 
 <!-- Wine Grid -->
@@ -330,8 +330,8 @@
 
         <div class="form-footer" id="formFooter">
           <div class="reload-popover-wrap" id="reloadPopoverWrap" style="display:none">
-            <button type="button" class="btn-reload-trigger" id="reloadTriggerBtn" onclick="toggleReloadPopover()">
-              <i class="mdi mdi-refresh"></i> {{ t.btn_reload }}
+            <button type="button" class="btn-reload-trigger" id="reloadTriggerBtn" onclick="toggleReloadPopover()" title="{{ t.btn_reload }}">
+              <i class="mdi mdi-refresh"></i>
             </button>
             <div class="reload-popover" id="reloadPopover" style="display:none">
               {% if ai_enabled %}
@@ -420,8 +420,8 @@ const INGRESS = '{{ ingress }}';
 const CURRENCY = '{{ currency }}';
 const T = {{ t | tojson }};
 
-// Theme: 3-state cycle → dark → light → system
-const THEME_MODES = ['dark', 'light', 'system'];
+// Theme: 3-state cycle → system → dark → light
+const THEME_MODES = ['system', 'dark', 'light'];
 const THEME_ICONS = { dark: '<i class="mdi mdi-weather-night"></i>', light: '<i class="mdi mdi-weather-sunny"></i>', system: '<i class="mdi mdi-laptop"></i>' };
 
 function getSystemPreference() {
@@ -436,7 +436,7 @@ function applyTheme(mode) {
 }
 
 function cycleTheme() {
-  const current = localStorage.getItem('wine-theme') || 'dark';
+  const current = localStorage.getItem('wine-theme') || 'system';
   const idx = THEME_MODES.indexOf(current);
   const next = THEME_MODES[(idx + 1) % THEME_MODES.length];
   localStorage.setItem('wine-theme', next);
@@ -445,11 +445,11 @@ function cycleTheme() {
 
 // Init theme
 (function() {
-  const saved = localStorage.getItem('wine-theme') || 'dark';
+  const saved = localStorage.getItem('wine-theme') || 'system';
   applyTheme(saved);
   // Listen for OS theme changes when in system mode
   window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
-    if (localStorage.getItem('wine-theme') === 'system') applyTheme('system');
+    if ((localStorage.getItem('wine-theme') || 'system') === 'system') applyTheme('system');
   });
 })();
 
@@ -1386,8 +1386,9 @@ function reloadViaVivino() {
         vivinoField.value = item.vivino_id;
       }
 
-      // Download image if we don't have one
-      var hasImage = document.getElementById('aiImageField').value;
+      // Download image only if the wine has no image at all
+      var hasImage = document.getElementById('aiImageField').value
+        || document.querySelector('#winePreview img');
       if (!hasImage && item.image_url) {
         downloadVivinoImage(item.image_url);
       }

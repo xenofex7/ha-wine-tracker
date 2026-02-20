@@ -1,177 +1,166 @@
 # Changelog
 
+## 1.0.1
+
+- **Your photos stay yours** — reloading data from Vivino no longer replaces your own wine photos
+- **Compact reload button** — cleaner edit dialog with a sleek icon-only button
+- **Pixel-perfect header** — now matches the Home Assistant toolbar height exactly
+- System theme is now the default — automatically adapts to your device's dark or light mode
+
 ## 1.0.0
 
-### 🎉 Major UI Overhaul
-
-- **Unified navigation header** — single consistent nav bar across all pages replaces the old header + toolbar layout
-- **Filter dropdown** — wine-type filter moved into a dropdown popup with radio-button list (replaces inline tab chips)
-- **"Leere ausblenden" toggle** integrated into the filter dropdown
-- Removed stats-pill, back button, and separate toolbar row
-
-### 🎨 Visual Refinements
-
-- **Flat header** with clean `var(--surface)` background (no more gradient)
-- **Fixed 55 px header height** for consistent appearance across pages
-- Header buttons (filter + theme toggle) now share identical styling
-- Wine-glass logo icon enlarged for better visibility
-- Globe legend repositioned to **upper-left corner** with solid background, hidden on mobile
-- Removed info-chips section from statistics page
-
-### 🐛 Bug Fixes
-
-- **Vivino links now point to the correct wine** — stores vintage ID instead of generic wine ID, URL changed from `/wines/` to `/w/`
-- Type-corner ribbon no longer clipped at the bottom edge
-
-### 🌍 Translations
-
-- Added `nav_cellar` translation key to all 7 languages (DE, EN, FR, IT, ES, PT, NL)
+- **Redesigned navigation** — a clean, unified header across every page for a polished app-like experience
+- **Smart filter menu** — tap the filter icon to pick your wine type from a neat dropdown list
+- **Hide empty bottles** toggle now lives right inside the filter menu — one less thing cluttering the screen
+- **Cleaner interface** — removed visual clutter for a more focused wine browsing experience
+- **Sleek flat header** — modern, minimal design that looks great in dark and light mode
+- **Consistent layout** — every page now feels like it belongs to the same app
+- **Bigger wine glass icon** — because your cellar deserves a proper logo
+- **Polished globe view** — legend tucked into the corner, cleaner on mobile
+- **Streamlined statistics** — focused on what matters: your charts and numbers
+- **Vivino links actually work now** — clicking a Vivino link on a wine card opens the correct wine page (not a random one)
+- **Wine type ribbon** no longer gets cut off at the bottom
+- All 7 languages fully updated (German, English, French, Italian, Spanish, Portuguese, Dutch)
 
 ## 0.4.5
 
-- **AI reload works without image** — text-only mode uses wine name, region, grape etc. to fill missing fields; image + text combined for best results
-- Fixed **Vivino image not saved** on edit — `/edit/` endpoint now checks `ai_image` field
-- **Placeholders hidden** in edit mode (shown only when adding new wines)
-- Renamed AI reload label to "Fehlende Daten von der KI laden"
+- **AI gets smarter** — even without a photo, AI can now fill in missing data using just the wine name, region, and grape
+- Photo + text together still gives the best results
+- Fixed an issue where Vivino images weren't saved when editing a wine
+- Cleaner edit form — no more confusing placeholder text on existing wines
 
 ## 0.4.4
 
-- **"Daten ergänzen" moved into edit modal** — popover next to save button with AI / Vivino options (removed from card actions)
-- Fixed **Vivino image download** — protocol-relative URLs now handled correctly
-- Updated **wine-type colors** to match Vivino palette
+- **"Reload data" moved into the edit dialog** — find AI and Vivino options right next to the save button
+- Fixed Vivino image downloads that sometimes failed
+- Wine type colors now match the Vivino palette
 
 ## 0.4.3
 
-- Fixed **Vivino search** — rewrote to scrape HTML search page (explore API no longer supports text queries)
-- **Image downscaling** on upload (longest edge ≤ 1800 px)
-- Wine-type **ribbon moved to top-left** corner (qty badge occupies top-right)
-- **Empty bottles hidden** on initial page load when toggle is off
-- **Changelog** now ships inside the add-on directory (fixes "No changelog found" in HA)
+- **Vivino search is back** — completely rebuilt to work reliably again
+- **Smaller photos** — uploaded images are automatically downsized for faster loading
+- Wine type ribbon moved to the top-left corner for better readability
+- Empty bottles now properly hidden on page load when the toggle is off
+- Changelog visible in Home Assistant (no more "No changelog found")
 
 ## 0.4.2
 
-- Centralized **wine-type colors** as CSS Custom Properties
-- **Donut chart** uses type-based color mapping (fixes wrong colors)
-- Globe starts centered on the **region with most wines**
-- Removed redundant wine-type tag from card meta (ribbon is sufficient)
-- Adjusted **modal widths** (source step 360 px, wine form 480 / 900 px)
+- **Smarter donut chart** — colors now match the wine type (red for red, gold for white, etc.)
+- **Globe finds your wines** — automatically centers on the country where most of your wine comes from
+- Cleaner wine cards with less redundant info
+- Improved modal sizes on different screen sizes
 
 ## 0.4.1
 
-- Search wines on **Vivino** directly from the add dialog (name, region, rating, price)
-- **Reload missing data** button to re-analyze wines with incomplete AI results
-- Improved **AI drink-window estimation** (better prompts, more reliable responses)
-- Redesigned source-selection step with three full-width options (AI / Vivino / Manual)
-- Extracted all CSS into a dedicated stylesheet for faster page loads
-- Globe now starts centered on **equator height** for a more balanced view
-- Version bumping script for maintainers (`set_version_nr.sh`)
+- **Vivino search** — search for wines by name, see ratings, prices, and import directly
+- **Reload missing data** — re-analyze wines where AI couldn't fill all fields
+- **Better drink window estimation** — AI now gives more accurate "best before" ranges
+- **Redesigned "add wine" flow** — choose between AI, Vivino, or manual entry with big clear buttons
+- Faster page loads thanks to optimized stylesheets
+- Globe starts with a nicer balanced view
 
 ## 0.4.0
 
-- **Vivino wine search** integrated into the add-wine flow
-- **Reload missing data** for wines with incomplete AI analysis
-- Improved **drink-window estimation** from AI providers
+- **Vivino integration** — search and import wines from Vivino
+- **Reload incomplete wines** — let AI retry on wines with missing data
+- Improved drink window predictions
 
 ## 0.3.5
 
-- **Autocomplete** for region and purchase source fields
-- Added DOCS page with logo and commit-activity badge
+- **Autocomplete everywhere** — region and purchase source now suggest values as you type
 
 ## 0.3.4
 
-- Polished **photo panel** layout and styling
-- Added version and license **badges** to README
+- Polished photo layout and styling
 
 ## 0.3.3
 
-- **Grape autocomplete** when entering grape varieties
-- Responsive **side-panel photo layout** (photo next to wine details on wide screens)
+- **Grape variety autocomplete** — quickly find the right grape as you type
+- **Side-by-side photo layout** — on wider screens, the photo sits next to the wine details
 
 ## 0.3.2
 
-- AI now estimates a **drinking window** (best-before range) for each wine
+- **Drinking window** — AI now estimates when your wine is at its best
 
 ## 0.3.1
 
-- New **grape varieties** field on every wine entry
-- Cleaned up Home Assistant add-on configuration
-- Reorganized translation files into per-language YAML
+- New **grape variety** field on every wine
+- Cleaned up add-on settings
 
 ## 0.3.0
 
-- **AI-powered onboarding**: snap a photo of a wine label and let AI fill in all fields
-- Supports **Anthropic Claude**, **OpenAI**, **OpenRouter**, and local **Ollama** models
-- Configurable AI provider and model in the add-on settings
+- **AI label recognition** — snap a photo of any wine label and let AI fill in all the details automatically
+- Supports **4 AI providers**: Anthropic Claude, OpenAI, OpenRouter, and local Ollama
+- Choose your provider and model in the add-on settings
 
 ## 0.2.3
 
-- **Vertical drag** on the interactive globe (move up and down, not just left/right)
-- Fixed donut-chart card width on smaller screens
+- Globe now supports **vertical dragging** — explore the whole world, not just left and right
+- Better chart sizing on smaller screens
 
 ## 0.2.2
 
-- **Configurable currency** (CHF, EUR, USD, ...) in add-on settings
-- Globe now supports **click-and-drag interaction** with smooth momentum
-- Added **country legend** next to the globe
-- Refined donut-chart colors and layout
+- **Configurable currency** — set your preferred currency (CHF, EUR, USD, ...) in settings
+- Globe supports **click-and-drag** with smooth momentum — feels like spinning a real globe
+- **Country legend** next to the globe
+- Refined chart colors
 
 ## 0.2.1
 
-- **3D globe** showing wine origins by country
-- **Donut chart** for wine-type distribution
+- **Interactive 3D globe** — see where your wines come from on a beautiful spinning globe
+- **Donut chart** — visual breakdown of your wine types
 - New **app logo**
 
 ## 0.2.0
 
-- **Statistics page** with country breakdown, wine-type summary, and price overview
+- **Statistics page** — country breakdown, wine type distribution, and price overview at a glance
 
 ## 0.1.8
 
-- Client-side **filter tabs** (Red, White, Rosé, Sparkling, All)
-- **Live search** across all wine fields
-- **Status toggle** (consumed / in stock) without page reload
+- **Filter by type** — quickly switch between Red, White, Rosé, Sparkling, or show all
+- **Live search** — find any wine instantly as you type
+- **Quick status toggle** — mark wines as consumed without reloading
 
 ## 0.1.7
 
-- **AJAX saves** — adding and editing wines no longer reloads the page
-- **Lightbox** for full-screen wine photos
-- **Dirty-tracking** warns before leaving unsaved changes
-- Fixed duplicate image uploads
+- **Instant saves** — adding or editing a wine no longer reloads the page
+- **Photo lightbox** — tap any wine photo to see it full screen
+- **Unsaved changes warning** — no more accidentally losing your edits
 
 ## 0.1.6
 
-- Merged add and edit forms into a **single modal dialog**
-- Newly saved wines are **highlighted** in the list
+- **Single dialog for everything** — add and edit wines in the same clean modal
+- Newly saved wines get **highlighted** so you spot them immediately
 
 ## 0.1.5
 
-- Newly added wines are **highlighted and auto-scrolled** into view
+- New wines are **highlighted and scrolled into view** — you'll never wonder where they went
 
 ## 0.1.4
 
-- Consistent **card layout** — action buttons always pinned to the bottom
+- **Consistent card layout** — action buttons always at the bottom, no more jumping around
 
 ## 0.1.3
 
-- Custom **delete confirmation dialog** (replaces the native browser popup)
+- **Custom delete confirmation** — a proper dialog instead of the ugly browser popup
 
 ## 0.1.2
 
-- **Dark / Light theme** with one-click toggle
-- Unified **toolbar** with search, filters, and theme switch
-- General UI polish
+- **Dark & Light theme** — switch with one click
+- Unified toolbar with search, filters, and theme toggle
+- General visual polish
 
 ## 0.1.1
 
-- **Multi-language support** — German, English, French, Italian, Spanish, Portuguese, Dutch
-- All emojis replaced with **Material Design Icons**
-- **Floating action button** (FAB) to add wines
-- Storage location selectable from a **dropdown**
+- **7 languages** — German, English, French, Italian, Spanish, Portuguese, Dutch
+- Beautiful **Material Design icons** throughout
+- **Floating + button** to quickly add new wines
+- Storage location as a **dropdown** for easy selection
 
 ## 0.1.0
 
-- Initial release as a **Home Assistant add-on**
-- Add, edit, and delete wines with photo upload
-- Wine cards with image, name, vintage, region, type, and price
-- SQLite database stored on the HA shared volume
-- Full **ingress** support (runs behind the HA reverse proxy)
+- **First release!** 🍷
+- Add, edit, and delete wines with label photo upload
+- Wine cards with photo, name, vintage, region, type, and price
+- Runs as a **Home Assistant add-on** right in your sidebar
+- All data safely stored and preserved across updates
