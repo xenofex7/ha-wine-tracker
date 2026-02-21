@@ -418,6 +418,20 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .img-preview input[type=file] {
   position: absolute; inset: 0; opacity: 0; cursor: pointer; padding: 0;
 }
+.img-actions {
+  position: absolute; bottom: 8px; right: 8px;
+  display: flex; gap: 6px; z-index: 2;
+}
+.img-action-btn {
+  width: 36px; height: 36px; border-radius: 6px;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.55); color: #fff; font-size: 1.1rem;
+  backdrop-filter: blur(4px);
+  transition: background .15s;
+}
+.img-action-btn:hover { background: rgba(0,0,0,.75); }
+.img-action-btn.danger:hover { background: var(--accent); }
 
 /* Submit button */
 .btn-submit {

@@ -463,6 +463,13 @@ def edit(wine_id):
         return ingress_redirect("index")
 
     image = wine["image"]
+    if request.form.get("delete_image") == "1":
+        if image:
+            try:
+                os.remove(os.path.join(UPLOAD_DIR, image))
+            except FileNotFoundError:
+                pass
+        image = None
     new_image = save_image(request.files.get("image"))
     if new_image:
         # Remove old image

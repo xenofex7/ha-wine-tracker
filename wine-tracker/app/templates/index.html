@@ -210,6 +210,7 @@
     <form method="post" id="wineForm" enctype="multipart/form-data">
       <input type="hidden" name="ai_image" id="aiImageField" value="">
       <input type="hidden" name="vivino_id" id="wine_vivino_id" value="">
+      <input type="hidden" name="delete_image" id="deleteImageField" value="">
       <div class="modal-body" id="formStep">
 
         <!-- Photo: shown inline on mobile, side panel on wide screens -->
@@ -219,6 +220,10 @@
             <i class="mdi mdi-camera" style="font-size:2rem; opacity:.5"></i>
             <input type="file" name="image" accept="image/*"
                    onchange="previewImg(this,'winePreview')">
+            <div class="img-actions" id="imgActions" style="display:none">
+              <button type="button" class="img-action-btn" onclick="rotateWineImage()" title="Rotate"><i class="mdi mdi-rotate-right"></i></button>
+              <button type="button" class="img-action-btn danger" onclick="deleteWineImage()" title="Delete"><i class="mdi mdi-delete"></i></button>
+            </div>
           </div>
         </div>
 
@@ -640,9 +645,57 @@ function previewImg(input, previewId) {
     let img = preview.querySelector('img');
     if (!img) { img = document.createElement('img'); preview.prepend(img); }
     img.src = e.target.result;
-    preview.childNodes.forEach(n => { if (n.nodeType === 3) n.remove(); }); // remove emoji text
+    preview.childNodes.forEach(n => { if (n.nodeType === 3) n.remove(); });
+    let cam = preview.querySelector('.mdi-camera'); if (cam) cam.style.display = 'none';
+    var actions = document.getElementById('imgActions');
+    if (actions) actions.style.display = '';
   };
   reader.readAsDataURL(file);
+}
+
+var _editWineId = null;
+
+function rotateWineImage() {
+  var preview = document.getElementById('winePreview');
+  var img = preview.querySelector('img');
+  if (!img) return;
+  var tempImg = new Image();
+  tempImg.crossOrigin = 'anonymous';
+  tempImg.onload = function() {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = tempImg.naturalHeight;
+    canvas.height = tempImg.naturalWidth;
+    ctx.translate(canvas.width, 0);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(tempImg, 0, 0);
+    img.src = canvas.toDataURL('image/jpeg', 0.85);
+    canvas.toBlob(function(blob) {
+      var file = new File([blob], 'rotated.jpg', { type: 'image/jpeg' });
+      var dt = new DataTransfer();
+      dt.items.add(file);
+      preview.querySelector('input[type=file]').files = dt.files;
+    }, 'image/jpeg', 0.85);
+  };
+  tempImg.src = img.src;
+}
+
+function deleteWineImage() {
+  if (!confirm('Delete photo?')) return;
+  document.getElementById('deleteImageField').value = '1';
+  var preview = document.getElementById('winePreview');
+  var img = preview.querySelector('img');
+  if (img) img.remove();
+  // Restore camera icon
+  var cam = preview.querySelector('.mdi-camera');
+  if (cam) { cam.style.display = ''; }
+  else {
+    cam = document.createElement('i');
+    cam.className = 'mdi mdi-camera';
+    cam.style.cssText = 'font-size:2rem; opacity:.5';
+    preview.insertBefore(cam, preview.firstChild);
+  }
+  document.getElementById('imgActions').style.display = 'none';
 }
 
 const AI_ENABLED = {{ 'true' if ai_enabled else 'false' }};
@@ -670,10 +723,12 @@ function openWineModal(id, wine) {
   // Form action
   form.action = isEdit ? INGRESS + '/edit/' + id : INGRESS + '/add';
 
-  // Reset file input & AI image field
+  // Reset file input & hidden fields
   const fileInput = preview.querySelector('input[type=file]');
   if (fileInput) fileInput.value = '';
   document.getElementById('aiImageField').value = '';
+  document.getElementById('deleteImageField').value = '';
+  _editWineId = isEdit ? id : null;
 
   // Fill fields (empty for add, data for edit)
   const w = wine || {};
@@ -704,24 +759,25 @@ function openWineModal(id, wine) {
   });
 
   // Image preview
+  var imgActions = document.getElementById('imgActions');
   let img = preview.querySelector('img');
   if (isEdit && w.image) {
     if (!img) { img = document.createElement('img'); preview.prepend(img); }
     img.src = INGRESS + '/uploads/' + w.image;
     preview.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
-    // Hide camera icon when image exists
     let camIcon = preview.querySelector('.mdi-camera');
-    if (camIcon) camIcon.remove();
+    if (camIcon) camIcon.style.display = 'none';
+    if (imgActions) imgActions.style.display = '';
   } else {
     if (img) img.remove();
-    // Restore camera icon
     let hasIcon = preview.querySelector('.mdi-camera');
     if (!hasIcon) {
       const cam = document.createElement('i');
       cam.className = 'mdi mdi-camera';
       cam.style.cssText = 'font-size:2rem; opacity:.5';
       preview.insertBefore(cam, preview.firstChild);
-    }
+    } else { hasIcon.style.display = ''; }
+    if (imgActions) imgActions.style.display = 'none';
   }
 
   // Show/hide reload button (only in edit mode)

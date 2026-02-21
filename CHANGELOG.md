@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+- **Rotate photos** — rotate wine label images directly in the edit dialog with a single click
+- **Delete photos** — remove a wine's photo with confirmation before saving
+
 ## 1.0.3
 
 - **Fix image orientation** — Apply EXIF rotation during upload resize so smartphone photos display correctly
