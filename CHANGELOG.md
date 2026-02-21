@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- **Fix image orientation** — Apply EXIF rotation during upload resize so smartphone photos display correctly
+
 ## 1.0.2
 
 - **Cleaner add-wine dialogs** — AI and Vivino steps now share a unified, streamlined layout

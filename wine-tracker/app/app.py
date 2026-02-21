@@ -307,10 +307,12 @@ MAX_IMAGE_PX = 1800  # downscale images so longest edge ≤ this
 def _downscale(filepath):
     """Resize an image file in-place so its longest edge ≤ MAX_IMAGE_PX."""
     try:
-        from PIL import Image
+        from PIL import Image, ImageOps
         with Image.open(filepath) as img:
+            img = ImageOps.exif_transpose(img)
             w, h = img.size
             if max(w, h) <= MAX_IMAGE_PX:
+                img.save(filepath, quality=85, optimize=True)
                 return
             ratio = MAX_IMAGE_PX / max(w, h)
             new_size = (int(w * ratio), int(h * ratio))
