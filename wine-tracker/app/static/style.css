@@ -145,6 +145,11 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
 }
 .toggle-empty-option:hover { color: var(--text); }
 
+.filter-section-title {
+  font-size: .7rem; color: var(--muted); text-transform: uppercase;
+  letter-spacing: .05em; padding: .2rem .6rem;
+}
+
 /* ── Header: Mobile ───────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   header { padding: 0 .75rem; gap: .5rem; }

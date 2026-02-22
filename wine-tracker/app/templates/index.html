@@ -25,6 +25,7 @@
   <div class="filter-dropdown-wrap">
     <button class="filter-btn" onclick="toggleFilterDropdown()" title="Filter"><i class="mdi mdi-filter-variant"></i></button>
     <div class="filter-dropdown" id="filterDropdown">
+      <div class="filter-section-title">{{ t.filter_title_type }}</div>
       <div class="filter-list" id="filterTabs">
         <label class="filter-option active" data-type="">
           <input type="radio" name="wineType" value="" checked onchange="filterByType('')"> {{ t.filter_all }}
@@ -34,6 +35,24 @@
           <input type="radio" name="wineType" value="{{ wt }}" onchange="filterByType('{{ wt }}')"> {{ wt | wine_type }}
         </label>
         {% endfor %}
+      </div>
+      <div id="filterDrinkWindowSection" style="display:none">
+        <hr class="filter-divider">
+        <div class="filter-section-title">{{ t.filter_title_dw }}</div>
+        <div class="filter-list" id="filterDrinkWindow">
+          <label class="filter-option active" data-dw="">
+            <input type="radio" name="drinkWindow" value="" checked onchange="filterByDrinkWindow('')"> {{ t.filter_all }}
+          </label>
+          <label class="filter-option" data-dw="in">
+            <input type="radio" name="drinkWindow" value="in" onchange="filterByDrinkWindow('in')"> {{ t.filter_dw_in }}
+          </label>
+          <label class="filter-option" data-dw="last">
+            <input type="radio" name="drinkWindow" value="last" onchange="filterByDrinkWindow('last')"> {{ t.filter_dw_last }}
+          </label>
+          <label class="filter-option" data-dw="past">
+            <input type="radio" name="drinkWindow" value="past" onchange="filterByDrinkWindow('past')"> {{ t.filter_dw_past }}
+          </label>
+        </div>
       </div>
       <hr class="filter-divider">
       <label class="filter-option toggle-empty-option" id="toggleEmptyBtn" onclick="toggleEmpty()">
@@ -454,6 +473,7 @@ function cycleTheme() {
 
 // ── Client-side filter state ─────────────────────────────────────────────────
 var activeType = '';
+var activeDrinkWindow = '';
 var showEmpty = false;
 var _filterTimer = null;
 
@@ -476,10 +496,26 @@ function applyFilters() {
       (d.name || '').toLowerCase().indexOf(query) !== -1 ||
       (d.region || '').toLowerCase().indexOf(query) !== -1 ||
       (d.notes || '').toLowerCase().indexOf(query) !== -1;
+    // Drink window match
+    var dwOk = true;
+    if (activeDrinkWindow) {
+      var until = parseInt(d.drink_until);
+      var from = parseInt(d.drink_from);
+      var year = new Date().getFullYear();
+      if (!until) {
+        dwOk = false;
+      } else if (activeDrinkWindow === 'in') {
+        dwOk = (!from || from <= year) && until >= year;
+      } else if (activeDrinkWindow === 'last') {
+        dwOk = until === year;
+      } else if (activeDrinkWindow === 'past') {
+        dwOk = until < year;
+      }
+    }
     // Empty match
     var emptyOk = showEmpty || parseInt(d.quantity) > 0;
 
-    var visible = typeOk && searchOk && emptyOk;
+    var visible = typeOk && searchOk && dwOk && emptyOk;
     card.style.display = visible ? '' : 'none';
     if (visible) visibleCount++;
   });
@@ -523,8 +559,18 @@ function updateTabCounts() {
       (d.name || '').toLowerCase().indexOf(query) !== -1 ||
       (d.region || '').toLowerCase().indexOf(query) !== -1 ||
       (d.notes || '').toLowerCase().indexOf(query) !== -1;
+    var dwOk = true;
+    if (activeDrinkWindow) {
+      var until = parseInt(d.drink_until);
+      var from = parseInt(d.drink_from);
+      var year = new Date().getFullYear();
+      if (!until) { dwOk = false; }
+      else if (activeDrinkWindow === 'in') { dwOk = (!from || from <= year) && until >= year; }
+      else if (activeDrinkWindow === 'last') { dwOk = until === year; }
+      else if (activeDrinkWindow === 'past') { dwOk = until < year; }
+    }
     var emptyOk = showEmpty || parseInt(d.quantity) > 0;
-    if (searchOk && emptyOk) {
+    if (searchOk && dwOk && emptyOk) {
       total++;
       var t = d.type || '';
       counts[t] = (counts[t] || 0) + 1;
@@ -545,6 +591,48 @@ function updateTabCounts() {
       opt.appendChild(document.createTextNode(' ' + label + ' (' + count + ')'));
     }
   });
+
+  // Count cards per drink-window category (respecting type + search + empty, ignoring DW filter)
+  var dwSection = document.getElementById('filterDrinkWindowSection');
+  var dwOpts = document.querySelectorAll('#filterDrinkWindow .filter-option');
+  if (!dwOpts.length) return;
+  // Show/hide DW section based on whether any wine has a drink window at all
+  var anyDW = false;
+  cards.forEach(function(c) { if (parseInt(c.dataset.drink_until)) anyDW = true; });
+  if (dwSection) dwSection.style.display = anyDW ? '' : 'none';
+  if (!anyDW) return;
+  var dwCounts = { '': 0, 'in': 0, 'last': 0, 'past': 0 };
+  var curYear = new Date().getFullYear();
+  cards.forEach(function(card) {
+    var d = card.dataset;
+    var searchOk = !query ||
+      (d.name || '').toLowerCase().indexOf(query) !== -1 ||
+      (d.region || '').toLowerCase().indexOf(query) !== -1 ||
+      (d.notes || '').toLowerCase().indexOf(query) !== -1;
+    var typeOk = !activeType || d.type === activeType;
+    var emptyOk = showEmpty || parseInt(d.quantity) > 0;
+    if (!(searchOk && typeOk && emptyOk)) return;
+    dwCounts['']++;
+    var until = parseInt(d.drink_until);
+    if (!until) return;
+    var from = parseInt(d.drink_from);
+    if (until < curYear) { dwCounts['past']++; }
+    if (until === curYear) { dwCounts['last']++; }
+    if ((!from || from <= curYear) && until >= curYear) { dwCounts['in']++; }
+  });
+
+  dwOpts.forEach(function(opt) {
+    var dw = opt.dataset.dw !== undefined ? opt.dataset.dw : '';
+    var radio = opt.querySelector('input[type="radio"]');
+    var label = opt.dataset.label || opt.textContent.replace(/\s*\(\d+\)\s*$/, '').trim();
+    if (!opt.dataset.label) opt.dataset.label = label;
+    var count = dwCounts[dw] || 0;
+    if (radio) {
+      opt.textContent = '';
+      opt.appendChild(radio);
+      opt.appendChild(document.createTextNode(' ' + label + ' (' + count + ')'));
+    }
+  });
 }
 
 function filterByType(type) {
@@ -554,6 +642,15 @@ function filterByType(type) {
   opts.forEach(function(opt) {
     var optType = opt.dataset.type !== undefined ? opt.dataset.type : '';
     opt.classList.toggle('active', optType === activeType);
+  });
+  applyFilters();
+}
+
+function filterByDrinkWindow(val) {
+  activeDrinkWindow = val;
+  var opts = document.querySelectorAll('#filterDrinkWindow .filter-option');
+  opts.forEach(function(opt) {
+    opt.classList.toggle('active', (opt.dataset.dw || '') === val);
   });
   applyFilters();
 }
