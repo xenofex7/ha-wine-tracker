@@ -2,7 +2,7 @@ ARG BUILD_FROM
 FROM $BUILD_FROM
 
 # Install Python + pip deps
-RUN apk add --no-cache python3 py3-pip py3-pillow
+RUN apk add --no-cache python3 py3-pip py3-pillow ca-certificates
 RUN pip3 install flask anthropic openai requests --break-system-packages
 
 # Copy app

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+- **Drink window warnings** — red alert icon when a wine is past its drinking window, orange when in its last year
+- **Fix Vivino search on all platforms** — add missing CA certificates to Docker image so SSL connections work reliably
+
 ## 1.1.0
 
 - **Rotate photos** — rotate wine label images directly in the edit dialog with a single click

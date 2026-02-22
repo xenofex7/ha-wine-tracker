@@ -1771,6 +1771,30 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
 
 // Apply filters on initial load (hides empty bottles when showEmpty is false)
 applyFilters();
+
+// Drink window warnings
+(function() {
+  var year = new Date().getFullYear();
+  document.querySelectorAll('.card').forEach(function(card) {
+    var until = parseInt(card.dataset.drink_until);
+    if (!until) return;
+    var span = card.querySelector('.drink-window');
+    if (!span) return;
+    var cls;
+    if (until < year) {
+      cls = 'expired';
+    } else if (until === year) {
+      cls = 'last-year';
+    } else {
+      return;
+    }
+    span.classList.add(cls);
+    var icon = document.createElement('i');
+    icon.className = 'mdi mdi-alert drink-warn';
+    icon.title = cls === 'expired' ? 'Past drink window' : 'Last year to drink';
+    span.appendChild(icon);
+  });
+})();
 </script>
 
 <button class="fab" onclick="openWineModal()" title="{{ t.btn_add_wine }}"><i class="mdi mdi-plus"></i></button>

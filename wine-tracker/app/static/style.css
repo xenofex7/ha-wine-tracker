@@ -234,6 +234,9 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
                    background: var(--bg); color: var(--muted); }
 .card-extra .price { color: var(--gold); }
 .card-extra .drink-window { color: #7ab8a0; }
+.drink-window.expired { color: #e74c3c; }
+.drink-window.last-year { color: #f39c12; }
+.drink-window .drink-warn { margin-left: 4px; }
 
 .card-actions {
   display: flex; border-top: 1px solid var(--border);
