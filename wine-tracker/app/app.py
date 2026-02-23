@@ -52,6 +52,18 @@ def _is_ai_configured(opts):
     return False
 
 
+def _ssl_verify():
+    """Return best available CA bundle for requests verify parameter."""
+    try:
+        import certifi
+        return certifi.where()
+    except ImportError:
+        for p in ("/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/cert.pem"):
+            if os.path.exists(p):
+                return p
+        return True  # requests default
+
+
 HA_OPTIONS = load_options()
 
 # Persist data in /share so it survives app restarts/updates
@@ -966,6 +978,7 @@ def vivino_search():
                 "Accept": "text/html",
             },
             timeout=10,
+            verify=_ssl_verify(),
         )
         resp.raise_for_status()
 
@@ -1047,7 +1060,7 @@ def vivino_image():
     try:
         resp = req.get(url, timeout=10, headers={
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        })
+        }, verify=_ssl_verify())
         resp.raise_for_status()
         # Determine extension from content-type
         ct = resp.headers.get("Content-Type", "image/jpeg")
