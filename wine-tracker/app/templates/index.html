@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7/css/materialdesignicons.min.css">
 <link rel="stylesheet" href="{{ ingress }}/static/style.css">
+<script>
+(function(){var s=localStorage.getItem('wine-theme')||'system';var e=s==='system'?(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'):s;if(e==='light')document.documentElement.classList.add('light');})();
+</script>
 <title>Wine Tracker</title>
 </head>
 <body>
 
 <header>
-  <a class="nav-brand" href="{{ ingress }}/"><i class="mdi mdi-glass-wine"></i></a>
+  <a class="nav-brand" href="{{ ingress }}/"><img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" class="nav-logo"></a>
   <nav class="nav-links">
     <a class="nav-link active" href="{{ ingress }}/">{{ t.nav_cellar }}</a>
     <a class="nav-link" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
@@ -149,7 +152,21 @@
   <div class="modal">
     <div class="modal-header">
       <span id="wineModalTitle">{{ t.modal_add_title }}</span>
-      <button class="modal-close" onclick="tryCloseWineModal()">×</button>
+      <div class="modal-header-actions">
+        <div class="vivino-id-popover-wrap" id="vivinoIdWrap" style="display:none">
+          <button type="button" class="btn-header-icon" id="vivinoIdTriggerBtn" onclick="toggleVivinoIdPopover()" title="{{ t.vivino_id_title }}">
+            <i class="mdi mdi-code-tags"></i>
+          </button>
+          <div class="vivino-id-popover" id="vivinoIdPopover" style="display:none">
+            <label class="vivino-id-label">{{ t.vivino_id_title }}</label>
+            <div class="vivino-id-row">
+              <input type="text" id="vivinoIdInput" class="vivino-id-input" placeholder="{{ t.vivino_id_placeholder }}" oninput="updateVivinoIdFromPopover()">
+              <a id="vivinoIdTestLink" class="vivino-id-test-link" href="#" target="_blank" rel="noopener" style="display:none" title="{{ t.vivino_id_test }}"><i class="mdi mdi-open-in-new"></i></a>
+            </div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="tryCloseWineModal()">×</button>
+      </div>
     </div>
     <!-- Source Step: choose AI / Vivino / Manual -->
     <div id="sourceStep" class="source-step" style="display:none;">
@@ -433,43 +450,11 @@
   <img id="lightboxImg" src="" alt="{{ t.lightbox_alt }}">
 </div>
 
+<script src="{{ ingress }}/static/theme.js"></script>
 <script>
 const INGRESS = '{{ ingress }}';
 const CURRENCY = '{{ currency }}';
 const T = {{ t | tojson }};
-
-// Theme: 3-state cycle → system → dark → light
-const THEME_MODES = ['system', 'dark', 'light'];
-const THEME_ICONS = { dark: '<i class="mdi mdi-weather-night"></i>', light: '<i class="mdi mdi-weather-sunny"></i>', system: '<i class="mdi mdi-laptop"></i>' };
-
-function getSystemPreference() {
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-}
-
-function applyTheme(mode) {
-  const effective = mode === 'system' ? getSystemPreference() : mode;
-  document.documentElement.classList.toggle('light', effective === 'light');
-  const btn = document.querySelector('.theme-icon');
-  if (btn) btn.innerHTML = THEME_ICONS[mode];
-}
-
-function cycleTheme() {
-  const current = localStorage.getItem('wine-theme') || 'system';
-  const idx = THEME_MODES.indexOf(current);
-  const next = THEME_MODES[(idx + 1) % THEME_MODES.length];
-  localStorage.setItem('wine-theme', next);
-  applyTheme(next);
-}
-
-// Init theme
-(function() {
-  const saved = localStorage.getItem('wine-theme') || 'system';
-  applyTheme(saved);
-  // Listen for OS theme changes when in system mode
-  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
-    if ((localStorage.getItem('wine-theme') || 'system') === 'system') applyTheme('system');
-  });
-})();
 
 // ── Client-side filter state ─────────────────────────────────────────────────
 var activeType = '';
@@ -881,6 +866,11 @@ function openWineModal(id, wine) {
   var reloadWrap = document.getElementById('reloadPopoverWrap');
   if (reloadWrap) reloadWrap.style.display = isEdit ? '' : 'none';
   closeReloadPopover();
+
+  // Show/hide vivino ID button (only in edit mode)
+  var vivinoIdWrap = document.getElementById('vivinoIdWrap');
+  if (vivinoIdWrap) vivinoIdWrap.style.display = isEdit ? '' : 'none';
+  closeVivinoIdPopover();
 
   // Source step: show source selection for add mode (not edit)
   if (!isEdit) {
@@ -1427,7 +1417,44 @@ function closeReloadPopover() {
 document.addEventListener('click', function(e) {
   var wrap = document.getElementById('reloadPopoverWrap');
   if (wrap && !wrap.contains(e.target)) closeReloadPopover();
+  var vwrap = document.getElementById('vivinoIdWrap');
+  if (vwrap && !vwrap.contains(e.target)) closeVivinoIdPopover();
 });
+
+// ── Vivino ID Popover ─────────────────────────────────────────────────────────
+
+function toggleVivinoIdPopover() {
+  var pop = document.getElementById('vivinoIdPopover');
+  if (!pop) return;
+  var open = pop.style.display === 'none' || !pop.style.display;
+  pop.style.display = open ? '' : 'none';
+  if (open) {
+    // Sync from hidden field
+    var val = document.getElementById('wine_vivino_id').value || '';
+    document.getElementById('vivinoIdInput').value = val;
+    updateVivinoIdTestLink(val);
+    document.getElementById('vivinoIdInput').focus();
+  }
+}
+function closeVivinoIdPopover() {
+  var pop = document.getElementById('vivinoIdPopover');
+  if (pop) pop.style.display = 'none';
+}
+function updateVivinoIdFromPopover() {
+  var val = document.getElementById('vivinoIdInput').value.trim();
+  document.getElementById('wine_vivino_id').value = val;
+  updateVivinoIdTestLink(val);
+}
+function updateVivinoIdTestLink(val) {
+  var link = document.getElementById('vivinoIdTestLink');
+  if (!link) return;
+  if (val) {
+    link.href = 'https://www.vivino.com/w/' + val;
+    link.style.display = '';
+  } else {
+    link.style.display = 'none';
+  }
+}
 
 function setReloadLoading(on) {
   var btn = document.getElementById('reloadTriggerBtn');
@@ -1561,10 +1588,6 @@ function openDupModal(id, name, year, qty) {
 }
 
 // ── AJAX helpers ──────────────────────────────────────────────────────────────
-
-function updateStats(s) {
-  // Stats pill was removed in v1.0.0 — kept as no-op for API compatibility
-}
 
 function highlightCard(card) {
   card.classList.remove('highlight');
@@ -1733,7 +1756,6 @@ document.getElementById('wineForm').addEventListener('submit', function(e) {
       grid.appendChild(card);
     }
     ensureFilterTab(w.type);
-    updateStats(data.stats);
     refreshLocationList();
     refreshPurchasedAtList();
     refreshRegionList();
@@ -1779,9 +1801,7 @@ function changeQty(el, delta) {
   fetch(INGRESS + '/edit/' + id, {
     method: 'POST', body: fd,
     headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) { if (data.ok) updateStats(data.stats); });
+  });
 }
 
 // ── AJAX duplicate ────────────────────────────────────────────────────────────
@@ -1813,7 +1833,6 @@ document.getElementById('dupForm').addEventListener('submit', function(e) {
       document.querySelector('.grid').appendChild(card);
     }
     ensureFilterTab(w.type);
-    updateStats(data.stats);
     refreshLocationList();
     refreshPurchasedAtList();
     refreshRegionList();
@@ -1840,7 +1859,6 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
     if (!data.ok) return;
     var card = document.querySelector('.card[data-id="' + id + '"]');
     if (card) card.remove();
-    updateStats(data.stats);
     refreshLocationList();
     refreshPurchasedAtList();
     refreshRegionList();

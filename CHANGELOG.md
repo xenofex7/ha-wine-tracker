@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.3
+
+- **No more theme flicker** — switching between Cellar and Statistics no longer flashes dark mode; an inline script applies your theme before the first paint
+- **Custom logo** — the wine glass icon in the header is now a proper logo image
+- **Vivino ID management** — new developer icon (</>) in the edit modal header opens a popover to view, edit, and test-link the Vivino wine ID
+- **Fix Vivino ID bug** — wine links now use the stable wine ID instead of the vintage ID, so they always point to the correct Vivino page
+- **Smarter year labels** — drink window chart shortens year labels (e.g. '25 instead of 2025) when there are many years, with responsive breakpoints for mobile
+- **Cleaner codebase** — theme logic extracted into shared theme.js, removed unused updateStats() dead code
+
 ## 1.1.2
 
 - **Interactive chart tooltips** — hover over donut segments, region bars, or drink window chart segments to see which wines are behind the numbers (name, vintage, quantity)

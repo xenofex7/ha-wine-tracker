@@ -59,9 +59,9 @@ header {
 .nav-brand {
   display: flex; align-items: center; gap: .4rem;
   font-size: 1.15rem; font-weight: 700; color: var(--text);
-  text-decoration: none; flex-shrink: 0;
+  text-decoration: none; flex-shrink: 0; margin-right: -.75rem;
 }
-.nav-brand .mdi { font-size: 2rem; color: var(--accent); }
+.nav-logo { height: 32px; width: auto; }
 .nav-links {
   display: flex; gap: .25rem; flex-shrink: 0;
 }
@@ -347,6 +347,12 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
   display: flex; justify-content: space-between; align-items: center;
   position: sticky; top: 0; background: var(--surface); z-index: 1;
 }
+.modal-header-actions { display: flex; align-items: center; gap: .75rem; }
+.btn-header-icon {
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  font-size: 1.2rem; padding: .15rem; line-height: 1; transition: color .15s;
+}
+.btn-header-icon:hover { color: var(--accent); }
 .modal-close { color: var(--muted); font-size: 1.3rem; }
 .modal-close:hover { color: var(--text); }
 .modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: .9rem; }
@@ -486,6 +492,32 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 }
 .reload-popover-option:hover { background: rgba(192,57,43,.1); }
 .reload-popover-option .mdi { font-size: 1.15rem; opacity: .8; }
+
+/* ── Vivino ID Popover ────────────────────────────────────────────────────── */
+.vivino-id-popover-wrap { position: relative; }
+.vivino-id-popover {
+  position: absolute; top: calc(100% + .5rem); right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: .75rem; min-width: 240px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4); z-index: 100;
+}
+.vivino-id-label {
+  font-size: .78rem; color: var(--muted); margin-bottom: .35rem; display: block;
+}
+.vivino-id-row { display: flex; align-items: center; gap: .5rem; }
+.vivino-id-input {
+  flex: 1; padding: .45rem .6rem; font-size: .88rem;
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; outline: none; font-family: monospace;
+}
+.vivino-id-input:focus { border-color: var(--accent); }
+.vivino-id-test-link {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 6px; flex-shrink: 0;
+  color: var(--accent); border: 1px solid var(--border);
+  background: var(--surface2); transition: background .15s, border-color .15s;
+}
+.vivino-id-test-link:hover { border-color: var(--accent); background: var(--surface); }
 
 /* ── Source Step (AI + Vivino + Manual) ─────────────────────────────────────── */
 .source-step { padding: 1.5rem; max-width: 360px; margin: 0 auto; }
@@ -739,6 +771,14 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 }
 .dw-bar-seg { min-height: 2px; transition: height .4s ease; }
 .dw-bar-label { font-size: .72rem; color: var(--muted); margin-top: 6px; white-space: nowrap; }
+/* >10 years: always short */
+.dw-yr-full { display: none; }
+/* 6-10 years: full on desktop, short on mobile */
+.dw-yr-short-mobile { display: none; }
+@media (max-width: 600px) {
+  .dw-yr-full-mobile { display: none; }
+  .dw-yr-short-mobile { display: inline; }
+}
 .dw-current .dw-bar-label { color: var(--accent); font-weight: 700; }
 .dw-current .dw-bar-stack { box-shadow: 0 0 0 1.5px var(--accent); }
 .dw-legend { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-top: 1rem; font-size: .78rem; }

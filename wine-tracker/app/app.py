@@ -1027,7 +1027,7 @@ def vivino_search():
             image_url = vintage.get("image", {}).get("location", "") if vintage.get("image") else ""
 
             results.append({
-                "vivino_id": vintage.get("id"),
+                "vivino_id": wine.get("id"),
                 "name": f"{winery.get('name', '')} {wine.get('name', '')}".strip(),
                 "year": vintage.get("year") or None,
                 "wine_type": wine_type,

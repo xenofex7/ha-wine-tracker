@@ -127,6 +127,11 @@ TRANSLATIONS = {
     "reload_filled": "Felder ergänzt!",
     "reload_nothing": "Keine neuen Daten gefunden",
 
+    # Vivino ID
+    "vivino_id_title": "Vivino ID",
+    "vivino_id_placeholder": "z.B. 1157077",
+    "vivino_id_test": "Link testen",
+
     # Discard
     "confirm_discard": "Änderungen verwerfen?",
 
@@ -281,6 +286,11 @@ TRANSLATIONS = {
     "reload_filled": "Fields updated!",
     "reload_nothing": "No new data found",
 
+    # Vivino ID
+    "vivino_id_title": "Vivino ID",
+    "vivino_id_placeholder": "e.g. 1157077",
+    "vivino_id_test": "Test link",
+
     "confirm_discard": "Discard changes?",
 
     "lightbox_alt": "Label",
@@ -431,6 +441,11 @@ TRANSLATIONS = {
     "reload_vivino_desc": "Charger les données manquantes depuis Vivino",
     "reload_filled": "Champs complétés !",
     "reload_nothing": "Aucune nouvelle donnée trouvée",
+
+    # Vivino ID
+    "vivino_id_title": "Vivino ID",
+    "vivino_id_placeholder": "p.ex. 1157077",
+    "vivino_id_test": "Tester le lien",
 
     "confirm_discard": "Annuler les modifications ?",
 
@@ -583,6 +598,11 @@ TRANSLATIONS = {
     "reload_filled": "Campi aggiornati!",
     "reload_nothing": "Nessun nuovo dato trovato",
 
+    # Vivino ID
+    "vivino_id_title": "Vivino ID",
+    "vivino_id_placeholder": "es. 1157077",
+    "vivino_id_test": "Testa il link",
+
     "confirm_discard": "Annullare le modifiche?",
 
     "lightbox_alt": "Etichetta",
@@ -733,6 +753,11 @@ TRANSLATIONS = {
     "reload_vivino_desc": "Cargar datos faltantes de Vivino",
     "reload_filled": "¡Campos actualizados!",
     "reload_nothing": "No se encontraron datos nuevos",
+
+    # Vivino ID
+    "vivino_id_title": "Vivino ID",
+    "vivino_id_placeholder": "ej. 1157077",
+    "vivino_id_test": "Probar enlace",
 
     "confirm_discard": "¿Descartar cambios?",
 
@@ -885,6 +910,11 @@ TRANSLATIONS = {
     "reload_filled": "Campos atualizados!",
     "reload_nothing": "Nenhum dado novo encontrado",
 
+    # Vivino ID
+    "vivino_id_title": "Vivino ID",
+    "vivino_id_placeholder": "ex. 1157077",
+    "vivino_id_test": "Testar link",
+
     "confirm_discard": "Descartar alterações?",
 
     "lightbox_alt": "Rótulo",
@@ -1035,6 +1065,11 @@ TRANSLATIONS = {
     "reload_vivino_desc": "Ontbrekende gegevens van Vivino laden",
     "reload_filled": "Velden bijgewerkt!",
     "reload_nothing": "Geen nieuwe gegevens gevonden",
+
+    # Vivino ID
+    "vivino_id_title": "Vivino ID",
+    "vivino_id_placeholder": "bijv. 1157077",
+    "vivino_id_test": "Link testen",
 
     "confirm_discard": "Wijzigingen verwerpen?",
 

@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7/css/materialdesignicons.min.css">
 <link rel="stylesheet" href="{{ ingress }}/static/style.css">
+<script>
+(function(){var s=localStorage.getItem('wine-theme')||'system';var e=s==='system'?(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'):s;if(e==='light')document.documentElement.classList.add('light');})();
+</script>
 <title>{{ t.stats_title }} – Wine Tracker</title>
 </head>
 <body>
 
 <header>
-  <a class="nav-brand" href="{{ ingress }}/"><i class="mdi mdi-glass-wine"></i></a>
+  <a class="nav-brand" href="{{ ingress }}/"><img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" class="nav-logo"></a>
   <nav class="nav-links">
     <a class="nav-link" href="{{ ingress }}/">{{ t.nav_cellar }}</a>
     <a class="nav-link active" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
@@ -177,6 +180,8 @@
         {% set row_total = item.counts.values() | sum %}
         {% if row_total > ns.max_total %}{% set ns.max_total = row_total %}{% endif %}
       {% endfor %}
+      {% set short_desktop = dw_chart | length > 10 %}
+      {% set short_mobile = dw_chart | length > 5 %}
       <div class="dw-chart">
         {% for item in dw_chart %}
         <div class="dw-bar-col{% if item.year == current_year %} dw-current{% endif %}">
@@ -191,7 +196,17 @@
             {% endif %}
             {% endfor %}
           </div>
-          <div class="dw-bar-label">{{ item.year }}</div>
+          <div class="dw-bar-label">
+            {% if short_desktop %}
+            <span class="dw-yr-short">{{ item.year % 100 }}</span>
+            <span class="dw-yr-full">{{ item.year }}</span>
+            {% elif short_mobile %}
+            <span class="dw-yr-short-mobile">{{ item.year % 100 }}</span>
+            <span class="dw-yr-full-mobile">{{ item.year }}</span>
+            {% else %}
+            {{ item.year }}
+            {% endif %}
+          </div>
         </div>
         {% endfor %}
       </div>
@@ -315,6 +330,7 @@
   <div class="chart-tooltip-list"></div>
 </div>
 
+<script src="{{ ingress }}/static/theme.js"></script>
 <script>
 var WINE_DATA = {
   byType: {{ wines_by_type | tojson }},
@@ -541,39 +557,9 @@ function initGlobe() {
   });
 }
 
-// ── Theme: 3-state cycle (shared with index page) ────────────────────────────
-const THEME_MODES = ['system', 'dark', 'light'];
-const THEME_ICONS = { dark: '<i class="mdi mdi-weather-night"></i>', light: '<i class="mdi mdi-weather-sunny"></i>', system: '<i class="mdi mdi-laptop"></i>' };
-
-function getSystemPreference() {
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-}
-
-function applyTheme(mode) {
-  const effective = mode === 'system' ? getSystemPreference() : mode;
-  document.documentElement.classList.toggle('light', effective === 'light');
-  const btn = document.querySelector('.theme-icon');
-  if (btn) btn.innerHTML = THEME_ICONS[mode];
-  // Recreate globe with theme-matching colors
-  initGlobe();
-}
-
-window.cycleTheme = function() {
-  const current = localStorage.getItem('wine-theme') || 'system';
-  const idx = THEME_MODES.indexOf(current);
-  const next = THEME_MODES[(idx + 1) % THEME_MODES.length];
-  localStorage.setItem('wine-theme', next);
-  applyTheme(next);
-};
-
-// Init theme
-(function() {
-  const saved = localStorage.getItem('wine-theme') || 'system';
-  applyTheme(saved);
-  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
-    if ((localStorage.getItem('wine-theme') || 'system') === 'system') applyTheme('system');
-  });
-})();
+// Hook: recreate globe when theme changes (called by theme.js)
+window._onThemeApplied = () => initGlobe();
+initGlobe();
 </script>
 
 </body>
