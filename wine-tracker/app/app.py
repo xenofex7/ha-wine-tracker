@@ -584,7 +584,7 @@ def duplicate(wine_id):
             wine["location"],
             wine["grape"],
             wine["vivino_id"],
-            wine.get("bottle_format", 0.75),
+            wine["bottle_format"] if wine["bottle_format"] is not None else 0.75,
         ),
     )
     db.commit()

@@ -1783,6 +1783,7 @@ document.getElementById('wineForm').addEventListener('submit', function(e) {
       if (emptyState) emptyState.remove();
       grid.appendChild(card);
     }
+    applyDrinkWindowWarning(card);
     ensureFilterTab(w.type);
     refreshLocationList();
     refreshPurchasedAtList();
@@ -1861,6 +1862,7 @@ document.getElementById('dupForm').addEventListener('submit', function(e) {
     } else {
       document.querySelector('.grid').appendChild(card);
     }
+    applyDrinkWindowWarning(card);
     ensureFilterTab(w.type);
     refreshLocationList();
     refreshPurchasedAtList();
@@ -1916,14 +1918,22 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
 // Apply filters on initial load (hides empty bottles when showEmpty is false)
 applyFilters();
 
-// Drink window warnings
-(function() {
+// Drink window warnings — reusable so it works after AJAX add/edit/duplicate
+function applyDrinkWindowWarning(root) {
   var year = new Date().getFullYear();
-  document.querySelectorAll('.card').forEach(function(card) {
+  // If root is a single .card element, wrap it; otherwise query all cards within root
+  var cards = root && root.classList && root.classList.contains('card')
+    ? [root]
+    : (root || document).querySelectorAll('.card');
+  cards.forEach(function(card) {
     var until = parseInt(card.dataset.drink_until);
-    if (!until) return;
     var span = card.querySelector('.drink-window');
     if (!span) return;
+    // Reset previous state (important for edit)
+    span.classList.remove('expired', 'last-year');
+    var oldWarn = span.querySelector('.drink-warn');
+    if (oldWarn) oldWarn.remove();
+    if (!until) return;
     var cls;
     if (until < year) {
       cls = 'expired';
@@ -1938,7 +1948,8 @@ applyFilters();
     icon.title = cls === 'expired' ? 'Past drink window' : 'Last year to drink';
     span.appendChild(icon);
   });
-})();
+}
+applyDrinkWindowWarning();
 </script>
 
 <button class="fab" onclick="openWineModal()" title="{{ t.btn_add_wine }}"><i class="mdi mdi-plus"></i></button>

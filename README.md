@@ -176,16 +176,52 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 
 ## Roadmap
 
-- Export / Import function
-- Custom sorting options
-- Display modes — list view or portal
-- Wines clickable on the statistics
+> Features are listed roughly by priority — not all will ship, and order may change.
+
+### 🔜 Up Next
+- **Export / Import** — CSV & JSON export of your full collection; import to restore or migrate
+- **Custom sorting** — sort by name, year, price, rating, date added, or drinking window
+- **Display modes** — switch between card grid, compact list, and table view
+- **Clickable statistics** — tap a chart segment to instantly filter the cellar to those wines
+
+### 🧠 Smarter AI
+- **Ask the AI about your wines** — "What should I open for a steak dinner?" → personalized recommendations from your own cellar
+- **Food & occasion pairing** — AI suggests matching dishes or events per wine
+- **Taste profile generation** — auto-generate tasting notes from label photos
+
+### 📊 Analytics & Tracking
+- **Consumption tracking** — record when a bottle was opened; track drinking history over time
+- **Spending trends** — visualize spending by month, region, or wine type
+- **Collection timeline** — chart showing how your cellar grew over time
+- **Maturity calendar** — overview of which wines become drinkable each year
+
+### 🏠 Home Assistant Integration
+- **Drink window notifications** — HA alerts when wines enter or leave their optimal window
+- **Extended REST API** — more endpoints (single wine, stats, collection export) for dashboards & automations
+- **HA Dashboard card** — native Lovelace card to embed wine stats on any dashboard
+
+### 🎨 UI & Personalization
+- **New settings section** — manage all options (currency, language, AI keys, display prefs) in-app
+- **Theming** — custom accent colors, font sizes, and layout density
+- **Keyboard shortcuts** — `/` to search, `+` to add, `Esc` to close modals
+- **Wishlist mode** — mark wines you want to buy (separate from owned bottles)
+
+### 📦 Platform & Data
+- **Docker standalone mode** — run without Home Assistant as a plain Docker container
+- **Tags & custom categories** — label wines as "gift", "special occasion", "everyday", etc.
+- **Bulk editing** — select multiple wines and change location, type, or category at once
+- **Multiple cellars** — manage separate collections (home, vacation house, office)
+
+### 📱 Mobile & Sharing
+- **PWA support** — install on your phone's home screen with offline access
+- **Barcode / QR scan** — scan a wine barcode to auto-lookup via Vivino
+- **Shareable collection link** — generate a read-only link or QR code for friends
 
 ## License
 
 MIT
 
-[version-badge]: https://img.shields.io/badge/version-v1.2.0-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v1.2.1-blue.svg
 [stage-badge]: https://img.shields.io/badge/project%20stage-stable-brightgreen.svg
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-green.svg

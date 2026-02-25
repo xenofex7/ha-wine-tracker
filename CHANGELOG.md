@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1
+
+- **Fix drink window color on duplicate/add/edit** — drink window badges now show the correct color (green/orange/red) immediately after AJAX operations instead of requiring a page reload
+- **Fix bottle format on duplicate** — duplicating a wine with a non-standard bottle size no longer silently resets to 0.75L
+- **Test suite** — 95 pytest tests covering routes, API endpoints, database operations, and helper functions; tests run automatically as a release gate
+- **Expanded roadmap** — structured roadmap with 25 planned features across 7 categories
+
 ## 1.2.0
 
 - **Bottle format support** — track different wine bottle sizes from Piccolo (0.1875L) to Nebuchadnezzar (15L) with a new dropdown in the wine form
