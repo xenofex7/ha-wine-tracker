@@ -776,6 +776,12 @@ def stats_page():
 
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
+    # Only serve files matching our naming pattern (uuid hex + allowed extension)
+    if not filename or "/" in filename or "\\" in filename:
+        return "Not found", 404
+    parts = filename.rsplit(".", 1)
+    if len(parts) != 2 or parts[1].lower() not in ALLOWED_EXT:
+        return "Not found", 404
     return send_from_directory(UPLOAD_DIR, filename)
 
 
@@ -1067,6 +1073,7 @@ def vivino_search():
 def vivino_image():
     """Download a Vivino wine image and save it locally."""
     import requests as req
+    from urllib.parse import urlparse
 
     body = request.get_json(silent=True) or {}
     url = body.get("url", "").strip()
@@ -1075,6 +1082,12 @@ def vivino_image():
     # Protocol-relative URLs (//images.vivino.com/...) need a scheme
     if url.startswith("//"):
         url = "https:" + url
+
+    # SSRF protection: only allow Vivino image domains
+    ALLOWED_HOSTS = {"images.vivino.com", "pictures.vivino.com"}
+    parsed = urlparse(url)
+    if parsed.hostname not in ALLOWED_HOSTS:
+        return jsonify({"ok": False, "error": "invalid_host"}), 400
 
     try:
         resp = req.get(url, timeout=10, headers={

@@ -283,3 +283,95 @@ class TestUploadServing:
     def test_serve_nonexistent_file(self, client):
         resp = client.get("/uploads/nonexistent.png")
         assert resp.status_code == 404
+
+    def test_reject_path_traversal(self, client):
+        """Should reject filenames with path traversal attempts."""
+        resp = client.get("/uploads/../../etc/passwd")
+        assert resp.status_code in (400, 404)
+
+    def test_reject_no_extension(self, client):
+        """Should reject filenames without a valid extension."""
+        resp = client.get("/uploads/noext")
+        assert resp.status_code == 404
+
+    def test_reject_disallowed_extension(self, client):
+        """Should reject filenames with non-image extensions."""
+        resp = client.get("/uploads/test.exe")
+        assert resp.status_code == 404
+
+
+# ── SSRF Protection (Vivino Image Proxy) ─────────────────────────────────────
+
+class TestVivinoImageSSRF:
+    def test_reject_internal_url(self, client):
+        """Should reject URLs pointing to internal services."""
+        resp = client.post(
+            "/api/vivino-image",
+            data=json.dumps({"url": "http://localhost:8123/api/states"}),
+            content_type="application/json",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 400
+        assert data.get("error") == "invalid_host"
+
+    def test_reject_arbitrary_domain(self, client):
+        """Should reject URLs from non-Vivino domains."""
+        resp = client.post(
+            "/api/vivino-image",
+            data=json.dumps({"url": "https://evil.com/malware.exe"}),
+            content_type="application/json",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 400
+        assert data.get("error") == "invalid_host"
+
+    def test_reject_internal_ip(self, client):
+        """Should reject URLs with internal IP addresses."""
+        resp = client.post(
+            "/api/vivino-image",
+            data=json.dumps({"url": "http://192.168.1.1/admin"}),
+            content_type="application/json",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 400
+        assert data.get("error") == "invalid_host"
+
+    @patch("app._downscale")
+    @patch("requests.get")
+    def test_allow_vivino_images(self, mock_get, mock_downscale, client, upload_dir):
+        """Should allow valid Vivino image URLs."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.content = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        mock_response.headers = {"Content-Type": "image/png"}
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        resp = client.post(
+            "/api/vivino-image",
+            data=json.dumps({"url": "https://images.vivino.com/test.png"}),
+            content_type="application/json",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 200
+        assert data["ok"] is True
+
+    @patch("app._downscale")
+    @patch("requests.get")
+    def test_allow_protocol_relative_vivino(self, mock_get, mock_downscale, client, upload_dir):
+        """Should allow protocol-relative Vivino URLs (//images.vivino.com/...)."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.content = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
+        mock_response.headers = {"Content-Type": "image/jpeg"}
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+
+        resp = client.post(
+            "/api/vivino-image",
+            data=json.dumps({"url": "//images.vivino.com/wine_photo.jpg"}),
+            content_type="application/json",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 200
+        assert data["ok"] is True

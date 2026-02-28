@@ -4,8 +4,9 @@ FROM $BUILD_FROM
 # Install Python + pip deps
 RUN apk add --no-cache python3 py3-pip py3-pillow ca-certificates \
     && update-ca-certificates
-RUN pip3 install --force-reinstall requests urllib3 certifi --break-system-packages \
-    && pip3 install flask anthropic openai --break-system-packages
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
 
 # Copy app
 WORKDIR /app

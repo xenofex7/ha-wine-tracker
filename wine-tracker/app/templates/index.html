@@ -1667,27 +1667,34 @@ function wineIcon(type) {
   return '<i class="mdi mdi-glass-wine"></i>';
 }
 
+function escapeHtml(s) {
+  if (!s) return '';
+  var d = document.createElement('div');
+  d.appendChild(document.createTextNode(s));
+  return d.innerHTML;
+}
+
 function renderCard(w) {
   var stars = '';
   if (w.rating) {
     stars = '<div class="stars">' + '<i class="mdi mdi-star"></i>'.repeat(w.rating) + '<i class="mdi mdi-star-outline"></i>'.repeat(5 - w.rating) + '</div>';
   }
   var extra = '';
-  if (w.price) extra += '<span class="price">' + CURRENCY + ' ' + Number(w.price).toFixed(2) + '</span>';
+  if (w.price) extra += '<span class="price">' + escapeHtml(CURRENCY) + ' ' + Number(w.price).toFixed(2) + '</span>';
   if (w.drink_from || w.drink_until) extra += '<span class="drink-window"><i class="mdi mdi-calendar-range"></i> ' + (w.drink_from || '?') + '–' + (w.drink_until || '?') + '</span>';
-  if (w.grape) extra += '<span><i class="mdi mdi-fruit-grapes"></i> ' + w.grape + '</span>';
-  if (w.location) extra += '<span><i class="mdi mdi-map-marker"></i> ' + w.location + '</span>';
-  if (w.vivino_id) extra += '<a class="card-vivino-link" href="https://www.vivino.com/w/' + w.vivino_id + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Vivino"><i class="mdi mdi-open-in-new"></i> Vivino</a>';
+  if (w.grape) extra += '<span><i class="mdi mdi-fruit-grapes"></i> ' + escapeHtml(w.grape) + '</span>';
+  if (w.location) extra += '<span><i class="mdi mdi-map-marker"></i> ' + escapeHtml(w.location) + '</span>';
+  if (w.vivino_id) extra += '<a class="card-vivino-link" href="https://www.vivino.com/w/' + encodeURIComponent(w.vivino_id) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Vivino"><i class="mdi mdi-open-in-new"></i> Vivino</a>';
 
   var imgHtml = w.image
-    ? '<img src="' + INGRESS + '/uploads/' + w.image + '" alt="' + (w.name||'') + '" loading="lazy">'
+    ? '<img src="' + INGRESS + '/uploads/' + encodeURIComponent(w.image) + '" alt="' + escapeHtml(w.name) + '" loading="lazy">'
     : wineIcon(w.type);
 
-  var notesHtml = w.notes ? '<div class="card-notes">' + w.notes.replace(/</g,'&lt;') + '</div>' : '';
+  var notesHtml = w.notes ? '<div class="card-notes">' + escapeHtml(w.notes) + '</div>' : '';
 
   var metaParts = '';
   if (w.year) metaParts += '<span>' + w.year + '</span>';
-  if (w.region) metaParts += '<span>' + w.region + '</span>';
+  if (w.region) metaParts += '<span>' + escapeHtml(w.region) + '</span>';
 
   // Ribbon
   var ribbonHtml = '';
@@ -1695,14 +1702,14 @@ function renderCard(w) {
     ribbonHtml = '<div class="ribbon ribbon-empty">' + (T.ribbon_empty || '') + '</div>';
   } else if (w.type) {
     var ribbonCls = w.type.toLowerCase().replace(/é/g,'e').replace(/ö/g,'oe');
-    ribbonHtml = '<div class="ribbon ribbon-' + ribbonCls + '">' + (T['wine_type_' + w.type] || w.type) + '</div>';
+    ribbonHtml = '<div class="ribbon ribbon-' + ribbonCls + '">' + escapeHtml(T['wine_type_' + w.type] || w.type) + '</div>';
   }
 
   return ribbonHtml +
     '<div class="card-img" onclick="cardImgClick(this)">' + imgHtml + '</div>' +
     '<div class="qty-badge ' + (w.quantity > 0 ? 'has' : '') + '">' + w.quantity + ' ' + T.bottles_abbr + '</div>' +
     '<div class="card-body" onclick="editFromCard(this)">' +
-      '<div class="card-name" title="' + (w.name||'') + '">' + (w.name||'') + '</div>' +
+      '<div class="card-name" title="' + escapeHtml(w.name) + '">' + escapeHtml(w.name) + '</div>' +
       '<div class="card-meta">' + metaParts + '</div>' +
       stars +
       '<div class="card-extra">' + extra + '</div>' +
