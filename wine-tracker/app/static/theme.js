@@ -7,7 +7,8 @@ var THEMES = [
   { key: 'vineyard',  colors: ['#0f1a12', '#4caf50', '#c9a84c'] },
   { key: 'champagne', colors: ['#1a1508', '#c9a84c', '#d4a843'] },
   { key: 'slate',     colors: ['#12151c', '#5c7cfa', '#c9a84c'] },
-  { key: 'burgundy',  colors: ['#180a1c', '#ab47bc', '#d4a843'] }
+  { key: 'burgundy',  colors: ['#180a1c', '#ab47bc', '#d4a843'] },
+  { key: 'homeassistant', colors: ['#111111', '#009ac7', '#ff9800'] }
 ];
 
 function getSystemPreference() {
