@@ -11,6 +11,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 # Files that contain the version number
 CONFIG="$ROOT/wine-tracker/config.yaml"
 README="$ROOT/README.md"
+ADDON_README="$ROOT/wine-tracker/README.md"
 DOCS="$ROOT/wine-tracker/DOCS.md"
 
 # ── Read current version from config.yaml ─────────────────────────────────────
@@ -51,6 +52,10 @@ echo "  ✓ config.yaml          → $NEW_VERSION"
 # ── Update README.md badge ────────────────────────────────────────────────────
 sed -i '' -e "s|version-v[0-9.]*-blue|version-v${NEW_VERSION}-blue|g" "$README"
 echo "  ✓ README.md (badge)    → v$NEW_VERSION"
+
+# ── Update wine-tracker/README.md badge ──────────────────────────────────
+sed -i '' -e "s|version-v[0-9.]*-blue|version-v${NEW_VERSION}-blue|g" "$ADDON_README"
+echo "  ✓ wine-tracker/README   → v$NEW_VERSION"
 
 # ── Update DOCS.md badge ─────────────────────────────────────────────────────
 sed -i '' -e "s|version-v[0-9.]*-blue|version-v${NEW_VERSION}-blue|g" "$DOCS"
