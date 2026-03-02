@@ -362,6 +362,7 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
 }
 .empty-state div { font-size: 4rem; margin-bottom: 1rem; }
 .empty-state .mdi { font-size: 4rem; }
+.empty-state-logo { width: 96px; height: 96px; opacity: .5; }
 
 /* ── Index: FAB Button ─────────────────────────────────────────────────────── */
 .fab {

@@ -72,7 +72,7 @@
 <div class="grid">
   {% if not wines %}
   <div class="empty-state" style="grid-column: 1/-1">
-    <div><i class="mdi mdi-glass-wine"></i></div>
+    <div><img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" class="empty-state-logo"></div>
     <p>{{ t.empty_no_wines }}<br>{{ t.empty_add_first }}</p>
   </div>
   {% endif %}
@@ -1981,7 +1981,7 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
     // Show empty state if no cards left
     var grid = document.querySelector('.grid');
     if (!grid.querySelector('.card')) {
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div><i class="mdi mdi-glass-wine" style="font-size:4rem"></i></div><p>' + T.empty_no_wines + '<br>' + T.empty_add_first + '</p></div>';
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div><img src="' + INGRESS + '/static/logo.png" alt="Wine Tracker" class="empty-state-logo"></div><p>' + T.empty_no_wines + '<br>' + T.empty_add_first + '</p></div>';
     }
   });
 });
