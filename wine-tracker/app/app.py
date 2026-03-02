@@ -10,7 +10,7 @@ from translations import TRANSLATIONS
 app = Flask(__name__)
 
 # ── HA Add-on Options ─────────────────────────────────────────────────────────
-OPTIONS_PATH = "/data/options.json"
+OPTIONS_PATH = os.environ.get("OPTIONS_PATH", "/data/options.json")
 
 def load_options():
     """Read HA add-on options with sensible defaults."""
@@ -888,6 +888,114 @@ def _call_ollama(image_b64, media_type, prompt, opts):
     return response.json()["message"]["content"]
 
 
+
+# ── AI Chat Functions ─────────────────────────────────────────────────────────
+
+def _call_chat_anthropic(messages, system_prompt, opts):
+    """Chat via Anthropic Claude (multi-turn, text-only)."""
+    import anthropic
+    api_key = opts.get("anthropic_api_key", "").strip()
+    model = opts.get("anthropic_model", "claude-opus-4-6").strip() or "claude-opus-4-6"
+    client = anthropic.Anthropic(api_key=api_key)
+    message = client.messages.create(
+        model=model,
+        max_tokens=2048,
+        system=system_prompt,
+        messages=messages,
+    )
+    return message.content[0].text
+
+
+def _call_chat_openai(messages, system_prompt, opts):
+    """Chat via OpenAI (multi-turn, text-only)."""
+    from openai import OpenAI
+    api_key = opts.get("openai_api_key", "").strip()
+    model = opts.get("openai_model", "gpt-5.2").strip() or "gpt-5.2"
+    client = OpenAI(api_key=api_key)
+    full_messages = [{"role": "system", "content": system_prompt}] + messages
+    response = client.chat.completions.create(
+        model=model,
+        messages=full_messages,
+        max_tokens=2048,
+    )
+    return response.choices[0].message.content
+
+
+def _call_chat_openrouter(messages, system_prompt, opts):
+    """Chat via OpenRouter (multi-turn, text-only)."""
+    from openai import OpenAI
+    api_key = opts.get("openrouter_api_key", "").strip()
+    model = opts.get("openrouter_model", "anthropic/claude-opus-4.6").strip() or "anthropic/claude-opus-4.6"
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+    )
+    full_messages = [{"role": "system", "content": system_prompt}] + messages
+    response = client.chat.completions.create(
+        model=model,
+        messages=full_messages,
+        max_tokens=2048,
+    )
+    return response.choices[0].message.content
+
+
+def _call_chat_ollama(messages, system_prompt, opts):
+    """Chat via local Ollama (multi-turn, text-only)."""
+    import requests as req
+    host = opts.get("ollama_host", "http://localhost:11434").strip().rstrip("/")
+    model = opts.get("ollama_model", "llava").strip() or "llava"
+    full_messages = [{"role": "system", "content": system_prompt}] + messages
+    response = req.post(
+        f"{host}/api/chat",
+        json={"model": model, "messages": full_messages, "stream": False},
+        timeout=120,
+    )
+    response.raise_for_status()
+    return response.json()["message"]["content"]
+
+
+def _call_chat(provider, messages, system_prompt, opts):
+    """Dispatch chat to the configured AI provider."""
+    dispatch = {
+        "anthropic": _call_chat_anthropic,
+        "openai": _call_chat_openai,
+        "openrouter": _call_chat_openrouter,
+        "ollama": _call_chat_ollama,
+    }
+    fn = dispatch.get(provider)
+    if not fn:
+        raise ValueError(f"Unknown chat provider: {provider}")
+    return fn(messages, system_prompt, opts)
+
+
+def _build_wine_cellar_context():
+    """Fetch all in-stock wines and format as structured text for the AI system prompt."""
+    db = get_db()
+    wines = db.execute(
+        "SELECT * FROM wines WHERE quantity > 0 ORDER BY type, name, year"
+    ).fetchall()
+    if not wines:
+        return "", 0
+    lines = []
+    for w in wines:
+        w = dict(w)
+        parts = [f"- {w['name']}"]
+        if w.get("year"):       parts.append(f"Jahrgang {w['year']}")
+        if w.get("type"):       parts.append(f"Typ: {w['type']}")
+        if w.get("region"):     parts.append(f"Region: {w['region']}")
+        if w.get("grape"):      parts.append(f"Rebsorte: {w['grape']}")
+        if w.get("rating"):     parts.append(f"Bewertung: {w['rating']}/5")
+        if w.get("quantity"):   parts.append(f"Menge: {w['quantity']} Fl.")
+        if w.get("drink_from") or w.get("drink_until"):
+            parts.append(f"Trinkfenster: {w.get('drink_from', '?')}-{w.get('drink_until', '?')}")
+        if w.get("notes"):      parts.append(f"Notizen: {w['notes']}")
+        if w.get("price"):      parts.append(f"Preis: {w['price']}")
+        if w.get("location"):   parts.append(f"Lagerort: {w['location']}")
+        if w.get("bottle_format") and w["bottle_format"] != 0.75:
+            parts.append(f"Format: {w['bottle_format']}L")
+        lines.append(" | ".join(parts))
+    return "\n".join(lines), len(wines)
+
 # ── AI Wine Label Analysis ───────────────────────────────────────────────────
 
 @app.route("/api/analyze-wine", methods=["POST"])
@@ -1258,6 +1366,75 @@ def reanalyze_wine():
             return jsonify({"ok": False, "error": "timeout"}), 500
         return jsonify({"ok": False, "error": "api_error", "message": error_msg}), 500
 
+
+
+# ── AI Wine Chat ──────────────────────────────────────────────────────────────
+
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    """Wine sommelier chat – AI answers questions about the user's wine cellar."""
+    opts = load_options()
+    provider = opts.get("ai_provider", "none").strip().lower()
+    if provider == "none" or not _is_ai_configured(opts):
+        return jsonify({"ok": False, "error": "ai_not_configured"}), 400
+
+    body = request.get_json(silent=True) or {}
+    user_message = (body.get("message") or "").strip()
+    history = body.get("history") or []
+
+    if not user_message:
+        return jsonify({"ok": False, "error": "empty_message"}), 400
+
+    # Limit conversation history to prevent token overflow
+    history = history[-20:]
+
+    # Validate history: only user/assistant roles allowed (block system-role injection)
+    valid_history = []
+    for msg in history:
+        if isinstance(msg, dict) and msg.get("role") in ("user", "assistant") and msg.get("content"):
+            valid_history.append({"role": msg["role"], "content": msg["content"]})
+
+    # Build wine cellar context
+    cellar_text, wine_count = _build_wine_cellar_context()
+
+    lang_map = {
+        "de": "German", "en": "English", "fr": "French", "it": "Italian",
+        "es": "Spanish", "pt": "Portuguese", "nl": "Dutch",
+    }
+    lang_name = lang_map.get(LANG, "English")
+
+    system_prompt = (
+        f"You are an expert wine sommelier and personal wine advisor. "
+        f"You have deep knowledge of the user's wine cellar.\n\n"
+        f"ALWAYS respond in {lang_name}.\n\n"
+        f"The user's wine cellar currently contains {wine_count} wines (only in-stock bottles):\n"
+        f"{cellar_text if cellar_text else '(The cellar is currently empty.)'}\n\n"
+        f"Your capabilities:\n"
+        f"- Recommend wines from the cellar for specific dishes, occasions, or moods\n"
+        f"- Suggest food pairings for specific wines in the cellar\n"
+        f"- Answer questions about wines, regions, grape varieties, and winemaking\n"
+        f"- Give advice on drinking windows and when to open specific bottles\n"
+        f"- Compare wines in the cellar\n"
+        f"- Suggest what wines to buy to complement the collection\n\n"
+        f"Rules:\n"
+        f"- When recommending wines, ALWAYS pick from the user's cellar first\n"
+        f"- If no wine in the cellar fits, say so and suggest what to buy\n"
+        f"- Be concise but informative\n"
+        f"- Use a friendly, knowledgeable tone\n"
+        f"- If the user asks about a wine not in their cellar, you can still answer with general expertise"
+    )
+
+    messages = valid_history + [{"role": "user", "content": user_message}]
+
+    try:
+        response_text = _call_chat(provider, messages, system_prompt, opts)
+        return jsonify({"ok": True, "response": response_text})
+    except Exception as e:
+        app.logger.exception("Chat error: %s", e)
+        error_msg = str(e)
+        if "timeout" in error_msg.lower():
+            return jsonify({"ok": False, "error": "timeout"}), 500
+        return jsonify({"ok": False, "error": "api_error", "message": error_msg}), 500
 
 # ── API for Home Assistant sensors ───────────────────────────────────────────
 

@@ -121,6 +121,14 @@ TRANSLATIONS = {
     "ai_retry": "Erneut versuchen",
     "ai_change_photo": "Anderes Foto",
 
+    # Wine Chat
+    "chat_title": "Sommelier",
+    "chat_welcome": "Frag mich nach Weinempfehlungen, Essens-Pairings oder Infos zu deinen Weinen!",
+    "chat_placeholder": "z.B. Was passt zum Risotto?",
+    "chat_send": "Senden",
+    "chat_error": "Fehler bei der Antwort. Bitte nochmal versuchen.",
+    "chat_empty_cellar": "Dein Weinkeller ist noch leer. Füge zuerst Weine hinzu!",
+
     # Vivino search
     "source_step_title": "Wein erfassen",
     "source_step_subtitle": "Wähle eine Methode",
@@ -295,6 +303,14 @@ TRANSLATIONS = {
     "ai_retry": "Try again",
     "ai_change_photo": "Change photo",
 
+    # Wine Chat
+    "chat_title": "Sommelier",
+    "chat_welcome": "Ask me for wine recommendations, food pairings, or info about your wines!",
+    "chat_placeholder": "e.g. What pairs with risotto?",
+    "chat_send": "Send",
+    "chat_error": "Error getting response. Please try again.",
+    "chat_empty_cellar": "Your cellar is empty. Add some wines first!",
+
     # Vivino search
     "source_step_title": "Add wine",
     "source_step_subtitle": "Choose a method",
@@ -465,6 +481,14 @@ TRANSLATIONS = {
     "ai_no_data": "Aucune image ni nom de vin disponible.",
     "ai_retry": "Réessayer",
     "ai_change_photo": "Autre photo",
+
+    # Wine Chat
+    "chat_title": "Sommelier",
+    "chat_welcome": "Demandez-moi des recommandations de vins, des accords mets-vins ou des infos sur vos vins\u00a0!",
+    "chat_placeholder": "ex. Quel vin avec un risotto\u00a0?",
+    "chat_send": "Envoyer",
+    "chat_error": "Erreur lors de la réponse. Veuillez réessayer.",
+    "chat_empty_cellar": "Votre cave est vide. Ajoutez d'abord des vins\u00a0!",
 
     # Vivino search
     "source_step_title": "Ajouter un vin",
@@ -637,6 +661,14 @@ TRANSLATIONS = {
     "ai_retry": "Riprova",
     "ai_change_photo": "Altra foto",
 
+    # Wine Chat
+    "chat_title": "Sommelier",
+    "chat_welcome": "Chiedimi consigli sui vini, abbinamenti o info sui tuoi vini!",
+    "chat_placeholder": "es. Quale vino con il risotto?",
+    "chat_send": "Invia",
+    "chat_error": "Errore nella risposta. Riprova.",
+    "chat_empty_cellar": "La tua cantina è vuota. Aggiungi prima dei vini!",
+
     # Vivino search
     "source_step_title": "Aggiungi vino",
     "source_step_subtitle": "Scegli un metodo",
@@ -807,6 +839,14 @@ TRANSLATIONS = {
     "ai_no_data": "No hay imagen ni nombre de vino disponible.",
     "ai_retry": "Reintentar",
     "ai_change_photo": "Otra foto",
+
+    # Wine Chat
+    "chat_title": "Sommelier",
+    "chat_welcome": "¡Pregúntame por recomendaciones, maridajes o info sobre tus vinos!",
+    "chat_placeholder": "ej. ¿Qué vino con risotto?",
+    "chat_send": "Enviar",
+    "chat_error": "Error en la respuesta. Inténtalo de nuevo.",
+    "chat_empty_cellar": "Tu bodega está vacía. ¡Añade vinos primero!",
 
     # Vivino search
     "source_step_title": "Añadir vino",
@@ -979,6 +1019,14 @@ TRANSLATIONS = {
     "ai_retry": "Tentar novamente",
     "ai_change_photo": "Outra foto",
 
+    # Wine Chat
+    "chat_title": "Sommelier",
+    "chat_welcome": "Pergunte-me sobre recomendações, harmonizações ou info dos seus vinhos!",
+    "chat_placeholder": "ex. Qual vinho com risoto?",
+    "chat_send": "Enviar",
+    "chat_error": "Erro na resposta. Tente novamente.",
+    "chat_empty_cellar": "Sua adega está vazia. Adicione vinhos primeiro!",
+
     # Vivino search
     "source_step_title": "Adicionar vinho",
     "source_step_subtitle": "Escolha um método",
@@ -1149,6 +1197,14 @@ TRANSLATIONS = {
     "ai_no_data": "Geen afbeelding of wijnnaam beschikbaar.",
     "ai_retry": "Opnieuw proberen",
     "ai_change_photo": "Andere foto",
+
+    # Wine Chat
+    "chat_title": "Sommelier",
+    "chat_welcome": "Vraag me om wijnaanbevelingen, food pairings of info over je wijnen!",
+    "chat_placeholder": "bijv. Welke wijn bij risotto?",
+    "chat_send": "Verzenden",
+    "chat_error": "Fout bij antwoord. Probeer opnieuw.",
+    "chat_empty_cellar": "Je wijnkelder is leeg. Voeg eerst wijnen toe!",
 
     # Vivino search
     "source_step_title": "Wijn toevoegen",

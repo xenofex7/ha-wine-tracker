@@ -1,0 +1,164 @@
+{% if ai_enabled %}
+<!-- ═══════════════ WINE SOMMELIER CHAT ═══════════════ -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <span><i class="mdi mdi-chat"></i> {{ t.chat_title }}</span>
+    <button class="chat-close" onclick="toggleChatPanel()">&times;</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-welcome">
+      <img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" style="width: 48px; height: 48px; opacity: .7;">
+      <p>{{ t.chat_welcome }}</p>
+    </div>
+  </div>
+  <div class="chat-input-wrap">
+    <input type="text" id="chatInput" placeholder="{{ t.chat_placeholder }}"
+           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
+    <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()" title="{{ t.chat_send }}">
+      <i class="mdi mdi-send"></i>
+    </button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@15/marked.min.js"></script>
+<script>
+// ── Wine Sommelier Chat ──────────────────────────────────────────────────────
+function renderMarkdown(text) {
+  if (typeof marked !== 'undefined') {
+    marked.setOptions({breaks: true, gfm: true});
+    return marked.parse(text);
+  }
+  // Fallback if marked didn't load
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+var _chatHistory = JSON.parse(sessionStorage.getItem('chatHistory') || '[]');
+var _chatOpen = false;
+var _chatSending = false;
+
+// Restore previous messages on page load
+(function restoreChatSession() {
+  if (_chatHistory.length === 0) return;
+  var container = document.getElementById('chatMessages');
+  var welcome = container.querySelector('.chat-welcome');
+  if (welcome) welcome.remove();
+  _chatHistory.forEach(function(msg) {
+    var div = document.createElement('div');
+    div.className = 'chat-msg chat-msg-' + msg.role;
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble';
+    if (msg.role === 'assistant') {
+      bubble.innerHTML = renderMarkdown(msg.content);
+    } else {
+      bubble.textContent = msg.content;
+    }
+    div.appendChild(bubble);
+    container.appendChild(div);
+  });
+})();
+
+function toggleChatPanel() {
+  _chatOpen = !_chatOpen;
+  document.getElementById('chatPanel').classList.toggle('open', _chatOpen);
+  document.getElementById('chatFab').classList.toggle('active', _chatOpen);
+  document.body.classList.toggle('no-scroll', _chatOpen);
+  if (_chatOpen) {
+    document.getElementById('chatInput').focus();
+    scrollChatBottom();
+  }
+}
+
+function scrollChatBottom() {
+  var el = document.getElementById('chatMessages');
+  el.scrollTop = el.scrollHeight;
+}
+
+function appendChatMessage(role, text) {
+  var container = document.getElementById('chatMessages');
+  // Remove welcome message on first message
+  var welcome = container.querySelector('.chat-welcome');
+  if (welcome) welcome.remove();
+
+  var div = document.createElement('div');
+  div.className = 'chat-msg chat-msg-' + role;
+
+  var bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  if (role === 'assistant') {
+    bubble.innerHTML = renderMarkdown(text);
+  } else {
+    bubble.textContent = text;
+  }
+
+  div.appendChild(bubble);
+  container.appendChild(div);
+  scrollChatBottom();
+  return bubble;
+}
+
+function appendChatLoading() {
+  var container = document.getElementById('chatMessages');
+  var div = document.createElement('div');
+  div.className = 'chat-msg chat-msg-assistant';
+  div.id = 'chatLoading';
+
+  var bubble = document.createElement('div');
+  bubble.className = 'chat-bubble chat-bubble-loading';
+  bubble.innerHTML = '<span class="chat-dots"><span>.</span><span>.</span><span>.</span></span>';
+
+  div.appendChild(bubble);
+  container.appendChild(div);
+  scrollChatBottom();
+}
+
+function removeChatLoading() {
+  var el = document.getElementById('chatLoading');
+  if (el) el.remove();
+}
+
+function sendChatMessage() {
+  if (_chatSending) return;
+  var input = document.getElementById('chatInput');
+  var text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  _chatSending = true;
+  document.getElementById('chatSendBtn').disabled = true;
+
+  // Show user message
+  appendChatMessage('user', text);
+  appendChatLoading();
+
+  var T = window.T || {};
+
+  fetch(INGRESS + '/api/chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({message: text, history: _chatHistory})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    removeChatLoading();
+    if (data.ok) {
+      appendChatMessage('assistant', data.response);
+      _chatHistory.push({role: 'user', content: text});
+      _chatHistory.push({role: 'assistant', content: data.response});
+      // Keep history manageable
+      if (_chatHistory.length > 20) _chatHistory = _chatHistory.slice(-20);
+      sessionStorage.setItem('chatHistory', JSON.stringify(_chatHistory));
+    } else {
+      appendChatMessage('assistant', T.chat_error || 'Error getting response. Please try again.');
+    }
+  })
+  .catch(function() {
+    removeChatLoading();
+    appendChatMessage('assistant', T.chat_error || 'Error getting response. Please try again.');
+  })
+  .finally(function() {
+    _chatSending = false;
+    document.getElementById('chatSendBtn').disabled = false;
+    document.getElementById('chatInput').focus();
+  });
+}
+</script>
+{% endif %}

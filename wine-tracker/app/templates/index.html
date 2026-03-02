@@ -65,6 +65,7 @@
     </div>
   </div>
   {% endif %}
+  {% if ai_enabled %}<button class="theme-toggle chat-toggle" id="chatFab" onclick="toggleChatPanel()" title="{{ t.chat_title }}"><i class="mdi mdi-chat"></i></button>{% endif %}
   <button class="theme-toggle" onclick="openModal('settingsModal')" title="{{ t.settings_title }}"><i class="mdi mdi-cog"></i></button>
 </header>
 
@@ -1768,6 +1769,7 @@ function initImageShimmer(container) {
 initImageShimmer();
 </script>
 
+{% include '_chat_panel.html' %}
 <button class="fab" onclick="openWineModal()" title="{{ t.btn_add_wine }}"><i class="mdi mdi-plus"></i></button>
 
 </body>

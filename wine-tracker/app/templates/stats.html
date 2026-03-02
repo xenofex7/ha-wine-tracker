@@ -20,6 +20,7 @@
     <a class="nav-link active" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
   </nav>
   <div class="header-spacer"></div>
+  {% if ai_enabled %}<button class="theme-toggle chat-toggle" id="chatFab" onclick="toggleChatPanel()" title="{{ t.chat_title }}"><i class="mdi mdi-chat"></i></button>{% endif %}
   <button class="theme-toggle" onclick="openModal('settingsModal')" title="{{ t.settings_title }}"><i class="mdi mdi-cog"></i></button>
 </header>
 
@@ -775,5 +776,6 @@ window._onThemeApplied = () => initGlobe();
 initGlobe();
 </script>
 
+{% include '_chat_panel.html' %}
 </body>
 </html>
