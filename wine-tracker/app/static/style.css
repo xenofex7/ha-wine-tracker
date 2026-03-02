@@ -222,7 +222,7 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
 
 .toggle-empty-option {
   font-size: .82rem; color: var(--muted); cursor: pointer;
-  white-space: nowrap;
+  white-space: nowrap; transition: color .15s;
 }
 .toggle-empty-option:hover { color: var(--text); }
 
@@ -331,9 +331,9 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
 .card-extra span { font-size: .75rem; padding: .15rem .45rem; border-radius: 4px;
                    background: var(--bg); color: var(--muted); }
 .card-extra .price { color: var(--gold); }
-.card-extra .drink-window { color: #7ab8a0; }
+.card-extra .drink-window { color: #27ae60; }
 .drink-window.expired { color: #e74c3c; }
-.drink-window.last-year { color: #f39c12; }
+.drink-window.last-year { color: #e67e22; }
 .drink-window .drink-warn { margin-left: 4px; }
 
 .card-actions {
@@ -365,7 +365,7 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
   font-size: .75rem; color: var(--muted); text-decoration: none;
   transition: color .15s;
 }
-.card-vivino-link:hover { color: #a41548; }
+.card-vivino-link:hover { color: var(--accent); }
 .card-vivino-link img { width: 14px; height: 14px; opacity: .6; }
 
 /* ── Index: Empty State ────────────────────────────────────────────────────── */
@@ -396,7 +396,7 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
   z-index: 150;
   transition: transform .2s, box-shadow .2s;
 }
-.fab:hover { background: #e74c3c; transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,.5); }
+.fab:hover { background: var(--accent2); transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,.5); }
 .fab:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
 
 /* ── Overlay Base (shared lightbox + modal) ────────────────────────────────── */
@@ -466,7 +466,7 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
   padding: .6rem 1rem; border-radius: 8px; font-size: .9rem;
   cursor: pointer; font-weight: 600; transition: all .2s;
 }
-.btn-cancel:hover { background: var(--surface); border-color: var(--text); }
+.btn-cancel:hover { background: var(--surface); border-color: var(--accent); }
 .btn-delete {
   flex: 1; background: #c0392b; color: white; border: none;
   padding: .6rem 1rem; border-radius: 8px; font-size: .9rem;
@@ -548,7 +548,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
   font-weight: 700; cursor: pointer; width: 100%; margin-top: .25rem;
   transition: background .2s;
 }
-.btn-submit:hover { background: #e74c3c; }
+.btn-submit:hover { background: var(--accent2); }
 
 /* ── Form Footer (Submit + Reload Popover) ─────────────────────────────────── */
 .form-footer {
@@ -584,7 +584,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
   color: var(--text); font-size: .88rem; cursor: pointer;
   border-radius: 6px; transition: background .15s; text-align: left;
 }
-.reload-popover-option:hover { background: rgba(192,57,43,.1); }
+.reload-popover-option:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .reload-popover-option .mdi { font-size: 1.15rem; opacity: .8; }
 
 /* ── Vivino ID Popover ────────────────────────────────────────────────────── */
@@ -600,14 +600,14 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 }
 .vivino-id-row { display: flex; align-items: center; gap: .5rem; }
 .vivino-id-input {
-  flex: 1; padding: .45rem .6rem; font-size: .88rem;
+  flex: 1; padding: .45rem .6rem; font-size: .88rem; height: 38px;
   background: var(--surface); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; outline: none; font-family: monospace;
+  border-radius: 8px; outline: none; font-family: monospace;
 }
 .vivino-id-input:focus { border-color: var(--accent); }
 .vivino-id-test-link {
   display: flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 6px; flex-shrink: 0;
+  width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0;
   color: var(--accent); border: 1px solid var(--border);
   background: var(--surface); transition: background .15s, border-color .15s;
 }
@@ -621,11 +621,11 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .source-options { display: flex; flex-direction: column; gap: .75rem; }
 .source-option {
   display: flex; align-items: center; gap: 1rem;
-  border: 1.5px solid var(--border); border-radius: 12px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
   padding: 1rem 1.25rem; cursor: pointer; transition: all .2s;
   background: var(--surface);
 }
-.source-option:hover { border-color: var(--accent); background: rgba(192,57,43,.04); }
+.source-option:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 4%, transparent); }
 .source-option .mdi { font-size: 1.6rem; color: var(--muted); flex-shrink: 0; }
 .source-option .source-text { text-align: left; }
 .source-option .source-label { font-size: .95rem; font-weight: 600; margin-bottom: .15rem; }
@@ -636,11 +636,11 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .ai-step h3 { font-size: 1.1rem; margin-bottom: .35rem; }
 .ai-step p { font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
 .ai-upload-area {
-  border: 1px solid var(--border); border-radius: 12px;
+  border: 1px solid var(--border); border-radius: var(--radius);
   padding: 3rem 1.5rem; cursor: pointer; transition: border-color .2s, background .2s;
   position: relative; overflow: hidden;
 }
-.ai-upload-area:hover { border-color: var(--accent); background: rgba(192,57,43,.05); }
+.ai-upload-area:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, transparent); }
 .ai-upload-area input[type=file] {
   position: absolute; inset: 0; opacity: 0; cursor: pointer;
 }
@@ -668,7 +668,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 }
 .ai-btn:hover { border-color: var(--accent); }
 .ai-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
-.ai-btn.primary:hover { background: #e74c3c; }
+.ai-btn.primary:hover { background: var(--accent2); }
 .step-link {
   color: var(--muted); cursor: pointer;
   font-size: .85rem; display: inline-flex; align-items: center; gap: .3rem;
@@ -692,7 +692,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
   border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s;
   border-radius: 6px; align-items: center;
 }
-.vivino-result-item:hover { background: rgba(192,57,43,.06); }
+.vivino-result-item:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .vivino-result-img {
   width: 40px; height: 56px; object-fit: contain; border-radius: 4px;
   flex-shrink: 0; background: rgba(255,255,255,.05);
@@ -708,12 +708,12 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 /* ── Reload Toast ──────────────────────────────────────────────────────────── */
 .reload-toast {
   position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
-  padding: .75rem 1.5rem; border-radius: .5rem; font-size: .9rem;
+  padding: .75rem 1.5rem; border-radius: 8px; font-size: .9rem;
   z-index: 9999; pointer-events: none;
   transition: opacity .4s ease;
   box-shadow: 0 4px 16px rgba(0,0,0,.3);
 }
-.reload-toast.success { background: var(--gold, #c8a951); color: #1a1a1a; }
+.reload-toast.success { background: var(--gold, #c8a951); color: var(--bg); }
 .reload-toast.neutral { background: var(--surface, #2a2a2a); color: var(--muted, #999); border: 1px solid var(--border, #444); }
 
 /* ── Settings Modal ───────────────────────────────────────────────────────── */
@@ -1048,9 +1048,9 @@ html.light a.wine-list-link:hover { background: rgba(0,0,0,.04); }
 /* ── Theme Dropdown ──────────────────────────────────────────────────────── */
 .theme-dropdown { position: relative; width: 100%; }
 .theme-dropdown-btn {
-  display: flex; align-items: center; gap: 0.6rem; width: 100%;
-  padding: 0.6rem 0.8rem; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); color: var(--text); font-size: 0.95rem;
+  display: flex; align-items: center; gap: .6rem; width: 100%;
+  padding: .6rem .8rem; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: .95rem;
   cursor: pointer; transition: border-color .2s;
 }
 .theme-dropdown-btn:hover { border-color: var(--gold); }
@@ -1060,17 +1060,17 @@ html.light a.wine-list-link:hover { background: rgba(0,0,0,.04); }
 .theme-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(128,128,128,.3); }
 .theme-dropdown-list {
   display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
   box-shadow: var(--shadow); z-index: 1000; overflow: hidden;
 }
 .theme-dropdown.open .theme-dropdown-list { display: block; }
 .theme-dropdown-item {
-  display: flex; align-items: center; gap: 0.6rem;
-  padding: 0.6rem 0.8rem; cursor: pointer; transition: background .15s;
-  color: var(--text); font-size: 0.95rem;
+  display: flex; align-items: center; gap: .6rem;
+  padding: .6rem .8rem; cursor: pointer; transition: background .15s;
+  color: var(--text); font-size: .95rem;
 }
-.theme-dropdown-item:hover { background: var(--surface); }
-.theme-dropdown-item.active { background: var(--surface); font-weight: 600; }
+.theme-dropdown-item:hover { background: var(--bg); }
+.theme-dropdown-item.active { background: color-mix(in srgb, var(--accent) 8%, transparent); font-weight: 600; }
 .theme-dropdown-item .dd-check { margin-left: auto; color: var(--gold); font-size: 1.1rem; }
 
 /* (Stats empty state now reuses .empty-state from Index) */
