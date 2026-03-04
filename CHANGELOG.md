@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.3
+
+- **Clickable wine recommendations** — when the sommelier mentions a wine from your cellar, the name is a clickable link that opens the edit modal directly
+- **Dedicated mobile chat page** — `/chat` route with full-screen layout, pinned between header and tab bar using `position: fixed` for reliable iOS behavior
+- **Sommelier in navigation** — chat is now a proper nav item (desktop header + mobile tab bar) instead of a floating icon button
+- **Home Assistant default theme** — HA theme is now the default for new installs and appears first in the theme picker
+- **Taller desktop chat panel** — fixed height of 70vh so the panel always feels spacious, even with few messages
+- **Fix FAB hidden behind tab bar** — CSS cascade bug: mobile override appeared before base `.fab` definition (same specificity → base always won); moved override after base rule
+- **Fix modal header z-index** — image rotate/delete buttons no longer scroll over the sticky modal header (z-index 1 → 5)
+- **Unify modal paddings** — all modal content areas now use `1.25rem` (20px) with no exceptions; enforced in Style Guide checklist
+- **Larger image preview** — wine photo area increased from 140px to 240px for better visibility
+- **125 tests** — 4 new tests covering `/chat` route and wine link instructions in chat prompts
+
 ## 1.4.2
 
 - **Fix chat behind keyboard** — chat panel uses dynamic viewport height (`dvh`) so it shrinks when the mobile keyboard opens
