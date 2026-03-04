@@ -8,6 +8,7 @@ import os
 import sys
 
 import pytest
+from unittest.mock import patch
 
 APP_DIR = os.path.join(os.path.dirname(__file__), "..", "app")
 sys.path.insert(0, APP_DIR)
@@ -425,3 +426,34 @@ class TestApiSummary:
         data = json.loads(resp.data)
         assert data["total_bottles"] == 5
         assert len(data["by_type"]) == 2
+
+
+# ── GET /chat ────────────────────────────────────────────────────────────────
+
+class TestChatPage:
+    """Tests for the /chat page route."""
+
+    @patch("app.load_options")
+    def test_chat_page_with_ai(self, mock_opts, client):
+        mock_opts.return_value = {
+            "currency": "CHF", "language": "en",
+            "ai_provider": "anthropic", "anthropic_api_key": "sk-test",
+            "anthropic_model": "claude-sonnet-4-20250514",
+            "openai_api_key": "", "openrouter_api_key": "",
+            "ollama_host": "", "ollama_model": "",
+        }
+        response = client.get("/chat")
+        assert response.status_code == 200
+        assert b"chatMessages" in response.data
+        assert b"chatInput" in response.data
+
+    @patch("app.load_options")
+    def test_chat_page_without_ai_redirects(self, mock_opts, client):
+        mock_opts.return_value = {
+            "currency": "CHF", "language": "en",
+            "ai_provider": "none", "anthropic_api_key": "",
+            "openai_api_key": "", "openrouter_api_key": "",
+            "ollama_host": "", "ollama_model": "",
+        }
+        response = client.get("/chat")
+        assert response.status_code == 302

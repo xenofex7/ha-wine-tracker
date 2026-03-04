@@ -574,3 +574,32 @@ class TestWineChat:
         assert "Merlot" in system_prompt
         assert "4" in system_prompt       # rating
         assert "Keller A" in system_prompt  # storage location
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_wine_context_includes_ids(self, mock_opts, mock_chat, client, sample_wine):
+        """Wine context includes wine IDs for linkable references."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = "Try the wine!"
+
+        resp = self._post_chat(client, message="recommend something")
+        assert resp.status_code == 200
+
+        call_args = mock_chat.call_args
+        system_prompt = call_args[0][2]  # third positional arg
+        assert "[ID:" in system_prompt
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_system_prompt_includes_link_instruction(self, mock_opts, mock_chat, client, sample_wine):
+        """System prompt tells AI to format wine names as markdown links."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = "Great wine!"
+
+        resp = self._post_chat(client, message="hi")
+        assert resp.status_code == 200
+
+        call_args = mock_chat.call_args
+        system_prompt = call_args[0][2]
+        assert "wine:" in system_prompt
+        assert "markdown link" in system_prompt.lower() or "[Wine" in system_prompt

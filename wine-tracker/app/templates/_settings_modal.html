@@ -22,6 +22,11 @@
                 <i class="mdi mdi-chevron-down dd-arrow"></i>
               </button>
               <div class="theme-dropdown-list">
+                <div class="theme-dropdown-item" data-theme="homeassistant" onclick="setThemeName('homeassistant')">
+                  <span class="theme-dots"><span class="theme-dot" style="background:#111111"></span><span class="theme-dot" style="background:#009ac7"></span><span class="theme-dot" style="background:#ff9800"></span></span>
+                  <span>{{ t.theme_homeassistant }}</span>
+                  <i class="mdi mdi-check dd-check"></i>
+                </div>
                 <div class="theme-dropdown-item" data-theme="classic" onclick="setThemeName('classic')">
                   <span class="theme-dots"><span class="theme-dot" style="background:#1a0a0f"></span><span class="theme-dot" style="background:#c0392b"></span><span class="theme-dot" style="background:#d4a843"></span></span>
                   <span>{{ t.theme_classic }}</span>
@@ -45,11 +50,6 @@
                 <div class="theme-dropdown-item" data-theme="burgundy" onclick="setThemeName('burgundy')">
                   <span class="theme-dots"><span class="theme-dot" style="background:#180a1c"></span><span class="theme-dot" style="background:#ab47bc"></span><span class="theme-dot" style="background:#d4a843"></span></span>
                   <span>{{ t.theme_burgundy }}</span>
-                  <i class="mdi mdi-check dd-check"></i>
-                </div>
-                <div class="theme-dropdown-item" data-theme="homeassistant" onclick="setThemeName('homeassistant')">
-                  <span class="theme-dots"><span class="theme-dot" style="background:#111111"></span><span class="theme-dot" style="background:#009ac7"></span><span class="theme-dot" style="background:#ff9800"></span></span>
-                  <span>{{ t.theme_homeassistant }}</span>
                   <i class="mdi mdi-check dd-check"></i>
                 </div>
               </div>

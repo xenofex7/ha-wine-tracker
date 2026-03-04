@@ -1,17 +1,37 @@
-{% if ai_enabled %}
-<!-- ═══════════════ WINE SOMMELIER CHAT ═══════════════ -->
-<div class="chat-panel" id="chatPanel">
-  <div class="chat-header">
-    <span><i class="mdi mdi-chat"></i> {{ t.chat_title }}</span>
-    <button class="chat-close" onclick="toggleChatPanel()">&times;</button>
-  </div>
-  <div class="chat-messages" id="chatMessages">
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7/css/materialdesignicons.min.css">
+<link rel="stylesheet" href="{{ ingress }}/static/style.css">
+<script>
+(function(){var n=localStorage.getItem('wine-theme-name')||'homeassistant';if(n&&n!=='classic')document.documentElement.setAttribute('data-theme',n);var s=localStorage.getItem('wine-theme')||'system';var e=s==='system'?(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'):s;if(e==='light')document.documentElement.classList.add('light');})();
+</script>
+<title>{{ t.chat_title }} – Wine Tracker</title>
+</head>
+<body class="chat-page">
+
+<header>
+  <a class="nav-brand" href="{{ ingress }}/" style="display:flex"><img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" class="nav-logo"></a>
+  <nav class="nav-links">
+    <a class="nav-link" href="{{ ingress }}/">{{ t.nav_cellar }}</a>
+    <a class="nav-link" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
+  </nav>
+  <div class="header-spacer"></div>
+  <button class="theme-toggle" onclick="openModal('settingsModal')" title="{{ t.settings_title }}"><i class="mdi mdi-cog"></i></button>
+</header>
+
+<!-- Full page chat content -->
+<div class="chat-fullpage">
+  <div class="chat-fullpage-messages" id="chatMessages">
     <div class="chat-welcome">
-      <img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" style="width: 48px; height: 48px; opacity: .7;">
+      <img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" style="width:48px;height:48px;opacity:.7">
       <p>{{ t.chat_welcome }}</p>
     </div>
   </div>
-  <div class="chat-input-wrap">
+  <div class="chat-fullpage-input">
     <input type="text" id="chatInput" placeholder="{{ t.chat_placeholder }}"
            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
     <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()" title="{{ t.chat_send }}">
@@ -20,37 +40,56 @@
   </div>
 </div>
 
+<!-- Bottom tab bar for mobile -->
+<nav class="bottom-tab-bar">
+  <a href="{{ ingress }}/" class="tab-item">
+    <i class="mdi mdi-bottle-wine"></i>
+    <span>{{ t.nav_cellar }}</span>
+  </a>
+  <a href="{{ ingress }}/chat" class="tab-item active">
+    <i class="mdi mdi-chat"></i>
+    <span>{{ t.chat_title }}</span>
+  </a>
+  <a href="{{ ingress }}/stats" class="tab-item">
+    <i class="mdi mdi-chart-bar"></i>
+    <span>{{ t.stats_title }}</span>
+  </a>
+</nav>
+
+{% include '_settings_modal.html' %}
+
+<script src="{{ ingress }}/static/theme.js"></script>
+<script>
+var INGRESS = '{{ ingress }}';
+var T = {{ t | tojson }};
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'settingsModal') { updateThemeSegmented(); updateThemeDropdown(); }
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    if (e.target === el) closeModal(el.id);
+  });
+});
+</script>
+
+<!-- Chat JS -->
 <script src="https://cdn.jsdelivr.net/npm/marked@15/marked.min.js"></script>
 <script>
-// ── Wine Sommelier Chat ──────────────────────────────────────────────────────
 function renderMarkdown(text) {
   if (typeof marked !== 'undefined') {
     marked.setOptions({breaks: true, gfm: true});
     return marked.parse(text);
   }
-  // Fallback if marked didn't load
   return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
-var _chatHistory = JSON.parse(sessionStorage.getItem('chatHistory') || '[]');
-var _chatOpen = false;
-var _chatSending = false;
 
-function _adjustChatViewport() {
-  var panel = document.getElementById('chatPanel');
-  if (!panel || !_chatOpen) return;
-  if (window.innerWidth <= 500) {
-    var vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    panel.style.height = vh + 'px';
-    panel.style.maxHeight = vh + 'px';
-  } else {
-    panel.style.height = '';
-    panel.style.maxHeight = '';
-  }
-}
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', _adjustChatViewport);
-}
-window.addEventListener('resize', _adjustChatViewport);
+var _chatHistory = JSON.parse(sessionStorage.getItem('chatHistory') || '[]');
+var _chatSending = false;
 
 // Restore previous messages on page load
 (function restoreChatSession() {
@@ -71,23 +110,8 @@ window.addEventListener('resize', _adjustChatViewport);
     div.appendChild(bubble);
     container.appendChild(div);
   });
+  scrollChatBottom();
 })();
-
-function toggleChatPanel() {
-  _chatOpen = !_chatOpen;
-  var panel = document.getElementById('chatPanel');
-  panel.classList.toggle('open', _chatOpen);
-  document.getElementById('chatFab').classList.toggle('active', _chatOpen);
-  document.body.classList.toggle('no-scroll', _chatOpen);
-  if (_chatOpen) {
-    _adjustChatViewport();
-    document.getElementById('chatInput').focus();
-    scrollChatBottom();
-  } else {
-    panel.style.height = '';
-    panel.style.maxHeight = '';
-  }
-}
 
 function scrollChatBottom() {
   var el = document.getElementById('chatMessages');
@@ -96,13 +120,10 @@ function scrollChatBottom() {
 
 function appendChatMessage(role, text) {
   var container = document.getElementById('chatMessages');
-  // Remove welcome message on first message
   var welcome = container.querySelector('.chat-welcome');
   if (welcome) welcome.remove();
-
   var div = document.createElement('div');
   div.className = 'chat-msg chat-msg-' + role;
-
   var bubble = document.createElement('div');
   bubble.className = 'chat-bubble';
   if (role === 'assistant') {
@@ -110,7 +131,6 @@ function appendChatMessage(role, text) {
   } else {
     bubble.textContent = text;
   }
-
   div.appendChild(bubble);
   container.appendChild(div);
   scrollChatBottom();
@@ -122,11 +142,9 @@ function appendChatLoading() {
   var div = document.createElement('div');
   div.className = 'chat-msg chat-msg-assistant';
   div.id = 'chatLoading';
-
   var bubble = document.createElement('div');
   bubble.className = 'chat-bubble chat-bubble-loading';
   bubble.innerHTML = '<span class="chat-dots"><span>.</span><span>.</span><span>.</span></span>';
-
   div.appendChild(bubble);
   container.appendChild(div);
   scrollChatBottom();
@@ -142,17 +160,11 @@ function sendChatMessage() {
   var input = document.getElementById('chatInput');
   var text = input.value.trim();
   if (!text) return;
-
   input.value = '';
   _chatSending = true;
   document.getElementById('chatSendBtn').disabled = true;
-
-  // Show user message
   appendChatMessage('user', text);
   appendChatLoading();
-
-  var T = window.T || {};
-
   fetch(INGRESS + '/api/chat', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -165,7 +177,6 @@ function sendChatMessage() {
       appendChatMessage('assistant', data.response);
       _chatHistory.push({role: 'user', content: text});
       _chatHistory.push({role: 'assistant', content: data.response});
-      // Keep history manageable
       if (_chatHistory.length > 20) _chatHistory = _chatHistory.slice(-20);
       sessionStorage.setItem('chatHistory', JSON.stringify(_chatHistory));
     } else {
@@ -184,12 +195,16 @@ function sendChatMessage() {
 }
 
 // Handle wine: links in chat messages — navigate to cellar with edit modal
-document.getElementById('chatPanel').addEventListener('click', function(e) {
+document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
   var link = e.target.closest('a[href^="wine:"]');
   if (!link) return;
   e.preventDefault();
   var wineId = link.getAttribute('href').replace('wine:', '');
   window.location = INGRESS + '/?edit=' + encodeURIComponent(wineId);
 });
+
+// Auto-focus input on load
+document.getElementById('chatInput').focus();
 </script>
-{% endif %}
+</body>
+</html>

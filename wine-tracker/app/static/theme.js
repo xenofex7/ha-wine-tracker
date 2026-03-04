@@ -3,12 +3,12 @@ var THEME_MODES = ['system', 'dark', 'light'];
 
 // Theme definitions with preview colors [bg-dark, accent, gold]
 var THEMES = [
+  { key: 'homeassistant', colors: ['#111111', '#009ac7', '#ff9800'] },
   { key: 'classic',   colors: ['#1a0a0f', '#c0392b', '#d4a843'] },
   { key: 'vineyard',  colors: ['#0f1a12', '#4caf50', '#c9a84c'] },
   { key: 'champagne', colors: ['#1a1508', '#c9a84c', '#d4a843'] },
   { key: 'slate',     colors: ['#12151c', '#5c7cfa', '#c9a84c'] },
-  { key: 'burgundy',  colors: ['#180a1c', '#ab47bc', '#d4a843'] },
-  { key: 'homeassistant', colors: ['#111111', '#009ac7', '#ff9800'] }
+  { key: 'burgundy',  colors: ['#180a1c', '#ab47bc', '#d4a843'] }
 ];
 
 function getSystemPreference() {
@@ -56,7 +56,7 @@ function updateThemeSegmented() {
 }
 
 function updateThemeDropdown() {
-  var current = localStorage.getItem('wine-theme-name') || 'classic';
+  var current = localStorage.getItem('wine-theme-name') || 'homeassistant';
   // Update button display
   var btn = document.querySelector('.theme-dropdown-btn');
   if (btn) {
@@ -103,7 +103,7 @@ document.addEventListener('click', function(e) {
 
 // Apply theme name on load (mode is handled by inline script + OS listener)
 (function() {
-  var name = localStorage.getItem('wine-theme-name') || 'classic';
+  var name = localStorage.getItem('wine-theme-name') || 'homeassistant';
   applyThemeName(name);
 })();
 

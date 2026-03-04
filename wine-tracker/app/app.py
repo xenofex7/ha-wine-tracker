@@ -615,6 +615,14 @@ def delete(wine_id):
     return ingress_redirect("index")
 
 
+@app.route("/chat")
+def chat_page():
+    opts = load_options()
+    if not _is_ai_configured(opts):
+        return ingress_redirect("index")
+    return render_template("chat.html")
+
+
 @app.route("/stats")
 def stats_page():
     db = get_db()
@@ -979,7 +987,7 @@ def _build_wine_cellar_context():
     lines = []
     for w in wines:
         w = dict(w)
-        parts = [f"- {w['name']}"]
+        parts = [f"- [ID:{w['id']}] {w['name']}"]
         if w.get("year"):       parts.append(f"Jahrgang {w['year']}")
         if w.get("type"):       parts.append(f"Typ: {w['type']}")
         if w.get("region"):     parts.append(f"Region: {w['region']}")
@@ -1421,7 +1429,10 @@ def api_chat():
         f"- If no wine in the cellar fits, say so and suggest what to buy\n"
         f"- Be concise but informative\n"
         f"- Use a friendly, knowledgeable tone\n"
-        f"- If the user asks about a wine not in their cellar, you can still answer with general expertise"
+        f"- If the user asks about a wine not in their cellar, you can still answer with general expertise\n"
+        f"- When mentioning a wine FROM THE CELLAR, format it as a markdown link: [Wine Name Vintage](wine:ID) where ID is the number from [ID:…] in the cellar data\n"
+        f"- Example: [Château Margaux 2015](wine:42)\n"
+        f"- Only use wine: links for wines that exist in the cellar with an ID; for purchase suggestions use plain text"
     )
 
     messages = valid_history + [{"role": "user", "content": user_message}]

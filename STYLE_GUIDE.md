@@ -148,7 +148,7 @@ The design uses rem-based spacing. Common increments:
 ### Consistent Patterns
 - **Grid gap**: `1rem`
 - **Card body padding**: `.75rem 1rem`
-- **Modal body padding**: `1.25rem`
+- **Modal inner padding**: **`1.25rem` (20px) — mandatory for ALL content areas inside modals** (`.modal-body`, `.source-step`, `.ai-step`, `.vivino-panel`, `.delete-confirm-body`, etc.). No exceptions. This ensures uniform spacing across all modal screens.
 - **Modal body gap**: `.9rem`
 - **Form row gap** (`.row2`): `.75rem`
 - **Button padding**: `.6rem 1rem` (standard), `.5rem 1.2rem` (small)
@@ -267,6 +267,7 @@ Each theme defines: `--bg`, `--surface`, `--border`, `--accent`, `--accent2`, `-
 - [ ] Only use hardcoded red (`#e74c3c`) for danger/error states
 - [ ] Use `color-mix(in srgb, var(--accent) N%, transparent)` for transparent tints
 - [ ] Use the correct border-radius tier (container=12, popover=10, button=8, small=6, tag=4)
+- [ ] Modal content areas use `padding: 1.25rem` — no other value, no exceptions
 - [ ] Use `var(--surface)` for elevated backgrounds, `var(--bg)` for recessed backgrounds
 - [ ] Use `var(--border)` for all borders and dividers
 - [ ] Use `var(--text)` for primary text, `var(--muted)` for secondary text

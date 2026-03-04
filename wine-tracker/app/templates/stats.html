@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7/css/materialdesignicons.min.css">
 <link rel="stylesheet" href="{{ ingress }}/static/style.css">
 <script>
-(function(){var n=localStorage.getItem('wine-theme-name')||'classic';if(n&&n!=='classic')document.documentElement.setAttribute('data-theme',n);var s=localStorage.getItem('wine-theme')||'system';var e=s==='system'?(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'):s;if(e==='light')document.documentElement.classList.add('light');})();
+(function(){var n=localStorage.getItem('wine-theme-name')||'homeassistant';if(n&&n!=='classic')document.documentElement.setAttribute('data-theme',n);var s=localStorage.getItem('wine-theme')||'system';var e=s==='system'?(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'):s;if(e==='light')document.documentElement.classList.add('light');})();
 </script>
 <title>{{ t.stats_title }} – Wine Tracker</title>
 </head>
@@ -17,10 +17,10 @@
   <a class="nav-brand" href="{{ ingress }}/"><img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" class="nav-logo"></a>
   <nav class="nav-links">
     <a class="nav-link" href="{{ ingress }}/">{{ t.nav_cellar }}</a>
+    {% if ai_enabled %}<a class="nav-link" href="#" id="chatFab" onclick="event.preventDefault();toggleChatPanel()">{{ t.chat_title }}</a>{% endif %}
     <a class="nav-link active" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
   </nav>
   <div class="header-spacer"></div>
-  {% if ai_enabled %}<button class="theme-toggle chat-toggle" id="chatFab" onclick="toggleChatPanel()" title="{{ t.chat_title }}"><i class="mdi mdi-chat"></i></button>{% endif %}
   <button class="theme-toggle" onclick="openModal('settingsModal')" title="{{ t.settings_title }}"><i class="mdi mdi-cog"></i></button>
 </header>
 
@@ -782,6 +782,11 @@ initGlobe();
   <a class="tab-item" href="{{ ingress }}/">
     <i class="mdi mdi-bottle-wine"></i><span>{{ t.nav_cellar }}</span>
   </a>
+  {% if ai_enabled %}
+  <a class="tab-item" href="{{ ingress }}/chat">
+    <i class="mdi mdi-chat"></i><span>{{ t.chat_title }}</span>
+  </a>
+  {% endif %}
   <a class="tab-item active" href="{{ ingress }}/stats">
     <i class="mdi mdi-chart-bar"></i><span>{{ t.stats_title }}</span>
   </a>
