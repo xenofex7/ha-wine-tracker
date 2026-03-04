@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.0
+
+- **Docker standalone mode** — run Wine Tracker without Home Assistant via `docker-compose up`; pre-built multi-arch images (amd64 + arm64) on GitHub Container Registry
+- **User authentication** — ENV-based login system with session cookies and password hashing (no new dependencies — uses werkzeug built into Flask)
+- **Readonly role** — `user:password:readonly` format blocks all write operations while allowing full browsing, searching, and AI chat
+- **Logout button** — settings modal shows the logged-in username with a sign-out button when auth is enabled
+- **ENV configuration** — all add-on options (language, currency, AI provider & keys) can now be set via environment variables for Docker deployments
+- **CI/CD pipeline** — GitHub Actions workflow builds and pushes Docker images to GHCR automatically on version tags; tests run as a build gate
+- **Login page** — theme-aware login screen with the Wine Tracker logo, matching the active color scheme
+- **README overhaul** — full Docker installation guide with Quick Start, all ENV variables documented, and update instructions
+- **Rename /release to /deploy** — release skill renamed to avoid Claude Code conflict
+- **153 tests** — 28 new tests covering ENV config (5), authentication (11), and readonly roles (12)
+
 ## 1.4.3
 
 - **Clickable wine recommendations** — when the sommelier mentions a wine from your cellar, the name is a clickable link that opens the edit modal directly

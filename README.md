@@ -326,7 +326,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 
 MIT
 
-[version-badge]: https://img.shields.io/badge/version-v1.4.3-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v1.5.0-blue.svg
 [stage-badge]: https://img.shields.io/badge/project%20stage-stable-brightgreen.svg
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-green.svg
