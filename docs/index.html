@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wine Tracker — Your Personal Wine Cellar, Beautifully Organized</title>
+  <meta name="description" content="Track your wine collection with AI-powered label recognition, Vivino integration, and a stunning 3D globe. Run as a Home Assistant add-on or standalone Docker container.">
+  <meta property="og:title" content="Wine Tracker — Your Personal Wine Cellar">
+  <meta property="og:description" content="Track your wine collection with AI-powered label recognition, Vivino integration, and a stunning 3D globe.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_main_screen.png">
+  <meta property="og:url" content="https://xenofex7.github.io/ha-wine-tracker">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Wine Tracker — Your Personal Wine Cellar">
+  <meta name="twitter:description" content="Track your wine collection with AI-powered label recognition, Vivino integration, and a stunning 3D globe.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_main_screen.png">
+  <link rel="icon" type="image/png" href="./icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ========================================
+       CSS Custom Properties
+       ======================================== */
+    :root {
+      --bg-primary: #0f0a0c;
+      --bg-secondary: #1a1014;
+      --bg-tertiary: #231820;
+      --bg-card: #1e1318;
+      --bg-card-hover: #2a1c24;
+      --bg-code: #160e12;
+
+      --wine-deep: #722F37;
+      --wine-mid: #8B3A42;
+      --wine-light: #A44A54;
+      --wine-glow: rgba(114, 47, 55, 0.3);
+      --wine-glow-strong: rgba(114, 47, 55, 0.5);
+
+      --gold: #C9A85C;
+      --gold-light: #D4B76A;
+      --gold-dim: rgba(201, 168, 92, 0.15);
+
+      --text-primary: #F2E8EC;
+      --text-secondary: #B8A0A8;
+      --text-muted: #7A6670;
+
+      --border: rgba(114, 47, 55, 0.2);
+      --border-hover: rgba(114, 47, 55, 0.4);
+
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+
+      --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.3);
+      --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 40px rgba(114, 47, 55, 0.15);
+
+      --max-width: 1200px;
+      --section-padding: 120px;
+    }
+
+    /* ========================================
+       Reset & Base
+       ======================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: var(--gold);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    a:hover {
+      color: var(--gold-light);
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* ========================================
+       Scroll Animations
+       ======================================== */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .fade-in-delay-1 { transition-delay: 0.1s; }
+    .fade-in-delay-2 { transition-delay: 0.2s; }
+    .fade-in-delay-3 { transition-delay: 0.3s; }
+    .fade-in-delay-4 { transition-delay: 0.4s; }
+
+    /* ========================================
+       Layout
+       ======================================== */
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section {
+      padding: var(--section-padding) 0;
+      position: relative;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 640px;
+      margin: 0 auto 60px;
+      line-height: 1.6;
+    }
+
+    /* ========================================
+       Navigation
+       ======================================== */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 16px 0;
+      background: rgba(15, 10, 12, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: padding 0.3s ease;
+    }
+
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+
+    .nav-brand img {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-github {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-github svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-secondary);
+      transition: fill 0.2s ease;
+    }
+
+    .nav-github:hover svg {
+      fill: var(--text-primary);
+    }
+
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .nav-toggle span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--text-secondary);
+      margin: 5px 0;
+      transition: all 0.3s ease;
+      border-radius: 2px;
+    }
+
+    /* ========================================
+       Hero Section
+       ======================================== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 140px 24px 100px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 50% 30%, rgba(114, 47, 55, 0.12) 0%, transparent 60%),
+                  radial-gradient(ellipse at 30% 80%, rgba(201, 168, 92, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+    }
+
+    .hero-logo {
+      width: 120px;
+      height: 120px;
+      border-radius: 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-glow), var(--shadow-elevated);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 6vw, 3.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-tagline {
+      font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+      color: var(--text-secondary);
+      max-width: 620px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--wine-deep);
+      color: var(--text-primary);
+      box-shadow: 0 4px 16px rgba(114, 47, 55, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--wine-mid);
+      color: var(--text-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(114, 47, 55, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border-hover);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--wine-mid);
+      transform: translateY(-2px);
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-badge img {
+      height: 20px;
+    }
+
+    /* ========================================
+       Screenshots Section
+       ======================================== */
+    .screenshots {
+      background: var(--bg-secondary);
+      overflow: hidden;
+    }
+
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .screenshot-main {
+      grid-column: 1 / -1;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-elevated);
+      border: 1px solid var(--border);
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .screenshot-main:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-glow), var(--shadow-elevated);
+    }
+
+    .screenshot-main img {
+      display: block;
+      width: 100%;
+    }
+
+    .screenshot-secondary {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border);
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .screenshot-secondary:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-glow), var(--shadow-soft);
+    }
+
+    .screenshot-secondary img {
+      display: block;
+      width: 100%;
+    }
+
+    .screenshot-label {
+      padding: 14px 18px;
+      background: var(--bg-card);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* ========================================
+       Features Section
+       ======================================== */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 28px 24px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--wine-deep), var(--gold), var(--wine-deep));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      font-size: 1.8rem;
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ========================================
+       Docker Section
+       ======================================== */
+    .docker-section {
+      background: var(--bg-secondary);
+    }
+
+    .docker-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    .docker-text h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--gold);
+    }
+
+    .docker-text p {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.7;
+    }
+
+    .docker-steps {
+      list-style: none;
+      counter-reset: steps;
+    }
+
+    .docker-steps li {
+      counter-increment: steps;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .docker-steps li::before {
+      content: counter(steps);
+      min-width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--wine-deep);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: rgba(114, 47, 55, 0.1);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-header span {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .code-copy {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .code-copy:hover {
+      border-color: var(--wine-mid);
+      color: var(--text-secondary);
+    }
+
+    .code-body {
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    .code-body pre {
+      margin: 0;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      white-space: pre;
+    }
+
+    .code-body .keyword { color: var(--wine-light); }
+    .code-body .string { color: var(--gold); }
+    .code-body .comment { color: var(--text-muted); font-style: italic; }
+    .code-body .number { color: #7EC8E3; }
+
+    .docker-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: var(--gold);
+    }
+
+    .docker-link:hover {
+      color: var(--gold-light);
+    }
+
+    .docker-link svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* ========================================
+       Home Assistant Section
+       ======================================== */
+    .ha-section {
+      text-align: center;
+    }
+
+    .ha-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 48px;
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ha-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #41BDF5, var(--wine-deep), var(--gold));
+    }
+
+    .ha-badge {
+      display: inline-block;
+      margin-bottom: 32px;
+    }
+
+    .ha-badge img {
+      height: 44px;
+      transition: transform 0.2s ease;
+    }
+
+    .ha-badge:hover img {
+      transform: translateY(-2px);
+    }
+
+    .ha-steps {
+      text-align: left;
+      list-style: none;
+      counter-reset: ha-steps;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .ha-steps li {
+      counter-increment: ha-steps;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .ha-steps li::before {
+      content: counter(ha-steps);
+      min-width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #41BDF5, #2196F3);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .ha-steps code {
+      background: var(--bg-code);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      color: var(--gold);
+      border: 1px solid var(--border);
+    }
+
+    /* ========================================
+       Footer
+       ======================================== */
+    footer {
+      padding: 48px 0;
+      border-top: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .footer-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .footer-brand img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--text-secondary);
+    }
+
+    .footer-made {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ========================================
+       Divider
+       ======================================== */
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-hover), transparent);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ========================================
+       Responsive
+       ======================================== */
+    @media (max-width: 900px) {
+      :root {
+        --section-padding: 80px;
+      }
+
+      .docker-content {
+        grid-template-columns: 1fr;
+      }
+
+      .screenshots-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      :root {
+        --section-padding: 60px;
+      }
+
+      .nav-links {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 10, 12, 0.97);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 24px;
+        z-index: 999;
+      }
+
+      .nav-links.open {
+        display: flex;
+      }
+
+      .nav-links a {
+        font-size: 1.2rem;
+      }
+
+      .nav-toggle {
+        display: block;
+        z-index: 1001;
+      }
+
+      .nav-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+      }
+
+      .nav-toggle.active span:nth-child(2) {
+        opacity: 0;
+      }
+
+      .nav-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(5px, -5px);
+      }
+
+      .hero {
+        padding: 120px 20px 80px;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero-cta {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .screenshots-grid {
+        gap: 16px;
+      }
+
+      .ha-card {
+        padding: 32px 24px;
+      }
+
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .footer-links {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================
+       Navigation
+       ======================================== -->
+  <nav>
+    <div class="container">
+      <a href="#" class="nav-brand">
+        <img src="./icon.png" alt="Wine Tracker Icon">
+        <span>Wine Tracker</span>
+      </a>
+      <button class="nav-toggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav-links">
+        <li><a href="#screenshots">Screenshots</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#docker">Docker</a></li>
+        <li><a href="#homeassistant">Home Assistant</a></li>
+        <li>
+          <a href="https://github.com/xenofex7/ha-wine-tracker" class="nav-github" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span>GitHub</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ========================================
+       Hero Section
+       ======================================== -->
+  <section class="hero">
+    <div class="hero-content">
+      <img src="./logo.png" alt="Wine Tracker Logo" class="hero-logo fade-in">
+      <h1 class="fade-in fade-in-delay-1">Your personal wine cellar &mdash; beautifully organized</h1>
+      <p class="hero-tagline fade-in fade-in-delay-2">
+        Track your collection with AI-powered label recognition, Vivino integration, and a stunning 3D globe. Run as a Home Assistant add-on or standalone Docker container.
+      </p>
+      <div class="hero-cta fade-in fade-in-delay-3">
+        <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fxenofex7%2Fha-wine-tracker" class="btn btn-primary" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.11 3.89L17.03.81c-.56-.56-1.31-.81-2.07-.81H7.05c-.76 0-1.51.25-2.07.81L1.89 3.89C1.33 4.45 1.08 5.2 1.08 5.96V20c0 1.66 1.34 3 3 3h15.84c1.66 0 3-1.34 3-3V5.96c0-.76-.25-1.51-.81-2.07zM12 17.5L6.5 12H10v-4h4v4h3.5L12 17.5zM3.61 5L5.86 2.75c.19-.19.45-.3.72-.3h10.84c.27 0 .53.11.72.3L20.39 5H3.61z"/></svg>
+          Install on Home Assistant
+        </a>
+        <a href="#docker" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.186.186 0 00-.185.186v1.887c0 .102.083.185.185.185zm-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.186.186 0 00-.185.185v1.888c0 .103.082.186.185.186zm0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.186.186 0 00-.185.185v1.888c0 .103.082.186.185.186zm-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.186.186 0 00-.185-.185H8.1a.186.186 0 00-.185.185v1.888c0 .103.083.186.185.186zm-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.186.186 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.888c0 .103.084.186.186.186zm5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.186.186 0 00-.185.186v1.887c0 .102.082.185.185.185zm-2.93 0h2.12a.186.186 0 00.184-.185V9.006a.186.186 0 00-.184-.186h-2.12a.186.186 0 00-.184.186v1.887c0 .102.083.185.185.185zm-2.964 0h2.119a.186.186 0 00.185-.185V9.006a.186.186 0 00-.185-.186H5.136a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185zm-2.92 0h2.12a.186.186 0 00.184-.185V9.006a.186.186 0 00-.184-.186h-2.12a.186.186 0 00-.184.186v1.887c0 .102.082.185.185.185zM23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/></svg>
+          Run with Docker
+        </a>
+      </div>
+      <div class="hero-badge fade-in fade-in-delay-4">
+        <a href="https://github.com/xenofex7/ha-wine-tracker" target="_blank" rel="noopener">
+          <img src="https://img.shields.io/github/stars/xenofex7/ha-wine-tracker?style=flat&logo=github&color=722F37&labelColor=1a1014" alt="GitHub Stars">
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Screenshots Section
+       ======================================== -->
+  <section class="screenshots" id="screenshots">
+    <div class="container">
+      <h2 class="section-title fade-in">See it in action</h2>
+      <p class="section-subtitle fade-in fade-in-delay-1">A beautiful, responsive interface designed for wine lovers. Works seamlessly on desktop and mobile.</p>
+      <div class="screenshots-grid">
+        <div class="screenshot-main fade-in fade-in-delay-1">
+          <img src="./assets/260220_main_screen.png" alt="Wine Tracker - Main Cellar Overview" loading="lazy">
+          <div class="screenshot-label">Wine Cellar Overview</div>
+        </div>
+        <div class="screenshot-secondary fade-in fade-in-delay-2">
+          <img src="./assets/260220_statistics_screen.png" alt="Wine Tracker - Statistics with Globe & Charts" loading="lazy">
+          <div class="screenshot-label">Statistics &amp; 3D Globe</div>
+        </div>
+        <div class="screenshot-secondary fade-in fade-in-delay-3">
+          <img src="./assets/260220_add_wine_screen.png" alt="Wine Tracker - Add Wine Screen" loading="lazy">
+          <div class="screenshot-label">Add Wine &mdash; AI, Vivino or Manual</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ========================================
+       Features Section
+       ======================================== -->
+  <section id="features">
+    <div class="container">
+      <h2 class="section-title fade-in">Everything you need to manage your cellar</h2>
+      <p class="section-subtitle fade-in fade-in-delay-1">From AI-powered label recognition to interactive globe visualization &mdash; Wine Tracker has you covered.</p>
+      <div class="features-grid">
+        <div class="feature-card fade-in">
+          <span class="feature-icon" aria-hidden="true">&#127863;</span>
+          <h3>Wine Cards</h3>
+          <p>Beautiful cards with photo, vintage, type, region, grape variety, star rating, and personal tasting notes.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-1">
+          <span class="feature-icon" aria-hidden="true">&#128248;</span>
+          <h3>AI Label Recognition</h3>
+          <p>Snap a photo of any wine label and let AI fill in all fields automatically. Supports Claude, GPT, OpenRouter, and Ollama.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-2">
+          <span class="feature-icon" aria-hidden="true">&#128270;</span>
+          <h3>Vivino Search</h3>
+          <p>Search by name, see community ratings, regions, and prices. Import wine data directly into your collection.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-3">
+          <span class="feature-icon" aria-hidden="true">&#127757;</span>
+          <h3>Interactive Globe</h3>
+          <p>See your wine regions on a beautiful 3D WebGL globe. A stunning way to visualize your collection geographically.</p>
+        </div>
+        <div class="feature-card fade-in">
+          <span class="feature-icon" aria-hidden="true">&#128202;</span>
+          <h3>Statistics</h3>
+          <p>Donut charts by type, total bottles, total liters, collection value, and average age &mdash; all at a glance.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-1">
+          <span class="feature-icon" aria-hidden="true">&#128483;&#65039;</span>
+          <h3>AI Sommelier</h3>
+          <p>Ask for food pairings, serving temperature, and recommendations based on your collection and preferences.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-2">
+          <span class="feature-icon" aria-hidden="true">&#127760;</span>
+          <h3>7 Languages</h3>
+          <p>Full support for German, English, French, Italian, Spanish, Portuguese, and Dutch.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-3">
+          <span class="feature-icon" aria-hidden="true">&#128051;</span>
+          <h3>Docker Standalone</h3>
+          <p>Run without Home Assistant. Simple Docker Compose setup with persistent data volumes.</p>
+        </div>
+        <div class="feature-card fade-in">
+          <span class="feature-icon" aria-hidden="true">&#128274;</span>
+          <h3>User Authentication</h3>
+          <p>Built-in login with admin and readonly roles. Secure your collection with multi-user support.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-1">
+          <span class="feature-icon" aria-hidden="true">&#11088;</span>
+          <h3>Star Ratings</h3>
+          <p>Rate your wines from 1 to 5 stars. Filter and sort by your personal ratings.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ========================================
+       Docker Section
+       ======================================== -->
+  <section class="docker-section" id="docker">
+    <div class="container">
+      <h2 class="section-title fade-in">Quick Start with Docker</h2>
+      <p class="section-subtitle fade-in fade-in-delay-1">Up and running in under a minute. No Home Assistant required.</p>
+      <div class="docker-content">
+        <div class="docker-text fade-in fade-in-delay-2">
+          <h3>Three simple steps</h3>
+          <ol class="docker-steps">
+            <li>Create a <code>docker-compose.yml</code> file with the configuration shown here</li>
+            <li>Run <code>docker-compose up -d</code> to start the container</li>
+            <li>Open <code>http://localhost:5050</code> in your browser and log in</li>
+          </ol>
+          <p>All data is stored in a Docker volume &mdash; your collection survives container updates.</p>
+          <a href="https://github.com/xenofex7/ha-wine-tracker/blob/main/docker/docker-compose.yml" class="docker-link" target="_blank" rel="noopener">
+            View full configuration on GitHub
+            <svg viewBox="0 0 24 24"><path d="M14 3v2h3.59l-9.3 9.29 1.42 1.42L19 6.41V10h2V3h-7zM5 5v14h14v-7h-2v5H7V7h5V5H5z"/></svg>
+          </a>
+        </div>
+        <div class="code-block fade-in fade-in-delay-3">
+          <div class="code-header">
+            <span>docker-compose.yml</span>
+            <button class="code-copy" onclick="copyCode(this)" aria-label="Copy to clipboard">Copy</button>
+          </div>
+          <div class="code-body">
+            <pre><span class="keyword">services</span>:
+  <span class="keyword">wine-tracker</span>:
+    <span class="keyword">image</span>: <span class="string">ghcr.io/xenofex7/wine-tracker:latest</span>
+    <span class="keyword">ports</span>:
+      - <span class="string">"5050:5050"</span>
+    <span class="keyword">volumes</span>:
+      - <span class="string">wine-data:/data</span>
+    <span class="keyword">environment</span>:
+      - <span class="string">AUTH_ENABLED=true</span>
+      - <span class="string">USERS=admin:changeme</span>
+      - <span class="string">SECRET_KEY=change-this-to-a-random-string</span>
+      - <span class="string">CURRENCY=CHF</span>
+      - <span class="string">LANGUAGE=de</span>
+    <span class="keyword">restart</span>: <span class="string">unless-stopped</span>
+
+<span class="keyword">volumes</span>:
+  <span class="keyword">wine-data</span>:</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ========================================
+       Home Assistant Section
+       ======================================== -->
+  <section class="ha-section" id="homeassistant">
+    <div class="container">
+      <h2 class="section-title fade-in">Home Assistant Add-on</h2>
+      <p class="section-subtitle fade-in fade-in-delay-1">Seamless integration with your smart home. Install directly from the add-on store.</p>
+      <div class="ha-card fade-in fade-in-delay-2">
+        <a href="https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fxenofex7%2Fha-wine-tracker" class="ha-badge" target="_blank" rel="noopener">
+          <img src="https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg" alt="Add Repository to My Home Assistant">
+        </a>
+        <ol class="ha-steps">
+          <li>Click the button above or manually add the repository URL:<br><code>https://github.com/xenofex7/ha-wine-tracker</code></li>
+          <li><strong>Wine Tracker</strong> will appear in your add-on store. Click <strong>Install</strong>.</li>
+          <li>Start the add-on &mdash; it opens in your HA sidebar under <strong>Wine Tracker</strong>.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================
+       Footer
+       ======================================== -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <img src="./icon.png" alt="Wine Tracker Icon">
+          <span>Wine Tracker</span>
+        </div>
+        <ul class="footer-links">
+          <li><a href="https://github.com/xenofex7/ha-wine-tracker" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://github.com/xenofex7/ha-wine-tracker/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
+          <li><a href="https://community.home-assistant.io/t/wine-tracker-home-assistant-app-add-on/989021" target="_blank" rel="noopener">Community Forum</a></li>
+          <li><a href="https://github.com/xenofex7/ha-wine-tracker/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+        </ul>
+        <p class="footer-made">Made with &#127863; by <a href="https://github.com/xenofex7" target="_blank" rel="noopener">xenofex7</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================
+       Minimal JavaScript
+       ======================================== -->
+  <script>
+    // Intersection Observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Mobile navigation toggle
+    const navToggle = document.querySelector('.nav-toggle');
+    const navLinks = document.querySelector('.nav-links');
+
+    navToggle.addEventListener('click', () => {
+      navToggle.classList.toggle('active');
+      navLinks.classList.toggle('open');
+    });
+
+    // Close mobile nav when a link is clicked
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navToggle.classList.remove('active');
+        navLinks.classList.remove('open');
+      });
+    });
+
+    // Copy code block
+    function copyCode(btn) {
+      const codeBlock = btn.closest('.code-block');
+      const code = codeBlock.querySelector('pre').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      });
+    }
+  </script>
+
+</body>
+</html>
