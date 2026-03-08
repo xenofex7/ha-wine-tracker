@@ -5,18 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wine Tracker — Your Personal Wine Cellar, Beautifully Organized</title>
   <meta name="description" content="Track your wine collection with AI-powered label recognition, Vivino integration, and a stunning 3D globe. Run as a Home Assistant add-on or standalone Docker container.">
+  <meta name="keywords" content="wine tracker, wine cellar, wine collection, home assistant, docker, AI label recognition, vivino, wine management, sommelier, wine statistics, wine globe">
+  <meta name="author" content="xenofex7">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#009ac7">
+  <meta name="color-scheme" content="dark light">
+  <link rel="canonical" href="https://xenofex7.github.io/ha-wine-tracker/">
   <meta property="og:title" content="Wine Tracker — Your Personal Wine Cellar">
   <meta property="og:description" content="Track your wine collection with AI-powered label recognition, Vivino integration, and a stunning 3D globe.">
   <meta property="og:image" content="https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_main_screen.png">
-  <meta property="og:url" content="https://xenofex7.github.io/ha-wine-tracker">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="800">
+  <meta property="og:image:alt" content="Wine Tracker main screen showing wine cellar overview with cards">
+  <meta property="og:url" content="https://xenofex7.github.io/ha-wine-tracker/">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Wine Tracker">
+  <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Wine Tracker — Your Personal Wine Cellar">
   <meta name="twitter:description" content="Track your wine collection with AI-powered label recognition, Vivino integration, and a stunning 3D globe.">
   <meta name="twitter:image" content="https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_main_screen.png">
+  <meta name="twitter:image:alt" content="Wine Tracker main screen showing wine cellar overview with cards">
   <link rel="icon" type="image/png" href="./icon.png">
+  <link rel="apple-touch-icon" href="./icon.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Wine Tracker",
+    "description": "Track your wine collection with AI-powered label recognition, Vivino integration, and a stunning 3D globe. Run as a Home Assistant add-on or standalone Docker container.",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Docker, Home Assistant",
+    "url": "https://xenofex7.github.io/ha-wine-tracker/",
+    "image": "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_main_screen.png",
+    "screenshot": [
+      "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_main_screen.png",
+      "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_statistics_screen.png",
+      "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_add_wine_screen.png"
+    ],
+    "author": {
+      "@type": "Person",
+      "name": "xenofex7",
+      "url": "https://github.com/xenofex7"
+    },
+    "license": "https://github.com/xenofex7/ha-wine-tracker/blob/main/LICENSE",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "AI-powered wine label recognition",
+      "Vivino search integration",
+      "Interactive 3D globe visualization",
+      "Wine collection statistics and charts",
+      "AI sommelier for food pairings",
+      "7 language support",
+      "Docker standalone deployment",
+      "Home Assistant add-on",
+      "User authentication",
+      "Star ratings and tasting notes"
+    ],
+    "softwareRequirements": "Docker or Home Assistant",
+    "codeRepository": "https://github.com/xenofex7/ha-wine-tracker",
+    "releaseNotes": "https://github.com/xenofex7/ha-wine-tracker/blob/main/CHANGELOG.md"
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
+  <link rel="dns-prefetch" href="https://img.shields.io">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* ========================================
@@ -162,6 +221,7 @@
       scroll-behavior: smooth;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
     }
 
     body {
@@ -1046,21 +1106,19 @@
         --section-padding: 60px;
       }
 
-      .nav-links {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
+      nav.nav-open {
         bottom: 0;
         background: var(--mobile-nav-bg);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+      }
+
+      .nav-links {
+        display: none;
+        position: absolute;
+        inset: 0;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         gap: 24px;
-        z-index: 999;
       }
 
       .nav-links.open {
@@ -1140,7 +1198,8 @@
   <!-- ========================================
        Navigation
        ======================================== -->
-  <nav>
+  <header>
+  <nav aria-label="Main navigation">
     <div class="container">
       <a href="#" class="nav-brand">
         <img src="./icon.png" alt="Wine Tracker Icon">
@@ -1171,6 +1230,9 @@
       </ul>
     </div>
   </nav>
+  </header>
+
+  <main>
 
   <!-- ========================================
        Hero Section
@@ -1386,6 +1448,8 @@
   <!-- ========================================
        Footer
        ======================================== -->
+  </main>
+
   <footer>
     <div class="container">
       <div class="footer-content">
@@ -1476,9 +1540,12 @@
     var navToggle = document.querySelector('.nav-toggle');
     var navLinks = document.querySelector('.nav-links');
 
+    var navEl = navToggle.closest('nav');
+
     navToggle.addEventListener('click', function() {
       navToggle.classList.toggle('active');
       navLinks.classList.toggle('open');
+      navEl.classList.toggle('nav-open');
     });
 
     // Close mobile nav when a link is clicked
@@ -1486,6 +1553,7 @@
       link.addEventListener('click', function() {
         navToggle.classList.remove('active');
         navLinks.classList.remove('open');
+        navEl.classList.remove('nav-open');
       });
     });
 

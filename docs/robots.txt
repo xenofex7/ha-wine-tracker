@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://xenofex7.github.io/ha-wine-tracker/sitemap.xml
