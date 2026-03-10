@@ -69,6 +69,49 @@
         </div>
       </div>
 
+      <!-- About -->
+      <div class="settings-section">
+        <div class="settings-section-title">{{ t.settings_about }}</div>
+        <div class="settings-row">
+          <div class="settings-row-label">{{ t.about_version }}</div>
+          <div class="settings-row-control" style="font-size: .85rem; color: var(--muted);">
+            v{{ app_version }}
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">{{ t.about_github }}</div>
+          <div class="settings-row-control">
+            <a href="https://github.com/xenofex7/ha-wine-tracker" target="_blank" rel="noopener" class="settings-link">
+              <i class="mdi mdi-github"></i> xenofex7/ha-wine-tracker
+            </a>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">{{ t.about_changelog }}</div>
+          <div class="settings-row-control">
+            <a href="https://github.com/xenofex7/ha-wine-tracker/blob/main/CHANGELOG.md" target="_blank" rel="noopener" class="settings-link">
+              <i class="mdi mdi-text-box-outline"></i> CHANGELOG.md
+            </a>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">{{ t.about_community }}</div>
+          <div class="settings-row-control">
+            <a href="https://community.home-assistant.io/t/wine-tracker-home-assistant-app-add-on/989021" target="_blank" rel="noopener" class="settings-link">
+              <i class="mdi mdi-forum-outline"></i> Home Assistant Community
+            </a>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-label">{{ t.about_license }}</div>
+          <div class="settings-row-control">
+            <a href="https://github.com/xenofex7/ha-wine-tracker/blob/main/LICENSE" target="_blank" rel="noopener" class="settings-link">
+              <i class="mdi mdi-scale-balance"></i> MIT
+            </a>
+          </div>
+        </div>
+      </div>
+
       {% if auth_user %}
       <div class="settings-section" style="border-top: 1px solid var(--border); padding-top: .9rem;">
         <div class="settings-row">

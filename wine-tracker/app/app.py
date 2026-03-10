@@ -110,6 +110,8 @@ def _ssl_verify():
         return True
 
 
+APP_VERSION = "1.5.0"
+
 HA_OPTIONS = load_options()
 
 # Persist data in /share so it survives app restarts/updates
@@ -286,6 +288,7 @@ def inject_globals():
         "ai_enabled": ai_enabled,
         "auth_user": session.get("user") if AUTH_ENABLED else None,
         "auth_readonly": session.get("role") == "readonly" if AUTH_ENABLED else False,
+        "app_version": APP_VERSION,
     }
 
 

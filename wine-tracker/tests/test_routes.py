@@ -49,6 +49,13 @@ class TestIndex:
         resp = client.get("/?type=Rotwein")
         assert resp.status_code == 200
 
+    def test_about_section_with_version(self, client):
+        """Settings modal should contain About section with app version."""
+        resp = client.get("/")
+        html = resp.data.decode()
+        assert "v1.5.0" in html
+        assert "settings_about" in html or "Über" in html
+
     def test_hide_empty_bottles(self, client):
         """show_empty=0 should hide wines with quantity=0."""
         # Add a wine with quantity 0

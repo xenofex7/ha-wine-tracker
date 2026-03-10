@@ -253,7 +253,8 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
     background: var(--surface);
     border-top: 1px solid var(--border);
     z-index: 140;
-    padding-bottom: env(safe-area-inset-bottom, 20px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: content-box;
   }
   .tab-item {
     flex: 1;
@@ -273,7 +274,7 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
   .tab-item:not(.active):hover { color: var(--text); }
 
   /* Push content above tab bar */
-  body { padding-bottom: calc(56px + env(safe-area-inset-bottom, 20px) + 4px); }
+  body { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 4px); }
   /* FAB override: moved after base .fab definition (line ~435) for specificity */
 }
 
@@ -756,7 +757,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 
 /* ── Settings Modal ───────────────────────────────────────────────────────── */
 #settingsModal .modal { max-width: 480px; min-height: 90vh; overflow: visible; }
-#settingsModal .modal-body { overflow: visible; }
+#settingsModal .modal-body { overflow: visible; gap: 1.8rem; }
 @media (min-width: 700px) {
   #settingsModal .modal { max-width: 900px; min-height: 90vh; }
 }
@@ -778,6 +779,19 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 }
 @media (max-width: 500px) {
   .settings-row { flex-direction: column; align-items: stretch; gap: .4rem; }
+}
+/* Push logout section to bottom of modal */
+#settingsModal .settings-section:last-child {
+  margin-top: auto;
+}
+/* About section links */
+.settings-link {
+  font-size: .85rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+.settings-link:hover {
+  text-decoration: underline;
 }
 .theme-segmented {
   display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px;
