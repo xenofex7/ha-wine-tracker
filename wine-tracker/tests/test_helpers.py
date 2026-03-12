@@ -286,3 +286,15 @@ class TestEnvConfig:
         monkeypatch.setenv("CURRENCY", "")
         opts = wine_app.load_options()
         assert opts["currency"] == "CHF"  # empty ENV should not override
+
+
+# ── View modal translations ─────────────────────────────────────────────────
+
+class TestViewModalTranslations:
+    def test_view_modal_translations_all_languages(self):
+        """All 7 languages should have view modal translation keys."""
+        from translations import TRANSLATIONS
+        for lang in TRANSLATIONS:
+            assert "modal_view_title" in TRANSLATIONS[lang], f"Missing modal_view_title in {lang}"
+            assert "btn_close" in TRANSLATIONS[lang], f"Missing btn_close in {lang}"
+            assert "view_drink_window" in TRANSLATIONS[lang], f"Missing view_drink_window in {lang}"

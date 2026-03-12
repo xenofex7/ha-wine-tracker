@@ -393,7 +393,16 @@
   </div>
 </div>
 
+<!-- ═══════════════ WINE VIEW MODAL ═══════════════ -->
+{% include '_wine_view_modal.html' %}
+
 {% include '_settings_modal.html' %}
+
+<!-- ═══════════════ LIGHTBOX ═══════════════ -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img id="lightboxImg" src="" alt="{{ t.lightbox_alt }}">
+</div>
 
 <script src="{{ ingress }}/static/theme.js"></script>
 <script>
@@ -406,6 +415,8 @@ var WINE_TYPE_NAMES = {{ type_translations | tojson }};
 var TOOLTIP_MORE = {{ t.stat_tooltip_more | tojson }};
 var INGRESS = '{{ ingress }}';
 var T = {{ t | tojson }};
+var CURRENCY = '{{ currency }}';
+var AUTH_READONLY = {{ auth_readonly | tojson }};
 </script>
 <script src="{{ ingress }}/static/wine-modal.js"></script>
 <script>
@@ -431,9 +442,10 @@ document.querySelectorAll('.modal-overlay').forEach(function(el) {
   });
 });
 
-// ESC closes modals (wineModal: guard if dirty)
+// ESC closes modals & lightbox (wineModal: guard if dirty)
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
+    closeLightbox();
     document.querySelectorAll('.modal-overlay.open').forEach(function(el) {
       if (el.id === 'wineModal') {
         tryCloseWineModal();
@@ -444,81 +456,121 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// ── Wine Edit Modal (inline on stats) ──────────────────────
+// ── View Modal (inline on stats) ──────────────────────────
+
+function escapeHtml(s) {
+  if (!s) return '';
+  var d = document.createElement('div');
+  d.appendChild(document.createTextNode(s));
+  return d.innerHTML;
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
+}
+
+var BOTTLE_FORMATS = {
+  0.1875: 'Piccolo (0.1875 l)', 0.375: 'Demi (0.375 l)', 0.75: 'Standard (0.75 l)',
+  1.5: 'Magnum (1.5 l)', 3: 'Double Magnum (3 l)', 4.5: 'Jéroboam (4.5 l)',
+  6: 'Impérial (6 l)', 9: 'Salmanazar (9 l)', 12: 'Balthazar (12 l)',
+  15: 'Nebukadnezar (15 l)'
+};
+
+function viewRow(icon, label, value) {
+  return '<div class="view-row"><i class="mdi ' + icon + '"></i>'
+       + '<span class="view-label">' + escapeHtml(label) + '</span>'
+       + '<span class="view-value">' + escapeHtml(String(value)) + '</span></div>';
+}
+
+function openViewModal(id, wine) {
+  var w = wine || {};
+  window._viewWineId = id;
+  window._viewWineData = w;
+
+  document.getElementById('viewModalTitle').textContent = T.modal_view_title || 'Wine details';
+
+  var html = '';
+
+  if (w.image) {
+    html += '<div class="view-photo-panel" onclick="openLightbox(\'' + INGRESS + '/uploads/' + encodeURIComponent(w.image) + '\')">'
+          + '<img src="' + INGRESS + '/uploads/' + encodeURIComponent(w.image) + '" alt="' + escapeHtml(w.name) + '">'
+          + '</div>';
+  }
+
+  html += '<div class="view-fields-panel">';
+  html += '<div class="view-name">' + escapeHtml(w.name) + '</div>';
+
+  if (w.type) {
+    var typeKey = 'wine_type_' + w.type;
+    var typeLabel = T[typeKey] || w.type;
+    html += '<span class="view-type-badge ribbon-' + escapeHtml(w.type) + '">' + escapeHtml(typeLabel) + '</span>';
+  }
+
+  var meta = [];
+  if (w.year) meta.push('<span>' + w.year + '</span>');
+  if (w.region) meta.push('<span>' + escapeHtml(w.region) + '</span>');
+  if (meta.length) html += '<div class="view-meta">' + meta.join('') + '</div>';
+
+  if (w.rating && w.rating > 0) {
+    var stars = '';
+    for (var i = 0; i < 5; i++) stars += '<i class="mdi ' + (i < w.rating ? 'mdi-star' : 'mdi-star-outline') + '"></i>';
+    html += '<div class="view-stars">' + stars + '</div>';
+  }
+
+  var details = '';
+  details += viewRow('mdi-bottle-wine', T.label_quantity || 'Quantity', w.quantity);
+  if (w.bottle_format && parseFloat(w.bottle_format) !== 0.75) {
+    var fmt = BOTTLE_FORMATS[parseFloat(w.bottle_format)] || w.bottle_format + ' l';
+    details += viewRow('mdi-ruler', T.label_bottle_format || 'Format', fmt);
+  }
+  if (w.grape) details += viewRow('mdi-fruit-grapes', T.label_grape || 'Grape', w.grape);
+  if (w.purchased_at) details += viewRow('mdi-cart', T.label_purchased_at || 'Purchased at', w.purchased_at);
+  if (w.price) {
+    details += viewRow('mdi-cash', T.label_price || 'Price', CURRENCY + ' ' + Number(w.price).toFixed(2));
+  }
+  if (w.drink_from || w.drink_until) {
+    var window_str = (w.drink_from || '?') + ' – ' + (w.drink_until || '?');
+    details += viewRow('mdi-calendar-range', T.view_drink_window || 'Drink window', window_str);
+  }
+  if (w.location) details += viewRow('mdi-map-marker', T.label_location || 'Location', w.location);
+  if (w.vivino_id) {
+    details += '<div class="view-row"><i class="mdi mdi-open-in-new"></i>'
+             + '<span class="view-label">Vivino</span>'
+             + '<a href="https://www.vivino.com/w/' + w.vivino_id + '" target="_blank" rel="noopener" class="view-vivino-link view-value">vivino.com</a></div>';
+  }
+  if (details) html += '<div class="view-details">' + details + '</div>';
+
+  if (w.notes) html += '<div class="view-notes">' + escapeHtml(w.notes) + '</div>';
+
+  html += '<div class="view-actions">';
+  if (!AUTH_READONLY) {
+    html += '<button class="btn-submit" onclick="editFromView()">' + (T.btn_edit || 'Edit') + '</button>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById('viewModalBody').innerHTML = html;
+  openModal('viewModal');
+}
+
+function editFromView() {
+  closeModal('viewModal');
+  window.open(INGRESS + '/?edit=' + window._viewWineId, '_blank');
+}
 
 var _editWineId = null;
 var wineFormSnapshot = '';
 
 function editWine(id) {
-  // Hide chart tooltip so it doesn't float over the modal
-  var tip = document.getElementById('chartTooltip');
-  if (tip) tip.style.display = 'none';
   fetch(INGRESS + '/api/wine/' + id)
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (!data.ok) return;
-      var wine = data.wine;
-      _editWineId = wine.id;
-
-      // Set title & action
-      document.getElementById('wineModalTitle').textContent = T.modal_edit_title;
-      document.getElementById('wineSubmitBtn').textContent = T.btn_save_changes;
-      document.getElementById('wineForm').action = INGRESS + '/edit/' + wine.id;
-
-      // Vivino ID display
-      var vivinoWrap = document.getElementById('vivinoIdWrap');
-      if (vivinoWrap) {
-        vivinoWrap.style.display = wine.vivino_id ? '' : 'none';
-        document.getElementById('vivinoIdInput').value = wine.vivino_id || '';
-        var testLink = document.getElementById('vivinoIdTestLink');
-        if (testLink) {
-          if (wine.vivino_id) { testLink.href = 'https://www.vivino.com/w/' + wine.vivino_id; testLink.style.display = ''; }
-          else { testLink.style.display = 'none'; }
-        }
-      }
-
-      // Fill form fields
-      document.getElementById('wine_name').value = wine.name || '';
-      document.getElementById('wine_year').value = wine.year || '';
-      document.getElementById('wine_qty').value = wine.quantity != null ? wine.quantity : 0;
-      document.getElementById('wine_type').value = wine.type || '';
-      document.getElementById('wine_region').value = wine.region || '';
-      document.getElementById('wine_grape').value = wine.grape || '';
-      document.getElementById('wine_bottle_format').value = wine.bottle_format || '0.75';
-      document.getElementById('wine_purchased_at').value = wine.purchased_at || '';
-      document.getElementById('wine_price').value = wine.price || '';
-      document.getElementById('wine_location').value = wine.location || '';
-      document.getElementById('wine_notes').value = wine.notes || '';
-      document.getElementById('wine_drink_from').value = wine.drink_from || '';
-      document.getElementById('wine_drink_until').value = wine.drink_until || '';
-      document.getElementById('wine_vivino_id').value = wine.vivino_id || '';
-      document.getElementById('deleteImageField').value = '';
-      document.getElementById('aiImageField').value = '';
-
-      // Rating stars
-      document.querySelectorAll('#wineForm input[name="rating"]').forEach(function(r) { r.checked = false; });
-      if (wine.rating) {
-        var star = document.getElementById('wine_star' + wine.rating);
-        if (star) star.checked = true;
-      }
-
-      // Image preview
-      var preview = document.getElementById('winePreview');
-      if (wine.image) {
-        preview.innerHTML = '<img src="' + INGRESS + '/uploads/' + wine.image + '">' +
-          '<input type="file" name="image" accept="image/*" onchange="previewImg(this,\'winePreview\')">' +
-          '<div class="img-actions" id="imgActions">' +
-          '<button type="button" class="img-action-btn" onclick="rotateWineImage()" title="Rotate"><i class="mdi mdi-rotate-right"></i></button>' +
-          '<button type="button" class="img-action-btn danger" onclick="deleteWineImage()" title="Delete"><i class="mdi mdi-delete"></i></button>' +
-          '</div>';
-      } else {
-        preview.innerHTML = '<i class="mdi mdi-camera" style="font-size:2rem; opacity:.5"></i>' +
-          '<input type="file" name="image" accept="image/*" onchange="previewImg(this,\'winePreview\')">' +
-          '<div class="img-actions" id="imgActions" style="display:none"></div>';
-      }
-
-      openModal('wineModal');
-      setTimeout(function() { wineFormSnapshot = getWineFormState(); }, 0);
+      if (data.ok) openViewModal(data.wine.id, data.wine);
     });
 }
 

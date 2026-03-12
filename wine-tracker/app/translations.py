@@ -53,7 +53,7 @@ TRANSLATIONS = {
 
     # Wine form
     "modal_add_title": "Wein hinzufügen",
-    "modal_edit_title": "Wein bearbeiten",
+    "modal_edit_title": "Bearbeiten",
     "label_photo": "Foto (Etikett)",
     "label_name": "Name *",
     "placeholder_name": "z.B. Barolo Riserva",
@@ -96,15 +96,20 @@ TRANSLATIONS = {
     "btn_duplicate": "Duplizieren",
     "btn_delete": "Löschen",
 
+    # View modal
+    "modal_view_title": "Detail",
+    "btn_close": "Schliessen",
+    "view_drink_window": "Trinkfenster",
+
     # Delete modal
-    "delete_title": "Wein löschen",
+    "delete_title": "Löschen",
     "delete_really": "wirklich löschen?",
     "btn_cancel": "Abbrechen",
     "btn_logout": "Abmelden",
     "btn_confirm_delete": "Löschen",
 
     # Duplicate modal
-    "dup_title": "Wein duplizieren",
+    "dup_title": "Duplizieren",
     "dup_template": "Vorlage",
     "dup_new_vintage": "Neuer Jahrgang",
     "dup_qty": "Anzahl Flaschen",
@@ -247,7 +252,7 @@ TRANSLATIONS = {
     "btn_add_wine": "+ Add wine",
 
     "modal_add_title": "Add wine",
-    "modal_edit_title": "Edit wine",
+    "modal_edit_title": "Edit",
     "label_photo": "Photo (label)",
     "label_name": "Name *",
     "placeholder_name": "e.g. Barolo Riserva",
@@ -288,13 +293,18 @@ TRANSLATIONS = {
     "btn_duplicate": "Duplicate",
     "btn_delete": "Delete",
 
-    "delete_title": "Delete wine",
+    # View modal
+    "modal_view_title": "Detail",
+    "btn_close": "Close",
+    "view_drink_window": "Drink window",
+
+    "delete_title": "Delete",
     "delete_really": "really delete?",
     "btn_cancel": "Cancel",
     "btn_logout": "Sign out",
     "btn_confirm_delete": "Delete",
 
-    "dup_title": "Duplicate wine",
+    "dup_title": "Duplicate",
     "dup_template": "Template",
     "dup_new_vintage": "New vintage",
     "dup_qty": "Quantity",
@@ -433,7 +443,7 @@ TRANSLATIONS = {
     "btn_add_wine": "+ Ajouter un vin",
 
     "modal_add_title": "Ajouter un vin",
-    "modal_edit_title": "Modifier le vin",
+    "modal_edit_title": "Modifier",
     "label_photo": "Photo (étiquette)",
     "label_name": "Nom *",
     "placeholder_name": "p.ex. Barolo Riserva",
@@ -474,13 +484,18 @@ TRANSLATIONS = {
     "btn_duplicate": "Dupliquer",
     "btn_delete": "Supprimer",
 
-    "delete_title": "Supprimer le vin",
+    # View modal
+    "modal_view_title": "Détail",
+    "btn_close": "Fermer",
+    "view_drink_window": "Fenêtre de dégustation",
+
+    "delete_title": "Supprimer",
     "delete_really": "vraiment supprimer ?",
     "btn_cancel": "Annuler",
     "btn_logout": "Déconnexion",
     "btn_confirm_delete": "Supprimer",
 
-    "dup_title": "Dupliquer le vin",
+    "dup_title": "Dupliquer",
     "dup_template": "Modèle",
     "dup_new_vintage": "Nouveau millésime",
     "dup_qty": "Quantité",
@@ -619,7 +634,7 @@ TRANSLATIONS = {
     "btn_add_wine": "+ Aggiungi vino",
 
     "modal_add_title": "Aggiungi vino",
-    "modal_edit_title": "Modifica vino",
+    "modal_edit_title": "Modifica",
     "label_photo": "Foto (etichetta)",
     "label_name": "Nome *",
     "placeholder_name": "es. Barolo Riserva",
@@ -660,13 +675,18 @@ TRANSLATIONS = {
     "btn_duplicate": "Duplica",
     "btn_delete": "Elimina",
 
-    "delete_title": "Elimina vino",
+    # View modal
+    "modal_view_title": "Dettaglio",
+    "btn_close": "Chiudi",
+    "view_drink_window": "Finestra di beva",
+
+    "delete_title": "Elimina",
     "delete_really": "eliminare davvero?",
     "btn_cancel": "Annulla",
     "btn_logout": "Disconnetti",
     "btn_confirm_delete": "Elimina",
 
-    "dup_title": "Duplica vino",
+    "dup_title": "Duplica",
     "dup_template": "Modello",
     "dup_new_vintage": "Nuova annata",
     "dup_qty": "Quantità",
@@ -805,7 +825,7 @@ TRANSLATIONS = {
     "btn_add_wine": "+ Añadir vino",
 
     "modal_add_title": "Añadir vino",
-    "modal_edit_title": "Editar vino",
+    "modal_edit_title": "Editar",
     "label_photo": "Foto (etiqueta)",
     "label_name": "Nombre *",
     "placeholder_name": "ej. Barolo Riserva",
@@ -846,13 +866,18 @@ TRANSLATIONS = {
     "btn_duplicate": "Duplicar",
     "btn_delete": "Eliminar",
 
-    "delete_title": "Eliminar vino",
+    # View modal
+    "modal_view_title": "Detalle",
+    "btn_close": "Cerrar",
+    "view_drink_window": "Ventana de consumo",
+
+    "delete_title": "Eliminar",
     "delete_really": "¿eliminar realmente?",
     "btn_cancel": "Cancelar",
     "btn_logout": "Cerrar sesión",
     "btn_confirm_delete": "Eliminar",
 
-    "dup_title": "Duplicar vino",
+    "dup_title": "Duplicar",
     "dup_template": "Plantilla",
     "dup_new_vintage": "Nueva añada",
     "dup_qty": "Cantidad",
@@ -991,7 +1016,7 @@ TRANSLATIONS = {
     "btn_add_wine": "+ Adicionar vinho",
 
     "modal_add_title": "Adicionar vinho",
-    "modal_edit_title": "Editar vinho",
+    "modal_edit_title": "Editar",
     "label_photo": "Foto (rótulo)",
     "label_name": "Nome *",
     "placeholder_name": "ex. Barolo Riserva",
@@ -1032,13 +1057,18 @@ TRANSLATIONS = {
     "btn_duplicate": "Duplicar",
     "btn_delete": "Excluir",
 
-    "delete_title": "Excluir vinho",
+    # View modal
+    "modal_view_title": "Detalhe",
+    "btn_close": "Fechar",
+    "view_drink_window": "Janela de consumo",
+
+    "delete_title": "Excluir",
     "delete_really": "realmente excluir?",
     "btn_cancel": "Cancelar",
     "btn_logout": "Sair",
     "btn_confirm_delete": "Excluir",
 
-    "dup_title": "Duplicar vinho",
+    "dup_title": "Duplicar",
     "dup_template": "Modelo",
     "dup_new_vintage": "Nova safra",
     "dup_qty": "Quantidade",
@@ -1177,7 +1207,7 @@ TRANSLATIONS = {
     "btn_add_wine": "+ Wijn toevoegen",
 
     "modal_add_title": "Wijn toevoegen",
-    "modal_edit_title": "Wijn bewerken",
+    "modal_edit_title": "Bewerken",
     "label_photo": "Foto (etiket)",
     "label_name": "Naam *",
     "placeholder_name": "bijv. Barolo Riserva",
@@ -1218,13 +1248,18 @@ TRANSLATIONS = {
     "btn_duplicate": "Dupliceren",
     "btn_delete": "Verwijderen",
 
-    "delete_title": "Wijn verwijderen",
+    # View modal
+    "modal_view_title": "Detail",
+    "btn_close": "Sluiten",
+    "view_drink_window": "Drinkvenster",
+
+    "delete_title": "Verwijderen",
     "delete_really": "echt verwijderen?",
     "btn_cancel": "Annuleren",
     "btn_logout": "Afmelden",
     "btn_confirm_delete": "Verwijderen",
 
-    "dup_title": "Wijn dupliceren",
+    "dup_title": "Dupliceren",
     "dup_template": "Sjabloon",
     "dup_new_vintage": "Nieuwe jaargang",
     "dup_qty": "Aantal",

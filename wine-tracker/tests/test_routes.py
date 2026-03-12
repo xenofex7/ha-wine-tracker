@@ -45,6 +45,11 @@ class TestIndex:
         # The wine card should be present for JS to find
         assert str(wine_id).encode() in resp.data
 
+    def test_view_modal_opens_in_place(self, client, sample_wine):
+        """View modal JS (openViewModal) should be present on index page."""
+        resp = client.get("/")
+        assert b'openViewModal' in resp.data
+
     def test_type_filter(self, client, sample_wine):
         resp = client.get("/?type=Rotwein")
         assert resp.status_code == 200
@@ -55,6 +60,21 @@ class TestIndex:
         html = resp.data.decode()
         assert "v1.5.0" in html
         assert "settings_about" in html or "Über" in html
+
+    def test_view_modal_present(self, client):
+        """Index page should contain the viewModal overlay."""
+        resp = client.get("/")
+        assert b'id="viewModal"' in resp.data
+
+    def test_card_body_calls_view(self, client, sample_wine):
+        """Card body onclick should call viewFromCard."""
+        resp = client.get("/")
+        assert b'viewFromCard(this)' in resp.data
+
+    def test_pencil_still_calls_edit(self, client, sample_wine):
+        """Pencil button should still call editFromCard."""
+        resp = client.get("/")
+        assert b'editFromCard(this)' in resp.data
 
     def test_hide_empty_bottles(self, client):
         """show_empty=0 should hide wines with quantity=0."""
@@ -349,6 +369,21 @@ class TestStatsPage:
         assert "editWine(" in html
         assert "chart-tooltip-item" in html
 
+    def test_stats_editwine_opens_view_modal(self, client, sample_wine):
+        """Stats editWine() function should fetch wine data and open view modal in-place."""
+        resp = client.get("/stats")
+        html = resp.data.decode()
+        assert "openViewModal" in html
+        assert "/api/wine/" in html
+        assert 'id="viewModal"' in html
+
+    def test_stats_has_lightbox(self, client, sample_wine):
+        """Stats page should contain the lightbox overlay for wine image viewing."""
+        resp = client.get("/stats")
+        html = resp.data.decode()
+        assert 'id="lightbox"' in html
+        assert "openLightbox" in html
+
     def test_stats_no_from_stats_links(self, client, sample_wine):
         """Stats page should not contain from=stats links (edit is inline now)."""
         resp = client.get("/stats")
@@ -465,6 +500,22 @@ class TestChatPage:
         }
         response = client.get("/chat")
         assert response.status_code == 302
+
+    @patch("app.load_options")
+    def test_chat_wine_links_open_view_modal(self, mock_opts, client):
+        """Chat page wine: link handler should open view modal in-place (not redirect)."""
+        mock_opts.return_value = {
+            "currency": "CHF", "language": "en",
+            "ai_provider": "anthropic", "anthropic_api_key": "sk-test",
+            "anthropic_model": "claude-sonnet-4-20250514",
+            "openai_api_key": "", "openrouter_api_key": "",
+            "ollama_host": "", "ollama_model": "",
+        }
+        response = client.get("/chat")
+        html = response.data.decode()
+        assert "openViewModal" in html
+        assert "/api/wine/" in html
+        assert 'id="viewModal"' in html
 
 
 # ── Authentication ────────────────────────────────────────────────────────────

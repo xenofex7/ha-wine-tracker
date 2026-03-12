@@ -183,13 +183,17 @@ function sendChatMessage() {
   });
 }
 
-// Handle wine: links in chat messages — navigate to cellar with edit modal
+// Handle wine: links in chat messages — open view modal in-place
 document.getElementById('chatPanel').addEventListener('click', function(e) {
   var link = e.target.closest('a[href^="wine:"]');
   if (!link) return;
   e.preventDefault();
   var wineId = link.getAttribute('href').replace('wine:', '');
-  window.location = INGRESS + '/?edit=' + encodeURIComponent(wineId);
+  fetch(INGRESS + '/api/wine/' + encodeURIComponent(wineId))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) openViewModal(data.wine.id, data.wine);
+    });
 });
 </script>
 {% endif %}

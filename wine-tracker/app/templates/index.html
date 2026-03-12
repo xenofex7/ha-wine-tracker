@@ -110,7 +110,7 @@
       {{ w['quantity'] }} {{ t.bottles_abbr }}
     </div>
 
-    <div class="card-body" onclick="editFromCard(this)">
+    <div class="card-body" onclick="viewFromCard(this)">
       <div class="card-name" title="{{ w['name'] }}">{{ w['name'] }}</div>
       <div class="card-meta">
         {% if w['year'] %}<span>{{ w['year'] }}</span>{% endif %}
@@ -351,6 +351,9 @@
   </div>
 </div>
 
+
+<!-- ═══════════════ WINE VIEW MODAL ═══════════════ -->
+{% include '_wine_view_modal.html' %}
 
 <!-- ═══════════════ SETTINGS MODAL ═══════════════ -->
 {% include '_settings_modal.html' %}
@@ -1124,13 +1127,7 @@ function getCardData(el) {
 }
 
 function cardImgClick(el) {
-  const card = el.closest('.card');
-  const img = card.dataset.image;
-  if (img) {
-    openLightbox(INGRESS + '/uploads/' + img);
-  } else {
-    editFromCard(el);
-  }
+  viewFromCard(el);
 }
 
 function openLightbox(src) {
@@ -1142,9 +1139,267 @@ function closeLightbox() {
   document.getElementById('lightboxImg').src = '';
 }
 
+// ── Lightbox Pinch-to-Zoom ────────────────────────────────────────────────
+(function() {
+  var lbImg = null;
+  var startDist = 0;
+  var currentScale = 1;
+  var startScale = 1;
+  var translateX = 0, translateY = 0;
+  var startX = 0, startY = 0;
+  var isPinching = false;
+  var isPanning = false;
+  var lastTapTime = 0;
+
+  function getTouchDist(touches) {
+    var dx = touches[0].clientX - touches[1].clientX;
+    var dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function applyTransform() {
+    if (lbImg) {
+      lbImg.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + currentScale + ')';
+    }
+  }
+
+  function resetZoom() {
+    currentScale = 1;
+    translateX = 0;
+    translateY = 0;
+    if (lbImg) {
+      lbImg.style.transform = '';
+      lbImg.style.transition = '';
+    }
+  }
+
+  // Wrap openLightbox to attach zoom support
+  var origOpenLightbox = window.openLightbox;
+  window.openLightbox = function(src) {
+    origOpenLightbox(src);
+    setTimeout(function() {
+      var overlay = document.querySelector('.lightbox-overlay');
+      if (overlay) {
+        lbImg = overlay.querySelector('img');
+        if (lbImg) {
+          lbImg.style.transformOrigin = 'center center';
+          resetZoom();
+        }
+      }
+    }, 50);
+  };
+
+  // Wrap closeLightbox to reset zoom
+  var origCloseLightbox = window.closeLightbox;
+  window.closeLightbox = function() {
+    resetZoom();
+    lbImg = null;
+    origCloseLightbox();
+  };
+
+  document.addEventListener('touchstart', function(e) {
+    if (!lbImg || !lbImg.closest('.lightbox-overlay.open')) return;
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      isPinching = true;
+      isPanning = false;
+      startDist = getTouchDist(e.touches);
+      startScale = currentScale;
+    } else if (e.touches.length === 1 && currentScale > 1) {
+      isPanning = true;
+      isPinching = false;
+      startX = e.touches[0].clientX - translateX;
+      startY = e.touches[0].clientY - translateY;
+    }
+    // Double-tap detection
+    if (e.touches.length === 1) {
+      var now = Date.now();
+      if (now - lastTapTime < 300) {
+        e.preventDefault();
+        if (currentScale > 1.05) {
+          currentScale = 1;
+          translateX = 0;
+          translateY = 0;
+        } else {
+          currentScale = 2;
+          translateX = 0;
+          translateY = 0;
+        }
+        lbImg.style.transition = 'transform .25s ease';
+        applyTransform();
+        lastTapTime = 0;
+      } else {
+        lastTapTime = now;
+      }
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!lbImg || !lbImg.closest('.lightbox-overlay.open')) return;
+    if (isPinching && e.touches.length === 2) {
+      e.preventDefault();
+      var dist = getTouchDist(e.touches);
+      currentScale = Math.min(Math.max(startScale * (dist / startDist), 1), 5);
+      lbImg.style.transition = 'none';
+      applyTransform();
+    } else if (isPanning && e.touches.length === 1 && currentScale > 1) {
+      e.preventDefault();
+      translateX = e.touches[0].clientX - startX;
+      translateY = e.touches[0].clientY - startY;
+      lbImg.style.transition = 'none';
+      applyTransform();
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchend', function(e) {
+    if (!lbImg || !lbImg.closest('.lightbox-overlay.open')) return;
+    if (e.touches.length < 2) isPinching = false;
+    if (e.touches.length < 1) {
+      isPanning = false;
+      // Snap back to 1x if close
+      if (currentScale < 1.1) {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        lbImg.style.transition = 'transform .2s ease';
+        applyTransform();
+      }
+    }
+  });
+})();
+
 function editFromCard(el) {
   const { id, wine } = getCardData(el);
   openWineModal(id, wine);
+}
+
+// ── View Modal ──────────────────────────────────────────────────────────────
+var BOTTLE_FORMATS = {
+  0.1875: 'Piccolo (0.1875 l)', 0.375: 'Demi (0.375 l)', 0.75: 'Standard (0.75 l)',
+  1.5: 'Magnum (1.5 l)', 3: 'Double Magnum (3 l)', 4.5: 'Jéroboam (4.5 l)',
+  6: 'Impérial (6 l)', 9: 'Salmanazar (9 l)', 12: 'Balthazar (12 l)',
+  15: 'Nebukadnezar (15 l)'
+};
+
+function viewFromCard(el) {
+  var d = getCardData(el);
+  openViewModal(d.id, d.wine);
+}
+
+function viewRow(icon, label, value) {
+  return '<div class="view-row"><i class="mdi ' + icon + '"></i>'
+       + '<span class="view-label">' + escapeHtml(label) + '</span>'
+       + '<span class="view-value">' + escapeHtml(String(value)) + '</span></div>';
+}
+
+function openViewModal(id, wine) {
+  var w = wine || {};
+  window._viewWineId = id;
+  window._viewWineData = w;
+
+  document.getElementById('viewModalTitle').textContent = T.modal_view_title || 'Wine details';
+
+  var html = '';
+
+  // Photo panel (on right on desktop)
+  if (w.image) {
+    html += '<div class="view-photo-panel" onclick="openLightbox(\'' + INGRESS + '/uploads/' + encodeURIComponent(w.image) + '\')">'
+          + '<img src="' + INGRESS + '/uploads/' + encodeURIComponent(w.image) + '" alt="' + escapeHtml(w.name) + '">'
+          + '</div>';
+  }
+
+  // Fields panel (on left on desktop)
+  html += '<div class="view-fields-panel">';
+
+  // Name
+  html += '<div class="view-name">' + escapeHtml(w.name) + '</div>';
+
+  // Type badge
+  if (w.type) {
+    var typeKey = 'wine_type_' + w.type;
+    var typeLabel = T[typeKey] || w.type;
+    html += '<span class="view-type-badge ribbon-' + escapeHtml(w.type) + '">' + escapeHtml(typeLabel) + '</span>';
+  }
+
+  // Meta: year + region
+  var meta = [];
+  if (w.year) meta.push('<span>' + w.year + '</span>');
+  if (w.region) meta.push('<span>' + escapeHtml(w.region) + '</span>');
+  if (meta.length) html += '<div class="view-meta">' + meta.join('') + '</div>';
+
+  // Rating stars
+  if (w.rating && w.rating > 0) {
+    var stars = '';
+    for (var i = 0; i < 5; i++) stars += '<i class="mdi ' + (i < w.rating ? 'mdi-star' : 'mdi-star-outline') + '"></i>';
+    html += '<div class="view-stars">' + stars + '</div>';
+  }
+
+  // Details section
+  var details = '';
+
+  // Quantity (always shown)
+  details += viewRow('mdi-bottle-wine', T.label_quantity || 'Quantity', w.quantity);
+
+  // Bottle format (only if not standard)
+  if (w.bottle_format && parseFloat(w.bottle_format) !== 0.75) {
+    var fmt = BOTTLE_FORMATS[parseFloat(w.bottle_format)] || w.bottle_format + ' l';
+    details += viewRow('mdi-ruler', T.label_bottle_format || 'Format', fmt);
+  }
+
+  // Grape
+  if (w.grape) details += viewRow('mdi-fruit-grapes', T.label_grape || 'Grape', w.grape);
+
+  // Purchased at
+  if (w.purchased_at) details += viewRow('mdi-cart', T.label_purchased_at || 'Purchased at', w.purchased_at);
+
+  // Price
+  if (w.price) {
+    var currency = (typeof CURRENCY !== 'undefined' ? CURRENCY : 'CHF');
+    details += viewRow('mdi-cash', T.label_price || 'Price', currency + ' ' + Number(w.price).toFixed(2));
+  }
+
+  // Drink window
+  if (w.drink_from || w.drink_until) {
+    var window_str = (w.drink_from || '?') + ' – ' + (w.drink_until || '?');
+    details += viewRow('mdi-calendar-range', T.view_drink_window || 'Drink window', window_str);
+  }
+
+  // Location
+  if (w.location) details += viewRow('mdi-map-marker', T.label_location || 'Location', w.location);
+
+  // Vivino link
+  if (w.vivino_id) {
+    details += '<div class="view-row"><i class="mdi mdi-open-in-new"></i>'
+             + '<span class="view-label">Vivino</span>'
+             + '<a href="https://www.vivino.com/w/' + w.vivino_id + '" target="_blank" rel="noopener" class="view-vivino-link view-value">vivino.com</a></div>';
+  }
+
+  if (details) {
+    html += '<div class="view-details">' + details + '</div>';
+  }
+
+  // Notes
+  if (w.notes) {
+    html += '<div class="view-notes">' + escapeHtml(w.notes) + '</div>';
+  }
+
+  // Action buttons
+  html += '<div class="view-actions">';
+  if (!AUTH_READONLY) {
+    html += '<button class="btn-submit" onclick="editFromView()">' + (T.btn_edit || 'Edit') + '</button>';
+  }
+  html += '</div>';
+
+  // Close fields panel
+  html += '</div>';
+
+  document.getElementById('viewModalBody').innerHTML = html;
+  openModal('viewModal');
+}
+
+function editFromView() {
+  closeModal('viewModal');
+  openWineModal(window._viewWineId, window._viewWineData);
 }
 
 function dupFromCard(el) {
@@ -1488,7 +1743,7 @@ function renderCard(w) {
   return ribbonHtml +
     '<div class="card-img' + (w.image ? ' shimmer' : '') + '" onclick="cardImgClick(this)">' + imgHtml + '</div>' +
     '<div class="qty-badge ' + (w.quantity > 0 ? 'has' : '') + '">' + w.quantity + ' ' + T.bottles_abbr + '</div>' +
-    '<div class="card-body" onclick="editFromCard(this)">' +
+    '<div class="card-body" onclick="viewFromCard(this)">' +
       '<div class="card-name" title="' + escapeHtml(w.name) + '">' + escapeHtml(w.name) + '</div>' +
       '<div class="card-meta">' + metaParts + '</div>' +
       stars +
@@ -1772,7 +2027,7 @@ function initImageShimmer(container) {
 }
 initImageShimmer();
 
-// Open edit modal from URL parameter (e.g., from chat wine links)
+// Open edit modal from URL parameter (e.g., from deep links)
 (function() {
   var params = new URLSearchParams(window.location.search);
   var editId = params.get('edit');
@@ -1788,6 +2043,7 @@ initImageShimmer();
       });
   }
 })();
+
 </script>
 
 {% include '_chat_panel.html' %}
