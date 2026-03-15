@@ -91,6 +91,70 @@ class TestInitDb:
         assert row["bottle_format"] == 0.75
 
 
+class TestWineLogTable:
+    def test_timeline_table_created(self, app):
+        """init_db() should create the timeline table."""
+        conn = sqlite3.connect(wine_app.DB_PATH)
+        tables = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='timeline'"
+        ).fetchone()
+        conn.close()
+        assert tables is not None
+
+    def test_timeline_has_all_columns(self, app):
+        """timeline table should have all expected columns."""
+        conn = sqlite3.connect(wine_app.DB_PATH)
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(timeline)")}
+        conn.close()
+        expected = {"id", "wine_id", "action", "quantity", "timestamp"}
+        assert expected.issubset(cols)
+
+    def test_backfill_existing_wines(self, app, db):
+        """Existing wines should be backfilled into timeline on first init."""
+        # Insert a wine directly (simulating pre-existing data)
+        db.execute(
+            "INSERT INTO wines (name, quantity, added) VALUES (?, ?, ?)",
+            ("Backfill Wine", 5, "2025-01-15"),
+        )
+        db.commit()
+
+        # Clear the log and re-run init to trigger backfill
+        db.execute("DELETE FROM timeline")
+        db.commit()
+        wine_app.init_db()
+
+        conn = sqlite3.connect(wine_app.DB_PATH)
+        conn.row_factory = sqlite3.Row
+        logs = conn.execute("SELECT * FROM timeline WHERE action='added'").fetchall()
+        conn.close()
+        assert len(logs) >= 1
+        # Find the backfill entry for our wine
+        backfill = [l for l in logs if l["quantity"] == 5]
+        assert len(backfill) >= 1
+        assert backfill[0]["timestamp"] == "2025-01-15"
+
+    def test_backfill_only_when_empty(self, app, db):
+        """Backfill should only happen when timeline is empty."""
+        # Add a wine via the app (creates a log entry)
+        db.execute(
+            "INSERT INTO wines (name, quantity, added) VALUES (?, ?, ?)",
+            ("Existing Wine", 2, "2025-06-01"),
+        )
+        db.execute(
+            "INSERT INTO timeline (wine_id, action, quantity, timestamp) VALUES (?, ?, ?, ?)",
+            (1, "added", 2, "2025-06-01"),
+        )
+        db.commit()
+
+        # Re-run init_db — should NOT duplicate entries
+        wine_app.init_db()
+
+        conn = sqlite3.connect(wine_app.DB_PATH)
+        count = conn.execute("SELECT COUNT(*) FROM timeline").fetchone()[0]
+        conn.close()
+        assert count == 1  # No duplicates
+
+
 class TestDatabaseOperations:
     def test_insert_and_read(self, app, db):
         """Basic insert and read."""

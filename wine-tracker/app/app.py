@@ -4,7 +4,7 @@ import secrets
 import shutil
 import sqlite3
 import uuid
-from datetime import date
+from datetime import date, datetime
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, g, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from translations import TRANSLATIONS
@@ -351,6 +351,31 @@ def init_db():
         for col, dtype in migrations.items():
             if col not in existing:
                 db.execute(f"ALTER TABLE wines ADD COLUMN {col} {dtype}")
+
+        # ── timeline table ────────────────────────────────────────────────
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS timeline (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                wine_id   INTEGER NOT NULL,
+                action    TEXT NOT NULL,
+                quantity  INTEGER DEFAULT 1,
+                timestamp TEXT NOT NULL,
+                FOREIGN KEY (wine_id) REFERENCES wines(id)
+            )
+        """)
+
+        # Backfill: insert 'added' entries for existing wines (only on first migration)
+        log_count = db.execute("SELECT COUNT(*) FROM timeline").fetchone()[0]
+        if log_count == 0:
+            wines = db.execute("SELECT id, quantity, added FROM wines").fetchall()
+            for w in wines:
+                ts = w[2] or date.today().isoformat()
+                qty = w[1] if w[1] else 1
+                db.execute(
+                    "INSERT INTO timeline (wine_id, action, quantity, timestamp) VALUES (?,?,?,?)",
+                    (w[0], "added", qty, ts),
+                )
+
         db.commit()
 
 
@@ -570,6 +595,13 @@ def add():
     )
     db.commit()
     new_id = cur.lastrowid
+    # Log the addition
+    qty = int(request.form.get("quantity", 1))
+    db.execute(
+        "INSERT INTO timeline (wine_id, action, quantity, timestamp) VALUES (?,?,?,?)",
+        (new_id, "added", qty, datetime.now().isoformat()),
+    )
+    db.commit()
     if is_ajax():
         return jsonify({"ok": True, "wine": wine_json(new_id), "stats": stats_json()})
     path = g.get("ingress", "") + url_for("index") + f"?new={new_id}"
@@ -611,9 +643,11 @@ def edit(wine_id):
                     pass
             image = ai_img
 
+    old_quantity = wine["quantity"] or 0
     price_raw = request.form.get("price", "").strip()
     vivino_raw = request.form.get("vivino_id", "").strip()
     bottle_format_raw = request.form.get("bottle_format", "").strip()
+    new_quantity = int(request.form.get("quantity", 0))
     db.execute(
         """UPDATE wines SET name=?, year=?, type=?, region=?, quantity=?, rating=?,
            notes=?, image=?, purchased_at=?, price=?, drink_from=?, drink_until=?, location=?,
@@ -624,7 +658,7 @@ def edit(wine_id):
             request.form.get("year") or None,
             request.form.get("type"),
             request.form.get("region", "").strip(),
-            int(request.form.get("quantity", 0)),
+            new_quantity,
             int(request.form.get("rating", 0)),
             request.form.get("notes", "").strip(),
             image,
@@ -639,6 +673,17 @@ def edit(wine_id):
             wine_id,
         ),
     )
+    # Log quantity changes
+    if new_quantity < old_quantity:
+        db.execute(
+            "INSERT INTO timeline (wine_id, action, quantity, timestamp) VALUES (?,?,?,?)",
+            (wine_id, "consumed", old_quantity - new_quantity, datetime.now().isoformat()),
+        )
+    elif new_quantity > old_quantity:
+        db.execute(
+            "INSERT INTO timeline (wine_id, action, quantity, timestamp) VALUES (?,?,?,?)",
+            (wine_id, "restocked", new_quantity - old_quantity, datetime.now().isoformat()),
+        )
     db.commit()
     if is_ajax():
         return jsonify({"ok": True, "wine": wine_json(wine_id), "stats": stats_json()})
@@ -690,6 +735,13 @@ def duplicate(wine_id):
     )
     db.commit()
     new_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    # Log the duplicated wine as added
+    dup_qty = int(request.form.get("quantity", wine["quantity"]))
+    db.execute(
+        "INSERT INTO timeline (wine_id, action, quantity, timestamp) VALUES (?,?,?,?)",
+        (new_id, "added", dup_qty, datetime.now().isoformat()),
+    )
+    db.commit()
     if is_ajax():
         return jsonify({"ok": True, "wine": wine_json(new_id), "stats": stats_json()})
     return ingress_redirect("index")
@@ -698,7 +750,13 @@ def duplicate(wine_id):
 @app.route("/delete/<int:wine_id>", methods=["POST"])
 def delete(wine_id):
     db = get_db()
-    wine = db.execute("SELECT image FROM wines WHERE id=?", (wine_id,)).fetchone()
+    wine = db.execute("SELECT image, quantity FROM wines WHERE id=?", (wine_id,)).fetchone()
+    # Log removal before deleting
+    if wine:
+        db.execute(
+            "INSERT INTO timeline (wine_id, action, quantity, timestamp) VALUES (?,?,?,?)",
+            (wine_id, "removed", wine["quantity"] or 0, datetime.now().isoformat()),
+        )
     if wine and wine["image"]:
         # Only delete image if no other wine uses it
         count = db.execute(
@@ -724,10 +782,67 @@ def chat_page():
     return render_template("chat.html")
 
 
+@app.route("/timeline")
+def timeline_page():
+    return render_template("timeline.html")
+
+
+@app.route("/api/timeline")
+def api_timeline():
+    db = get_db()
+    months_param = request.args.get("months")
+
+    sql = """
+        SELECT wl.id, wl.wine_id, w.name as wine_name, w.image as wine_image,
+               w.type as wine_type, wl.action, wl.quantity, wl.timestamp
+        FROM timeline wl
+        LEFT JOIN wines w ON wl.wine_id = w.id
+    """
+    params = []
+    if months_param:
+        try:
+            months = int(months_param)
+            now = datetime.now()
+            year = now.year
+            month = now.month - months
+            while month < 1:
+                month += 12
+                year -= 1
+            cutoff = now.replace(year=year, month=month, day=1, hour=0, minute=0, second=0, microsecond=0)
+            sql += " WHERE wl.timestamp >= ? "
+            params.append(cutoff.isoformat())
+        except (ValueError, TypeError):
+            pass
+
+    sql += " ORDER BY wl.timestamp DESC"
+
+    rows = db.execute(sql, params).fetchall()
+
+    # Group all entries with same wine_id + action + date (regardless of order)
+    grouped = {}
+    for r in rows:
+        day = r["timestamp"][:10] if r["timestamp"] else ""
+        key = (r["wine_id"], r["action"], day)
+        if key in grouped:
+            grouped[key]["quantity"] += r["quantity"]
+        else:
+            grouped[key] = {
+                "id": r["id"],
+                "wine_id": r["wine_id"],
+                "wine_name": r["wine_name"] or "(deleted)",
+                "wine_image": r["wine_image"],
+                "wine_type": r["wine_type"],
+                "action": r["action"],
+                "quantity": r["quantity"],
+                "timestamp": r["timestamp"],
+            }
+    entries = sorted(grouped.values(), key=lambda e: e["timestamp"], reverse=True)
+    return jsonify(ok=True, entries=entries)
+
+
 @app.route("/stats")
 def stats_page():
     db = get_db()
-    from datetime import datetime
     current_year = datetime.now().year
 
     # Total bottles & distinct wines

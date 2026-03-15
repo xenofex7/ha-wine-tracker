@@ -17,7 +17,9 @@
   <a class="nav-brand" href="{{ ingress }}/" style="display:flex"><img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" class="nav-logo"></a>
   <nav class="nav-links">
     <a class="nav-link" href="{{ ingress }}/">{{ t.nav_cellar }}</a>
+    <a class="nav-link" href="{{ ingress }}/timeline">{{ t.timeline }}</a>
     <a class="nav-link" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
+
   </nav>
   <div class="header-spacer"></div>
   <button class="theme-toggle" onclick="openModal('settingsModal')" title="{{ t.settings_title }}"><i class="mdi mdi-cog"></i></button>
@@ -49,6 +51,10 @@
   <a href="{{ ingress }}/chat" class="tab-item active">
     <i class="mdi mdi-chat"></i>
     <span>{{ t.chat_title }}</span>
+  </a>
+  <a href="{{ ingress }}/timeline" class="tab-item">
+    <i class="mdi mdi-timeline-text-outline"></i>
+    <span>{{ t.timeline }}</span>
   </a>
   <a href="{{ ingress }}/stats" class="tab-item">
     <i class="mdi mdi-chart-bar"></i>

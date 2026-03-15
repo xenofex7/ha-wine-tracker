@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7/css/materialdesignicons.min.css">
+<link rel="stylesheet" href="{{ ingress }}/static/style.css">
+<script>
+(function(){var n=localStorage.getItem('wine-theme-name')||'homeassistant';if(n&&n!=='classic')document.documentElement.setAttribute('data-theme',n);var s=localStorage.getItem('wine-theme')||'system';var e=s==='system'?(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'):s;if(e==='light')document.documentElement.classList.add('light');})();
+</script>
+<title>{{ t.timeline }} – Wine Tracker</title>
+<style>
+/* ── Timeline-specific styles ─────────────────────────────── */
+.timeline-summary {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.timeline-summary .highlight-card {
+  flex: 1 1 140px; min-width: 140px;
+}
+/* Month sections use .stat-card from style.css */
+#timelineContent { display: flex; flex-direction: column; gap: 1.5rem; }
+/* Timeline entries reuse .wine-list-item from style.css */
+.timeline-entry-action {
+  font-size: .75rem; color: var(--muted);
+  flex-shrink: 0; text-align: right;
+}
+.timeline-empty {
+  text-align: center; padding: 48px 16px;
+  color: var(--muted);
+}
+.timeline-empty i { font-size: 3rem; display: block; margin-bottom: 12px; opacity: .5; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="nav-brand" href="{{ ingress }}/"><img src="{{ ingress }}/static/logo.png" alt="Wine Tracker" class="nav-logo"></a>
+  <nav class="nav-links">
+    <a class="nav-link" href="{{ ingress }}/">{{ t.nav_cellar }}</a>
+    {% if ai_enabled %}<a class="nav-link" href="#" id="chatFab" onclick="event.preventDefault();toggleChatPanel()">{{ t.chat_title }}</a>{% endif %}
+    <a class="nav-link active" href="{{ ingress }}/timeline">{{ t.timeline }}</a>
+    <a class="nav-link" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
+  </nav>
+  <div class="header-spacer"></div>
+  <button class="theme-toggle" onclick="openModal('settingsModal')" title="{{ t.settings_title }}"><i class="mdi mdi-cog"></i></button>
+</header>
+
+<div class="content">
+  <!-- Summary cards (filled by JS) -->
+  <div class="timeline-summary" id="timelineSummary"></div>
+
+  <!-- Timeline entries (filled by JS) -->
+  <div id="timelineContent"></div>
+</div>
+
+<!-- ═══════════════ WINE VIEW MODAL ═══════════════ -->
+{% include '_wine_view_modal.html' %}
+
+{% include '_settings_modal.html' %}
+
+<!-- ═══════════════ LIGHTBOX ═══════════════ -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img id="lightboxImg" src="" alt="{{ t.lightbox_alt }}">
+</div>
+
+<script src="{{ ingress }}/static/theme.js"></script>
+<script>
+var INGRESS = '{{ ingress }}';
+var T = {{ t | tojson }};
+var CURRENCY = '{{ currency }}';
+var AUTH_READONLY = {{ auth_readonly | tojson }};
+
+var ACTION_ICONS = {
+  added: '<i class="mdi mdi-plus-circle-outline"></i>',
+  consumed: '<i class="mdi mdi-glass-wine"></i>',
+  restocked: '<i class="mdi mdi-package-variant"></i>',
+  removed: '<i class="mdi mdi-delete-outline"></i>'
+};
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'settingsModal') { updateThemeSegmented(); updateThemeDropdown(); }
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    if (e.target === el) closeModal(el.id);
+  });
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeLightbox();
+    document.querySelectorAll('.modal-overlay.open').forEach(function(el) {
+      el.classList.remove('open');
+    });
+  }
+});
+
+// ── View Modal functions ──────────────────────────────────
+function escapeHtml(s) {
+  if (!s) return '';
+  var d = document.createElement('div');
+  d.appendChild(document.createTextNode(s));
+  return d.innerHTML;
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
+}
+
+var BOTTLE_FORMATS = {
+  0.1875: 'Piccolo (0.1875 l)', 0.375: 'Demi (0.375 l)', 0.75: 'Standard (0.75 l)',
+  1.5: 'Magnum (1.5 l)', 3: 'Double Magnum (3 l)', 4.5: 'J\u00e9roboam (4.5 l)',
+  6: 'Imp\u00e9rial (6 l)', 9: 'Salmanazar (9 l)', 12: 'Balthazar (12 l)',
+  15: 'Nebukadnezar (15 l)'
+};
+
+function viewRow(icon, label, value) {
+  return '<div class="view-row"><i class="mdi ' + icon + '"></i>'
+       + '<span class="view-label">' + escapeHtml(label) + '</span>'
+       + '<span class="view-value">' + escapeHtml(String(value)) + '</span></div>';
+}
+
+function openViewModal(id, wine) {
+  var w = wine || {};
+  window._viewWineId = id;
+  window._viewWineData = w;
+
+  document.getElementById('viewModalTitle').textContent = T.modal_view_title || 'Wine details';
+
+  var html = '';
+
+  if (w.image) {
+    html += '<div class="view-photo-panel" onclick="openLightbox(\'' + INGRESS + '/uploads/' + encodeURIComponent(w.image) + '\')">'
+          + '<img src="' + INGRESS + '/uploads/' + encodeURIComponent(w.image) + '" alt="' + escapeHtml(w.name) + '">'
+          + '</div>';
+  }
+
+  html += '<div class="view-fields-panel">';
+  html += '<div class="view-name">' + escapeHtml(w.name) + '</div>';
+
+  if (w.type) {
+    var typeKey = 'wine_type_' + w.type;
+    var typeLabel = T[typeKey] || w.type;
+    html += '<span class="view-type-badge ribbon-' + escapeHtml(w.type) + '">' + escapeHtml(typeLabel) + '</span>';
+  }
+
+  var meta = [];
+  if (w.year) meta.push('<span>' + w.year + '</span>');
+  if (w.region) meta.push('<span>' + escapeHtml(w.region) + '</span>');
+  if (meta.length) html += '<div class="view-meta">' + meta.join('') + '</div>';
+
+  if (w.rating && w.rating > 0) {
+    var stars = '';
+    for (var i = 0; i < 5; i++) stars += '<i class="mdi ' + (i < w.rating ? 'mdi-star' : 'mdi-star-outline') + '"></i>';
+    html += '<div class="view-stars">' + stars + '</div>';
+  }
+
+  var details = '';
+  details += viewRow('mdi-bottle-wine', T.label_quantity || 'Quantity', w.quantity);
+  if (w.bottle_format && parseFloat(w.bottle_format) !== 0.75) {
+    var fmt = BOTTLE_FORMATS[parseFloat(w.bottle_format)] || w.bottle_format + ' l';
+    details += viewRow('mdi-ruler', T.label_bottle_format || 'Format', fmt);
+  }
+  if (w.grape) details += viewRow('mdi-fruit-grapes', T.label_grape || 'Grape', w.grape);
+  if (w.purchased_at) details += viewRow('mdi-cart', T.label_purchased_at || 'Purchased at', w.purchased_at);
+  if (w.price) {
+    details += viewRow('mdi-cash', T.label_price || 'Price', CURRENCY + ' ' + Number(w.price).toFixed(2));
+  }
+  if (w.drink_from || w.drink_until) {
+    var window_str = (w.drink_from || '?') + ' \u2013 ' + (w.drink_until || '?');
+    details += viewRow('mdi-calendar-range', T.view_drink_window || 'Drink window', window_str);
+  }
+  if (w.location) details += viewRow('mdi-map-marker', T.label_location || 'Location', w.location);
+  if (w.vivino_id) {
+    details += '<div class="view-row"><i class="mdi mdi-open-in-new"></i>'
+             + '<span class="view-label">Vivino</span>'
+             + '<a href="https://www.vivino.com/w/' + w.vivino_id + '" target="_blank" rel="noopener" class="view-vivino-link view-value">vivino.com</a></div>';
+  }
+  if (details) html += '<div class="view-details">' + details + '</div>';
+
+  if (w.notes) html += '<div class="view-notes">' + escapeHtml(w.notes) + '</div>';
+
+  html += '<div class="view-actions">';
+  if (!AUTH_READONLY) {
+    html += '<button class="btn-submit" onclick="editFromView()">' + (T.btn_edit || 'Edit') + '</button>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById('viewModalBody').innerHTML = html;
+  openModal('viewModal');
+}
+
+function editFromView() {
+  closeModal('viewModal');
+  window.open(INGRESS + '/?edit=' + window._viewWineId, '_blank');
+}
+
+function viewWine(wineId) {
+  fetch(INGRESS + '/api/wine/' + wineId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) openViewModal(data.wine.id, data.wine);
+    });
+}
+
+// ── Load timeline data ──────────────────────────────────
+function formatDate(isoStr) {
+  if (!isoStr) return '';
+  var d = new Date(isoStr);
+  var day = String(d.getDate()).padStart(2, '0');
+  var month = String(d.getMonth() + 1).padStart(2, '0');
+  return day + '.' + month;
+}
+
+function monthKey(isoStr) {
+  if (!isoStr) return '';
+  return isoStr.substring(0, 7); // YYYY-MM
+}
+
+function monthLabel(key) {
+  var parts = key.split('-');
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var monthNames = {
+    de: ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
+    en: months,
+    fr: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+    it: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
+    es: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+    pt: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+    nl: ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December']
+  };
+  var lang = '{{ lang }}';
+  var names = monthNames[lang] || months;
+  var m = parseInt(parts[1], 10) - 1;
+  return names[m] + ' ' + parts[0];
+}
+
+function loadTimeline() {
+  fetch(INGRESS + '/api/timeline')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) return;
+      var entries = data.entries;
+
+      // Compute summary
+      var now = new Date();
+      var thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      var consumedMonth = 0, addedMonth = 0, restockedMonth = 0;
+      entries.forEach(function(e) {
+        if (monthKey(e.timestamp) === thisMonth) {
+          if (e.action === 'consumed') consumedMonth += e.quantity;
+          if (e.action === 'added') addedMonth += e.quantity;
+          if (e.action === 'restocked') restockedMonth += e.quantity;
+        }
+      });
+
+      var summaryHtml = '';
+      summaryHtml += '<div class="highlight-card"><div class="emoji"><i class="mdi mdi-glass-wine"></i></div><div class="big-number">' + consumedMonth + '</div><div class="label">' + escapeHtml(T.timeline_consumed_month) + '</div></div>';
+      summaryHtml += '<div class="highlight-card"><div class="emoji"><i class="mdi mdi-plus-circle-outline"></i></div><div class="big-number">' + addedMonth + '</div><div class="label">' + escapeHtml(T.timeline_added_month) + '</div></div>';
+      summaryHtml += '<div class="highlight-card"><div class="emoji"><i class="mdi mdi-package-variant"></i></div><div class="big-number">' + restockedMonth + '</div><div class="label">' + escapeHtml(T.timeline_restocked_month) + '</div></div>';
+      summaryHtml += '<div class="highlight-card"><div class="emoji"><i class="mdi mdi-chart-box"></i></div><div class="big-number">' + entries.length + '</div><div class="label">' + escapeHtml(T.timeline_total_events) + '</div></div>';
+      document.getElementById('timelineSummary').innerHTML = summaryHtml;
+
+      // Group by month
+      if (entries.length === 0) {
+        document.getElementById('timelineContent').innerHTML = '<div class="timeline-empty"><i class="mdi mdi-timeline-text-outline"></i><p>' + escapeHtml(T.timeline_no_entries) + '</p></div>';
+        return;
+      }
+
+      var groups = {};
+      var groupOrder = [];
+      entries.forEach(function(e) {
+        var mk = monthKey(e.timestamp);
+        if (!groups[mk]) { groups[mk] = []; groupOrder.push(mk); }
+        groups[mk].push(e);
+      });
+
+      var html = '';
+      groupOrder.forEach(function(mk) {
+        html += '<div class="stat-card">';
+        html += '<h2><i class="mdi mdi-calendar-month"></i> ' + escapeHtml(monthLabel(mk)) + '</h2>';
+        html += '<div class="stat-body"><div class="wine-list">';
+        groups[mk].forEach(function(e) {
+          var icon = ACTION_ICONS[e.action] || '';
+          var actionLabel = T['log_' + e.action] || e.action;
+          var qtyStr = e.quantity > 1 ? ' (' + e.quantity + '\u00d7)' : '';
+          if (e.action === 'removed') qtyStr = '';
+          var typeClass = '';
+          if (e.wine_type) {
+            typeClass = 'type-' + e.wine_type.toLowerCase().replace(/é/g,'e').replace(/ö/g,'oe');
+          }
+          html += '<a href="#" class="wine-list-item wine-list-link" onclick="viewWine(' + e.wine_id + '); return false;">';
+          if (e.wine_type) html += '<span class="type-corner ' + typeClass + '"></span>';
+          html += '<div class="rank">' + icon + '</div>';
+          html += '<div class="wine-info">';
+          html += '<div class="wine-name">' + escapeHtml(e.wine_name) + '</div>';
+          html += '<div class="wine-detail">' + formatDate(e.timestamp) + '</div>';
+          html += '</div>';
+          html += '<span class="timeline-entry-action">' + escapeHtml(actionLabel) + escapeHtml(qtyStr) + '</span>';
+          html += '</a>';
+        });
+        html += '</div></div></div>';
+      });
+      document.getElementById('timelineContent').innerHTML = html;
+    });
+}
+
+loadTimeline();
+</script>
+
+{% include '_chat_panel.html' %}
+
+<nav class="bottom-tab-bar">
+  <a class="tab-item" href="{{ ingress }}/">
+    <i class="mdi mdi-bottle-wine"></i><span>{{ t.nav_cellar }}</span>
+  </a>
+  {% if ai_enabled %}
+  <a class="tab-item" href="{{ ingress }}/chat">
+    <i class="mdi mdi-chat"></i><span>{{ t.chat_title }}</span>
+  </a>
+  {% endif %}
+  <a class="tab-item active" href="{{ ingress }}/timeline">
+    <i class="mdi mdi-timeline-text-outline"></i><span>{{ t.timeline }}</span>
+  </a>
+  <a class="tab-item" href="{{ ingress }}/stats">
+    <i class="mdi mdi-chart-bar"></i><span>{{ t.stats_title }}</span>
+  </a>
+</nav>
+
+</body>
+</html>

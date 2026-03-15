@@ -205,6 +205,18 @@ TRANSLATIONS = {
     "stat_wine_origin": "Herkunft Deiner Weine",
     "stat_no_data": "Noch keine Daten vorhanden.",
     "stat_add_wines_first": "Füge zuerst Weine hinzu!",
+
+    # Timeline
+    "timeline": "Zeitverlauf",
+    "timeline_consumed_month": "Diesen Monat getrunken",
+    "timeline_added_month": "Diesen Monat hinzugefügt",
+    "timeline_restocked_month": "Diesen Monat nachgefüllt",
+    "timeline_total_events": "Aktivitäten",
+    "timeline_no_entries": "Noch keine Einträge vorhanden.",
+    "log_added": "hinzugefügt",
+    "log_consumed": "getrunken",
+    "log_restocked": "nachgefüllt",
+    "log_removed": "entfernt",
 },
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -396,6 +408,18 @@ TRANSLATIONS = {
     "stat_wine_origin": "Origin of your wines",
     "stat_no_data": "No data available yet.",
     "stat_add_wines_first": "Add some wines first!",
+
+    # Timeline
+    "timeline": "Timeline",
+    "timeline_consumed_month": "Consumed this month",
+    "timeline_added_month": "Added this month",
+    "timeline_restocked_month": "Restocked this month",
+    "timeline_total_events": "Activities",
+    "timeline_no_entries": "No entries yet.",
+    "log_added": "added",
+    "log_consumed": "consumed",
+    "log_restocked": "restocked",
+    "log_removed": "removed",
 },
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -587,6 +611,18 @@ TRANSLATIONS = {
     "stat_wine_origin": "Origine de vos vins",
     "stat_no_data": "Aucune donnée disponible.",
     "stat_add_wines_first": "Ajoutez d'abord des vins !",
+
+    # Timeline
+    "timeline": "Chronologie",
+    "timeline_consumed_month": "Bu ce mois-ci",
+    "timeline_added_month": "Ajouté ce mois-ci",
+    "timeline_restocked_month": "Réapprovisionné ce mois-ci",
+    "timeline_total_events": "Activités",
+    "timeline_no_entries": "Aucune entrée pour le moment.",
+    "log_added": "ajouté",
+    "log_consumed": "bu",
+    "log_restocked": "réapprovisionné",
+    "log_removed": "supprimé",
 },
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -778,6 +814,18 @@ TRANSLATIONS = {
     "stat_wine_origin": "Origine dei tuoi vini",
     "stat_no_data": "Nessun dato disponibile.",
     "stat_add_wines_first": "Aggiungi prima dei vini!",
+
+    # Timeline
+    "timeline": "Cronologia",
+    "timeline_consumed_month": "Bevuti questo mese",
+    "timeline_added_month": "Aggiunti questo mese",
+    "timeline_restocked_month": "Riforniti questo mese",
+    "timeline_total_events": "Attività",
+    "timeline_no_entries": "Nessuna voce ancora.",
+    "log_added": "aggiunto",
+    "log_consumed": "bevuto",
+    "log_restocked": "rifornito",
+    "log_removed": "rimosso",
 },
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -969,6 +1017,18 @@ TRANSLATIONS = {
     "stat_wine_origin": "Origen de tus vinos",
     "stat_no_data": "No hay datos disponibles.",
     "stat_add_wines_first": "¡Añade primero algunos vinos!",
+
+    # Timeline
+    "timeline": "Cronología",
+    "timeline_consumed_month": "Bebidos este mes",
+    "timeline_added_month": "Añadidos este mes",
+    "timeline_restocked_month": "Reabastecidos este mes",
+    "timeline_total_events": "Actividades",
+    "timeline_no_entries": "Aún no hay entradas.",
+    "log_added": "añadido",
+    "log_consumed": "bebido",
+    "log_restocked": "repuesto",
+    "log_removed": "eliminado",
 },
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1160,6 +1220,18 @@ TRANSLATIONS = {
     "stat_wine_origin": "Origem dos seus vinhos",
     "stat_no_data": "Nenhum dado disponível.",
     "stat_add_wines_first": "Adicione alguns vinhos primeiro!",
+
+    # Timeline
+    "timeline": "Cronologia",
+    "timeline_consumed_month": "Bebidos este mês",
+    "timeline_added_month": "Adicionados este mês",
+    "timeline_restocked_month": "Reabastecidos este mês",
+    "timeline_total_events": "Atividades",
+    "timeline_no_entries": "Ainda sem entradas.",
+    "log_added": "adicionado",
+    "log_consumed": "bebido",
+    "log_restocked": "reabastecido",
+    "log_removed": "removido",
 },
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1351,6 +1423,18 @@ TRANSLATIONS = {
     "stat_wine_origin": "Herkomst van je wijnen",
     "stat_no_data": "Nog geen gegevens beschikbaar.",
     "stat_add_wines_first": "Voeg eerst wijnen toe!",
+
+    # Timeline
+    "timeline": "Tijdlijn",
+    "timeline_consumed_month": "Gedronken deze maand",
+    "timeline_added_month": "Toegevoegd deze maand",
+    "timeline_restocked_month": "Aangevuld deze maand",
+    "timeline_total_events": "Activiteiten",
+    "timeline_no_entries": "Nog geen vermeldingen.",
+    "log_added": "toegevoegd",
+    "log_consumed": "gedronken",
+    "log_restocked": "bijgevuld",
+    "log_removed": "verwijderd",
 },
 
 }  # end TRANSLATIONS

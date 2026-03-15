@@ -471,6 +471,108 @@ class TestApiSummary:
         assert len(data["by_type"]) == 2
 
 
+# ── GET /timeline ─────────────────────────────────────────────────────────────
+
+class TestTimelinePage:
+    def test_timeline_loads(self, client):
+        resp = client.get("/timeline")
+        assert resp.status_code == 200
+        assert b"timeline" in resp.data.lower() or b"Zeitverlauf" in resp.data
+
+
+# ── Wine log integration ─────────────────────────────────────────────────────
+
+class TestWineLog:
+    def test_add_creates_log_entry(self, client, db):
+        """Adding a wine should create an 'added' log entry."""
+        resp = client.post(
+            "/add",
+            data={"name": "Log Wine", "quantity": "3"},
+            headers=AJAX,
+        )
+        data = json.loads(resp.data)
+        wine_id = data["wine"]["id"]
+        log = db.execute(
+            "SELECT * FROM timeline WHERE wine_id=? AND action='added'", (wine_id,)
+        ).fetchone()
+        assert log is not None
+        assert log["quantity"] == 3
+
+    def test_edit_quantity_down_creates_consumed_log(self, client, sample_wine, db):
+        """Reducing quantity via edit should log 'consumed'."""
+        wine_id = sample_wine["wine"]["id"]
+        client.post(
+            f"/edit/{wine_id}",
+            data={"name": "Château Test", "quantity": "1"},
+            headers=AJAX,
+        )
+        log = db.execute(
+            "SELECT * FROM timeline WHERE wine_id=? AND action='consumed'", (wine_id,)
+        ).fetchone()
+        assert log is not None
+        assert log["quantity"] == 2  # 3 - 1 = 2
+
+    def test_edit_quantity_up_creates_restocked_log(self, client, sample_wine, db):
+        """Increasing quantity via edit should log 'restocked'."""
+        wine_id = sample_wine["wine"]["id"]
+        client.post(
+            f"/edit/{wine_id}",
+            data={"name": "Château Test", "quantity": "7"},
+            headers=AJAX,
+        )
+        log = db.execute(
+            "SELECT * FROM timeline WHERE wine_id=? AND action='restocked'", (wine_id,)
+        ).fetchone()
+        assert log is not None
+        assert log["quantity"] == 4  # 7 - 3 = 4
+
+    def test_edit_same_quantity_no_log(self, client, sample_wine, db):
+        """No log entry when quantity stays the same."""
+        wine_id = sample_wine["wine"]["id"]
+        client.post(
+            f"/edit/{wine_id}",
+            data={"name": "Château Test", "quantity": "3"},
+            headers=AJAX,
+        )
+        consumed = db.execute(
+            "SELECT * FROM timeline WHERE wine_id=? AND action='consumed'", (wine_id,)
+        ).fetchone()
+        restocked = db.execute(
+            "SELECT * FROM timeline WHERE wine_id=? AND action='restocked'", (wine_id,)
+        ).fetchone()
+        assert consumed is None
+        assert restocked is None
+
+    def test_delete_creates_removed_log(self, client, sample_wine, db):
+        """Deleting a wine should create a 'removed' log entry."""
+        wine_id = sample_wine["wine"]["id"]
+        client.post(f"/delete/{wine_id}", headers=AJAX)
+        log = db.execute(
+            "SELECT * FROM timeline WHERE wine_id=? AND action='removed'", (wine_id,)
+        ).fetchone()
+        assert log is not None
+        assert log["quantity"] == 3
+
+    def test_api_timeline_returns_data(self, client, sample_wine):
+        """GET /api/timeline should return log entries."""
+        resp = client.get("/api/timeline")
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert isinstance(data["entries"], list)
+        assert len(data["entries"]) >= 1
+        entry = data["entries"][0]
+        assert "wine_name" in entry
+        assert "action" in entry
+        assert "timestamp" in entry
+
+    def test_api_timeline_with_months_filter(self, client, sample_wine):
+        """GET /api/timeline?months=1 should work without error."""
+        resp = client.get("/api/timeline?months=1")
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert isinstance(data["entries"], list)
+
+
 # ── GET /chat ────────────────────────────────────────────────────────────────
 
 class TestChatPage:

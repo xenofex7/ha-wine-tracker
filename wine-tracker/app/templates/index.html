@@ -18,6 +18,7 @@
   <nav class="nav-links">
     <a class="nav-link active" href="{{ ingress }}/">{{ t.nav_cellar }}</a>
     {% if ai_enabled %}<a class="nav-link" href="#" id="chatFab" onclick="event.preventDefault();toggleChatPanel()">{{ t.chat_title }}</a>{% endif %}
+    <a class="nav-link" href="{{ ingress }}/timeline">{{ t.timeline }}</a>
     <a class="nav-link" href="{{ ingress }}/stats">{{ t.stats_title }}</a>
   </nav>
   <div class="header-spacer"></div>
@@ -2058,6 +2059,9 @@ initImageShimmer();
     <i class="mdi mdi-chat"></i><span>{{ t.chat_title }}</span>
   </a>
   {% endif %}
+  <a class="tab-item" href="{{ ingress }}/timeline">
+    <i class="mdi mdi-timeline-text-outline"></i><span>{{ t.timeline }}</span>
+  </a>
   <a class="tab-item" href="{{ ingress }}/stats">
     <i class="mdi mdi-chart-bar"></i><span>{{ t.stats_title }}</span>
   </a>
