@@ -954,7 +954,7 @@ def _call_openai(image_b64, media_type, prompt, opts):
     response = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": content}],
-        max_tokens=1024,
+        max_completion_tokens=1024,
     )
     return response.choices[0].message.content
 
@@ -975,7 +975,7 @@ def _call_openrouter(image_b64, media_type, prompt, opts):
     response = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": content}],
-        max_tokens=1024,
+        max_completion_tokens=1024,
     )
     return response.choices[0].message.content
 
@@ -1025,7 +1025,7 @@ def _call_chat_openai(messages, system_prompt, opts):
     response = client.chat.completions.create(
         model=model,
         messages=full_messages,
-        max_tokens=2048,
+        max_completion_tokens=2048,
     )
     return response.choices[0].message.content
 
@@ -1043,7 +1043,7 @@ def _call_chat_openrouter(messages, system_prompt, opts):
     response = client.chat.completions.create(
         model=model,
         messages=full_messages,
-        max_tokens=2048,
+        max_completion_tokens=2048,
     )
     return response.choices[0].message.content
 
