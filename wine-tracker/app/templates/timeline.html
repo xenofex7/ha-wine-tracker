@@ -31,6 +31,15 @@
   color: var(--muted);
 }
 .timeline-empty i { font-size: 3rem; display: block; margin-bottom: 12px; opacity: .5; }
+.timeline-day-header {
+  padding: 4px 0;
+  font-weight: 400;
+  font-size: .8rem;
+  color: var(--muted);
+}
+.wine-list .timeline-day-header:not(:first-child) {
+  margin-top: 16px;
+}
 </style>
 </head>
 <body>
@@ -210,7 +219,7 @@ function editFromView() {
 
 function openTimelineChat(event, sessionId) {
   // On desktop, open flyover panel with the session; on mobile, navigate to /chat
-  if (window.innerWidth > 768) {
+  if (window.innerWidth > 600) {
     event.preventDefault();
     if (!_chatOpen) toggleChatPanel();
     if (sessionId) loadChatSession(sessionId);
@@ -241,22 +250,46 @@ function monthKey(isoStr) {
   return isoStr.substring(0, 7); // YYYY-MM
 }
 
+var LANG = '{{ lang }}';
+var MONTH_NAMES_ALL = {
+  de: ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
+  en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+  fr: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+  it: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
+  es: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+  pt: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+  nl: ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December']
+};
+var DAY_NAMES_ALL = {
+  de: ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'],
+  en: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+  fr: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
+  it: ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'],
+  es: ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],
+  pt: ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'],
+  nl: ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag']
+};
+
 function monthLabel(key) {
   var parts = key.split('-');
-  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var monthNames = {
-    de: ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
-    en: months,
-    fr: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
-    it: ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'],
-    es: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
-    pt: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
-    nl: ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December']
-  };
-  var lang = '{{ lang }}';
-  var names = monthNames[lang] || months;
+  var names = MONTH_NAMES_ALL[LANG] || MONTH_NAMES_ALL.en;
   var m = parseInt(parts[1], 10) - 1;
   return names[m] + ' ' + parts[0];
+}
+
+function dayHeader(isoStr) {
+  var d = new Date(isoStr);
+  var dayNames = DAY_NAMES_ALL[LANG] || DAY_NAMES_ALL.en;
+  var monthNames = MONTH_NAMES_ALL[LANG] || MONTH_NAMES_ALL.en;
+  var dayName = dayNames[d.getDay()];
+  var dayNum = d.getDate();
+  var monthName = monthNames[d.getMonth()];
+  if (LANG === 'en') return dayName + ', ' + monthName + ' ' + dayNum;
+  if (LANG === 'es') return dayName + ', ' + dayNum + ' de ' + monthName.toLowerCase();
+  if (LANG === 'pt') return dayName + ', ' + dayNum + ' de ' + monthName.toLowerCase();
+  if (LANG === 'fr' || LANG === 'it' || LANG === 'nl') return dayName + ', ' + dayNum + ' ' + monthName.toLowerCase();
+  // de (default): "Sonntag, 16. März"
+  return dayName + ', ' + dayNum + '. ' + monthName;
 }
 
 function loadTimeline() {
@@ -304,7 +337,13 @@ function loadTimeline() {
         html += '<div class="stat-card">';
         html += '<h2><i class="mdi mdi-calendar-month"></i> ' + escapeHtml(monthLabel(mk)) + '</h2>';
         html += '<div class="stat-body"><div class="wine-list">';
+        var lastDay = '';
         groups[mk].forEach(function(e) {
+          var entryDay = e.timestamp ? e.timestamp.substring(0, 10) : '';
+          if (entryDay && entryDay !== lastDay) {
+            html += '<div class="timeline-day-header">' + escapeHtml(dayHeader(e.timestamp)) + '</div>';
+            lastDay = entryDay;
+          }
           var icon = ACTION_ICONS[e.action] || '';
           var actionLabel = T['log_' + e.action] || e.action;
           var qtyStr = e.quantity > 1 ? ' (' + e.quantity + '\u00d7)' : '';
@@ -321,7 +360,6 @@ function loadTimeline() {
             html += '<div class="rank">' + icon + '</div>';
             html += '<div class="wine-info">';
             html += '<div class="wine-name timeline-chat-name">' + escapeHtml(e.wine_name) + '</div>';
-            html += '<div class="wine-detail">' + formatDate(e.timestamp) + '</div>';
             html += '</div>';
             html += '<span class="timeline-entry-action">' + escapeHtml(actionLabel) + '</span>';
             html += '</a>';
@@ -331,7 +369,6 @@ function loadTimeline() {
             html += '<div class="rank">' + icon + '</div>';
             html += '<div class="wine-info">';
             html += '<div class="wine-name">' + escapeHtml(e.wine_name) + '</div>';
-            html += '<div class="wine-detail">' + formatDate(e.timestamp) + '</div>';
             html += '</div>';
             html += '<span class="timeline-entry-action">' + escapeHtml(actionLabel) + escapeHtml(qtyStr) + '</span>';
             html += '</a>';

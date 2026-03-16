@@ -147,6 +147,8 @@ TRANSLATIONS = {
     "chat_delete": "Chat löschen",
     "chat_delete_confirm": "Chat wirklich löschen?",
     "chat_no_sessions": "Noch keine Gespräche",
+    "chat_message": "Nachricht",
+    "chat_messages": "Nachrichten",
 
     # Vivino search
     "source_step_title": "Wein erfassen",
@@ -361,6 +363,8 @@ TRANSLATIONS = {
     "chat_delete": "Delete chat",
     "chat_delete_confirm": "Really delete this chat?",
     "chat_no_sessions": "No conversations yet",
+    "chat_message": "message",
+    "chat_messages": "messages",
 
     # Vivino search
     "source_step_title": "Add wine",
@@ -572,6 +576,8 @@ TRANSLATIONS = {
     "chat_delete": "Supprimer le chat",
     "chat_delete_confirm": "Vraiment supprimer ce chat\u00a0?",
     "chat_no_sessions": "Aucune conversation",
+    "chat_message": "message",
+    "chat_messages": "messages",
 
     # Vivino search
     "source_step_title": "Ajouter un vin",
@@ -783,6 +789,8 @@ TRANSLATIONS = {
     "chat_delete": "Elimina chat",
     "chat_delete_confirm": "Eliminare davvero questa chat?",
     "chat_no_sessions": "Nessuna conversazione",
+    "chat_message": "messaggio",
+    "chat_messages": "messaggi",
 
     # Vivino search
     "source_step_title": "Aggiungi vino",
@@ -994,6 +1002,8 @@ TRANSLATIONS = {
     "chat_delete": "Eliminar chat",
     "chat_delete_confirm": "¿Realmente eliminar este chat?",
     "chat_no_sessions": "Aún no hay conversaciones",
+    "chat_message": "mensaje",
+    "chat_messages": "mensajes",
 
     # Vivino search
     "source_step_title": "Añadir vino",
@@ -1205,6 +1215,8 @@ TRANSLATIONS = {
     "chat_delete": "Excluir chat",
     "chat_delete_confirm": "Realmente excluir este chat?",
     "chat_no_sessions": "Nenhuma conversa ainda",
+    "chat_message": "mensagem",
+    "chat_messages": "mensagens",
 
     # Vivino search
     "source_step_title": "Adicionar vinho",
@@ -1416,6 +1428,8 @@ TRANSLATIONS = {
     "chat_delete": "Chat verwijderen",
     "chat_delete_confirm": "Chat echt verwijderen?",
     "chat_no_sessions": "Nog geen gesprekken",
+    "chat_message": "bericht",
+    "chat_messages": "berichten",
 
     # Vivino search
     "source_step_title": "Wijn toevoegen",
