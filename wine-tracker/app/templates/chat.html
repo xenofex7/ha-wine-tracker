@@ -94,7 +94,9 @@ var INGRESS = '{{ ingress }}';
 var T = {{ t | tojson }};
 var CURRENCY = '{{ currency }}';
 var AUTH_READONLY = {{ auth_readonly | tojson }};
-
+</script>
+{% include '_wine_edit_modal.html' %}
+<script>
 function openModal(id) {
   document.getElementById(id).classList.add('open');
   if (id === 'settingsModal') { updateThemeSegmented(); updateThemeDropdown(); initChatRecordingToggle(); }
@@ -102,18 +104,25 @@ function openModal(id) {
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
+// Close modal on overlay click (skip wineModal — handled by _wine_edit_modal.html)
 document.querySelectorAll('.modal-overlay').forEach(function(el) {
   el.addEventListener('click', function(e) {
-    if (e.target === el) closeModal(el.id);
+    if (e.target !== el) return;
+    if (el.id === 'wineModal') return;
+    closeModal(el.id);
   });
 });
 
-// ESC closes modals & lightbox
+// ESC closes modals & lightbox (wineModal: guard if dirty)
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeLightbox();
     document.querySelectorAll('.modal-overlay.open').forEach(function(el) {
-      el.classList.remove('open');
+      if (el.id === 'wineModal') {
+        tryCloseWineModal();
+      } else {
+        el.classList.remove('open');
+      }
     });
   }
 });
@@ -229,7 +238,7 @@ function openViewModal(id, wine) {
 
 function editFromView() {
   closeModal('viewModal');
-  window.open(INGRESS + '/?edit=' + window._viewWineId, '_blank');
+  openWineModal(window._viewWineId, window._viewWineData);
 }
 </script>
 

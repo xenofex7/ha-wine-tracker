@@ -1,0 +1,857 @@
+{# Wine edit modal – shared add/edit form included on all pages.
+   Expects globals: t, ingress, currency, ai_enabled, auth_readonly,
+                    wine_types, used_regions_list, used_grapes,
+                    used_purchased_at, used_locations
+   Expects JS globals: INGRESS, T, CURRENCY, AUTH_READONLY (set before this include) #}
+
+<!-- ═══════════════ WINE MODAL (Add + Edit) ═══════════════ -->
+<div class="modal-overlay" id="wineModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="wineModalTitle">{{ t.modal_add_title }}</span>
+      <div class="modal-header-actions">
+        <div class="vivino-id-popover-wrap" id="vivinoIdWrap" style="display:none">
+          <button type="button" class="btn-header-icon" id="vivinoIdTriggerBtn" onclick="toggleVivinoIdPopover()" title="{{ t.vivino_id_title }}">
+            <i class="mdi mdi-code-tags"></i>
+          </button>
+          <div class="vivino-id-popover" id="vivinoIdPopover" style="display:none">
+            <label class="vivino-id-label">{{ t.vivino_id_title }}</label>
+            <div class="vivino-id-row">
+              <input type="text" id="vivinoIdInput" class="vivino-id-input" placeholder="{{ t.vivino_id_placeholder }}" oninput="updateVivinoIdFromPopover()">
+              <a id="vivinoIdTestLink" class="vivino-id-test-link" href="#" target="_blank" rel="noopener" style="display:none" title="{{ t.vivino_id_test }}"><i class="mdi mdi-open-in-new"></i></a>
+            </div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="tryCloseWineModal()">×</button>
+      </div>
+    </div>
+    <!-- Source Step: choose AI / Vivino / Manual -->
+    <div id="sourceStep" class="source-step" style="display:none;">
+      <div class="source-step-header">
+        <h3>{{ t.source_step_title }}</h3>
+        <p>{{ t.source_step_subtitle }}</p>
+      </div>
+      <div class="source-options">
+        {% if ai_enabled %}
+        <div class="source-option" onclick="onSourceAi()">
+          <i class="mdi mdi-camera"></i>
+          <div class="source-text">
+            <div class="source-label">{{ t.ai_step_title }}</div>
+            <div class="source-desc">{{ t.source_ai_desc }}</div>
+          </div>
+        </div>
+        {% endif %}
+        <div class="source-option" onclick="onSourceVivino()">
+          <i class="mdi mdi-magnify"></i>
+          <div class="source-text">
+            <div class="source-label">{{ t.vivino_title }}</div>
+            <div class="source-desc">{{ t.vivino_desc }}</div>
+          </div>
+        </div>
+        <div class="source-option" onclick="skipToManual()">
+          <i class="mdi mdi-pencil"></i>
+          <div class="source-text">
+            <div class="source-label">{{ t.ai_skip }}</div>
+            <div class="source-desc">{{ t.manual_desc }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Panel (shown after clicking AI option) -->
+    {% if ai_enabled %}
+    <div id="aiStep" class="ai-step" style="display:none;">
+      <h3>{{ t.ai_step_title }}</h3>
+      <p>{{ t.ai_step_subtitle }}</p>
+
+      <div class="ai-upload-area" id="aiUploadArea">
+        <i class="mdi mdi-camera"></i>
+        <span>{{ t.ai_upload_btn }}</span>
+        <input type="file" accept="image/*" capture="environment" onchange="handleAiImage(this.files[0])">
+      </div>
+
+      <div class="ai-preview-wrap" id="aiPreviewWrap" style="display:none;">
+        <img id="aiPreviewImg" src="" alt="">
+      </div>
+
+      <div class="ai-loading" id="aiLoading" style="display:none;">
+        <div class="ai-spinner"></div>
+        <span>{{ t.ai_analyzing }}</span>
+      </div>
+
+      <div id="aiError" style="display:none;">
+        <div class="ai-error-msg">{{ t.ai_error }}</div>
+        <div class="ai-btn-row">
+          <button type="button" class="ai-btn" onclick="aiRetry()">{{ t.ai_retry }}</button>
+          <button type="button" class="ai-btn" onclick="aiChangePhoto()">{{ t.ai_change_photo }}</button>
+          <button type="button" class="ai-btn primary" onclick="skipToManual()">{{ t.ai_skip }}</button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Vivino Panel (shown after clicking Vivino option) -->
+    <div id="vivinoStep" class="vivino-panel" style="display:none;">
+      <h3><i class="mdi mdi-magnify"></i> {{ t.vivino_title }}</h3>
+      <p>{{ t.vivino_desc }}</p>
+      <input type="text" class="vivino-search-input" id="vivinoSearchInput"
+             placeholder="{{ t.vivino_placeholder }}" oninput="debouncedVivinoSearch()">
+      <div id="vivinoStatus" class="vivino-status" style="display:none;"></div>
+      <div id="vivinoResults" class="vivino-results"></div>
+    </div>
+
+    <form method="post" id="wineForm" enctype="multipart/form-data">
+      <input type="hidden" name="ai_image" id="aiImageField" value="">
+      <input type="hidden" name="vivino_id" id="wine_vivino_id" value="">
+      <input type="hidden" name="delete_image" id="deleteImageField" value="">
+      <input type="hidden" name="maturity_data" id="wine_maturity_data" value="">
+      <input type="hidden" name="taste_profile" id="wine_taste_profile" value="">
+      <input type="hidden" name="food_pairings" id="wine_food_pairings" value="">
+      <div class="modal-body" id="formStep">
+
+        <!-- Photo: shown inline on mobile, side panel on wide screens -->
+        <div class="form-photo-panel">
+          <label>{{ t.label_photo }}</label>
+          <div class="img-preview" id="winePreview">
+            <i class="mdi mdi-camera" style="font-size:2rem; opacity:.5"></i>
+            <input type="file" name="image" accept="image/*"
+                   onchange="previewImg(this,'winePreview')">
+            <div class="img-actions" id="imgActions" style="display:none">
+              <button type="button" class="img-action-btn" onclick="rotateWineImage()" title="Rotate"><i class="mdi mdi-rotate-right"></i></button>
+              <button type="button" class="img-action-btn danger" onclick="deleteWineImage()" title="Delete"><i class="mdi mdi-delete"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-fields-panel">
+        {% include '_wine_form_fields.html' %}
+
+        <div class="form-footer" id="formFooter">
+          <div class="reload-popover-wrap" id="reloadPopoverWrap" style="display:none">
+            <button type="button" class="btn-reload-trigger" id="reloadTriggerBtn" onclick="toggleReloadPopover()" title="{{ t.btn_reload }}">
+              <i class="mdi mdi-refresh"></i>
+            </button>
+            <div class="reload-popover" id="reloadPopover" style="display:none">
+              {% if ai_enabled %}
+              <button type="button" class="reload-popover-option" onclick="reloadViaAi(); closeReloadPopover();">
+                <i class="mdi mdi-robot"></i> {{ t.reload_ai_desc }}
+              </button>
+              {% endif %}
+              <button type="button" class="reload-popover-option" onclick="reloadViaVivino(); closeReloadPopover();">
+                <i class="mdi mdi-web"></i> {{ t.reload_vivino_desc }}
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" id="wineSubmitBtn">{{ t.btn_save }}</button>
+        </div>
+        </div><!-- /form-fields-panel -->
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="{{ ingress }}/static/wine-modal.js"></script>
+<script>
+// ── Wine Edit Modal JS ──────────────────────────────────────────────────────
+// These functions power the add/edit wine modal on all pages.
+
+var _editWineId = null;
+var AI_ENABLED = {{ 'true' if ai_enabled else 'false' }};
+var _aiLastFile = null;
+var _reloadMode = false;
+
+// Store original placeholders so we can hide them in edit mode
+var _placeholders = {};
+['wine_name','wine_year','wine_region','wine_grape','wine_purchased_at',
+ 'wine_price','wine_drink_from','wine_drink_until','wine_location','wine_notes'].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) _placeholders[id] = el.placeholder || '';
+});
+
+function openWineModal(id, wine) {
+  _reloadMode = false;
+  var isEdit = !!id;
+  var form = document.getElementById('wineForm');
+  var preview = document.getElementById('winePreview');
+
+  // Title & button text
+  document.getElementById('wineModalTitle').textContent = isEdit ? T.modal_edit_title : T.modal_add_title;
+  document.getElementById('wineSubmitBtn').textContent = isEdit ? T.btn_save_changes : T.btn_save;
+
+  // Form action
+  form.action = isEdit ? INGRESS + '/edit/' + id : INGRESS + '/add';
+
+  // Reset file input & hidden fields
+  var fileInput = preview.querySelector('input[type=file]');
+  if (fileInput) fileInput.value = '';
+  document.getElementById('aiImageField').value = '';
+  document.getElementById('deleteImageField').value = '';
+  _editWineId = isEdit ? id : null;
+
+  // Fill fields (empty for add, data for edit)
+  var w = wine || {};
+  document.getElementById('wine_name').value = w.name || '';
+  document.getElementById('wine_year').value = w.year || '';
+  document.getElementById('wine_qty').value = w.quantity !== undefined ? w.quantity : 1;
+  document.getElementById('wine_type').value = w.type || '';
+  document.getElementById('wine_region').value = w.region || '';
+  document.getElementById('wine_notes').value = w.notes || '';
+  document.getElementById('wine_purchased_at').value = w.purchased_at || '';
+  document.getElementById('wine_price').value = w.price || '';
+  document.getElementById('wine_drink_from').value = w.drink_from || '';
+  document.getElementById('wine_drink_until').value = w.drink_until || '';
+  document.getElementById('wine_location').value = w.location || '';
+  document.getElementById('wine_grape').value = w.grape || '';
+  document.getElementById('wine_bottle_format').value = w.bottle_format || '0.75';
+  document.getElementById('wine_vivino_id').value = w.vivino_id || '';
+  document.getElementById('wine_maturity_data').value = w.maturity_data ? JSON.stringify(w.maturity_data) : '';
+  document.getElementById('wine_taste_profile').value = w.taste_profile ? JSON.stringify(w.taste_profile) : '';
+  document.getElementById('wine_food_pairings').value = w.food_pairings ? JSON.stringify(w.food_pairings) : '';
+
+  // Stars
+  for (var i = 1; i <= 5; i++) {
+    var el = document.getElementById('wine_star' + i);
+    if (el) el.checked = isEdit ? (w.rating == i) : false;
+  }
+
+  // Placeholders: show in add mode, hide in edit mode
+  Object.keys(_placeholders).forEach(function(pid) {
+    var el = document.getElementById(pid);
+    if (el) el.placeholder = isEdit ? '' : _placeholders[pid];
+  });
+
+  // Image preview
+  var imgActions = document.getElementById('imgActions');
+  var img = preview.querySelector('img');
+  if (isEdit && w.image) {
+    if (!img) { img = document.createElement('img'); preview.prepend(img); }
+    img.src = INGRESS + '/uploads/' + w.image;
+    preview.childNodes.forEach(function(n) { if (n.nodeType === 3) n.textContent = ''; });
+    var camIcon = preview.querySelector('.mdi-camera');
+    if (camIcon) camIcon.style.display = 'none';
+    if (imgActions) imgActions.style.display = '';
+  } else {
+    if (img) img.remove();
+    var hasIcon = preview.querySelector('.mdi-camera');
+    if (!hasIcon) {
+      var cam = document.createElement('i');
+      cam.className = 'mdi mdi-camera';
+      cam.style.cssText = 'font-size:2rem; opacity:.5';
+      preview.insertBefore(cam, preview.firstChild);
+    } else { hasIcon.style.display = ''; }
+    if (imgActions) imgActions.style.display = 'none';
+  }
+
+  // Show/hide reload button (only in edit mode)
+  var reloadWrap = document.getElementById('reloadPopoverWrap');
+  if (reloadWrap) reloadWrap.style.display = isEdit ? '' : 'none';
+  closeReloadPopover();
+
+  // Show/hide vivino ID button (only in edit mode)
+  var vivinoIdWrap = document.getElementById('vivinoIdWrap');
+  if (vivinoIdWrap) vivinoIdWrap.style.display = isEdit ? '' : 'none';
+  closeVivinoIdPopover();
+
+  // Source step: show source selection for add mode (not edit)
+  if (!isEdit) {
+    showSourceStep();
+  } else {
+    showFormStep();
+  }
+
+  openModal('wineModal');
+
+  // Snapshot form state for dirty-tracking (after a tick so DOM settles)
+  setTimeout(function() { wineFormSnapshot = getWineFormState(); }, 0);
+}
+
+// ── Source / AI / Vivino Step Functions ──────────────────────────────────────
+
+function showSourceStep() {
+  var sourceStep = document.getElementById('sourceStep');
+  var aiStep = document.getElementById('aiStep');
+  var vivinoStep = document.getElementById('vivinoStep');
+  var formStep = document.getElementById('formStep');
+  document.getElementById('wineModal').classList.remove('form-active');
+  if (sourceStep) {
+    sourceStep.style.display = '';
+    var h3 = sourceStep.querySelector('.source-step-header h3');
+    var p = sourceStep.querySelector('.source-step-header p');
+    if (h3) h3.textContent = T.source_step_title;
+    if (p) p.textContent = T.source_step_subtitle;
+    var opts = sourceStep.querySelectorAll('.source-option');
+    opts.forEach(function(opt) {
+      var desc = opt.querySelector('.source-desc');
+      var icon = opt.querySelector('.mdi');
+      if (icon && icon.classList.contains('mdi-camera') && desc) desc.textContent = T.source_ai_desc;
+      if (icon && icon.classList.contains('mdi-magnify') && desc) desc.textContent = T.vivino_desc;
+      if (icon && icon.classList.contains('mdi-pencil') && desc) desc.textContent = T.manual_desc;
+    });
+  }
+  if (aiStep) aiStep.style.display = 'none';
+  if (vivinoStep) vivinoStep.style.display = 'none';
+  if (formStep) formStep.style.display = 'none';
+  var submitBtn = document.getElementById('wineSubmitBtn');
+  if (submitBtn) submitBtn.style.display = 'none';
+}
+
+function onSourceAi() {
+  if (_reloadMode) { reloadViaAi(); } else { showAiPanel(); }
+}
+
+function onSourceVivino() {
+  if (_reloadMode) { reloadViaVivino(); } else { showVivinoPanel(); }
+}
+
+function showAiPanel() {
+  var sourceStep = document.getElementById('sourceStep');
+  var aiStep = document.getElementById('aiStep');
+  var vivinoStep = document.getElementById('vivinoStep');
+  var formStep = document.getElementById('formStep');
+  if (sourceStep) sourceStep.style.display = 'none';
+  if (vivinoStep) vivinoStep.style.display = 'none';
+  if (formStep) formStep.style.display = 'none';
+  if (aiStep) {
+    aiStep.style.display = '';
+    document.getElementById('aiUploadArea').style.display = '';
+    document.getElementById('aiPreviewWrap').style.display = 'none';
+    document.getElementById('aiLoading').style.display = 'none';
+    document.getElementById('aiError').style.display = 'none';
+    var aiFileInput = aiStep.querySelector('input[type=file]');
+    if (aiFileInput) aiFileInput.value = '';
+    _aiLastFile = null;
+  }
+  var submitBtn = document.getElementById('wineSubmitBtn');
+  if (submitBtn) submitBtn.style.display = 'none';
+}
+
+function showVivinoPanel() {
+  var sourceStep = document.getElementById('sourceStep');
+  var aiStep = document.getElementById('aiStep');
+  var vivinoStep = document.getElementById('vivinoStep');
+  var formStep = document.getElementById('formStep');
+  if (sourceStep) sourceStep.style.display = 'none';
+  if (aiStep) aiStep.style.display = 'none';
+  if (formStep) formStep.style.display = 'none';
+  if (vivinoStep) {
+    vivinoStep.style.display = '';
+    var input = document.getElementById('vivinoSearchInput');
+    if (input) { input.value = ''; input.focus(); }
+    var results = document.getElementById('vivinoResults');
+    if (results) results.innerHTML = '';
+    var status = document.getElementById('vivinoStatus');
+    if (status) { status.style.display = 'none'; status.textContent = ''; status.className = 'vivino-status'; }
+  }
+  var submitBtn = document.getElementById('wineSubmitBtn');
+  if (submitBtn) submitBtn.style.display = 'none';
+}
+
+function showFormStep() {
+  var sourceStep = document.getElementById('sourceStep');
+  var aiStep = document.getElementById('aiStep');
+  var vivinoStep = document.getElementById('vivinoStep');
+  var formStep = document.getElementById('formStep');
+  document.getElementById('wineModal').classList.add('form-active');
+  if (sourceStep) sourceStep.style.display = 'none';
+  if (aiStep) aiStep.style.display = 'none';
+  if (vivinoStep) vivinoStep.style.display = 'none';
+  if (formStep) formStep.style.display = '';
+  var submitBtn = document.getElementById('wineSubmitBtn');
+  if (submitBtn) submitBtn.style.display = '';
+}
+
+function skipToManual() {
+  if (!_reloadMode) document.getElementById('wine_vivino_id').value = '';
+  showFormStep();
+}
+
+// ── Vivino Search Functions ─────────────────────────────────────────────────
+
+var _vivinoTimer = null;
+var _vivinoAbort = null;
+var _vivinoResults = [];
+
+function debouncedVivinoSearch() {
+  if (_vivinoTimer) clearTimeout(_vivinoTimer);
+  var q = (document.getElementById('vivinoSearchInput').value || '').trim();
+  if (q.length < 2) {
+    document.getElementById('vivinoResults').innerHTML = '';
+    var status = document.getElementById('vivinoStatus');
+    if (status) { status.style.display = 'none'; status.className = 'vivino-status'; }
+    return;
+  }
+  _vivinoTimer = setTimeout(function() { vivinoSearch(q); }, 400);
+}
+
+function vivinoSearch(query) {
+  if (_vivinoAbort) _vivinoAbort.abort();
+  _vivinoAbort = new AbortController();
+
+  var status = document.getElementById('vivinoStatus');
+  var results = document.getElementById('vivinoResults');
+  status.textContent = T.vivino_searching || 'Searching\u2026';
+  status.className = 'vivino-status';
+  status.style.display = '';
+  results.innerHTML = '';
+
+  fetch(INGRESS + '/api/vivino-search?q=' + encodeURIComponent(query), {
+    signal: _vivinoAbort.signal,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    status.style.display = 'none';
+    if (data.ok && data.results && data.results.length > 0) {
+      _vivinoResults = data.results;
+      renderVivinoResults(data.results);
+    } else if (data.ok) {
+      _vivinoResults = [];
+      status.textContent = T.vivino_no_results || 'No results found';
+      status.className = 'vivino-status';
+      status.style.display = '';
+    } else {
+      _vivinoResults = [];
+      status.textContent = T.vivino_error || 'Search failed';
+      status.className = 'vivino-status error';
+      status.style.display = '';
+    }
+  })
+  .catch(function(err) {
+    if (err.name === 'AbortError') return;
+    _vivinoResults = [];
+    status.textContent = T.vivino_error || 'Search failed';
+    status.className = 'vivino-status error';
+    status.style.display = '';
+    results.innerHTML = '';
+  });
+}
+
+function renderVivinoResults(items) {
+  var container = document.getElementById('vivinoResults');
+  container.innerHTML = items.map(function(item, idx) {
+    var meta = [];
+    if (item.year) meta.push(item.year);
+    if (item.wine_type) meta.push(T['wine_type_' + item.wine_type] || item.wine_type);
+    if (item.region) meta.push(item.region);
+
+    var ratingHtml = '';
+    if (item.rating) {
+      ratingHtml = '<span class="vivino-result-rating"><i class="mdi mdi-star"></i> ' +
+        Number(item.rating).toFixed(1) + '</span>';
+    }
+
+    var imgHtml = item.image_url
+      ? '<img class="vivino-result-img" src="' + item.image_url + '" alt="" loading="lazy">'
+      : '<div class="vivino-result-img" style="display:flex;align-items:center;justify-content:center;background:var(--surface);"><i class="mdi mdi-glass-wine" style="font-size:1.5rem;opacity:.4"></i></div>';
+
+    return '<div class="vivino-result-item" onclick="selectVivinoResult(' + idx + ')">' +
+      imgHtml +
+      '<div class="vivino-result-info">' +
+        '<div class="vivino-result-name">' + (item.name || '').replace(/</g, '&lt;') + '</div>' +
+        '<div class="vivino-result-meta">' + meta.join(' \u00b7 ') + '</div>' +
+        ratingHtml +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function selectVivinoResult(index) {
+  var item = _vivinoResults[index];
+  if (!item) return;
+
+  var fields = {};
+  if (item.name) fields.name = item.name;
+  if (item.year) fields.vintage = item.year;
+  if (item.wine_type) fields.wine_type = item.wine_type;
+  if (item.region) fields.region = item.region;
+  if (item.grape) fields.grape = item.grape;
+  if (item.price) fields.price = item.price;
+  if (item.rating) fields.rating = item.rating;
+
+  document.getElementById('wine_vivino_id').value = item.vivino_id || '';
+
+  populateFormFromAi(fields, null);
+
+  if (item.rating) {
+    var starVal = Math.round(item.rating);
+    if (starVal >= 1 && starVal <= 5) {
+      var starEl = document.getElementById('wine_star' + starVal);
+      if (starEl) starEl.checked = true;
+    }
+  }
+
+  if (item.image_url) {
+    downloadVivinoImage(item.image_url);
+  }
+}
+
+function downloadVivinoImage(url) {
+  fetch(INGRESS + '/api/vivino-image', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({ url: url })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok && data.filename) {
+      document.getElementById('aiImageField').value = data.filename;
+      var preview = document.getElementById('winePreview');
+      var img = preview.querySelector('img');
+      if (!img) { img = document.createElement('img'); preview.prepend(img); }
+      img.src = INGRESS + '/uploads/' + data.filename;
+      var cam = preview.querySelector('.mdi-camera');
+      if (cam) cam.style.display = 'none';
+    }
+  })
+  .catch(function() { /* image download is best-effort */ });
+}
+
+// ── AI Functions ────────────────────────────────────────────────────────────
+
+function handleAiImage(file) {
+  if (!file) return;
+  _aiLastFile = file;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('aiPreviewImg').src = e.target.result;
+    document.getElementById('aiPreviewWrap').style.display = '';
+    document.getElementById('aiUploadArea').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+
+  startAiAnalysis(file);
+}
+
+function startAiAnalysis(file) {
+  document.getElementById('aiLoading').style.display = '';
+  document.getElementById('aiError').style.display = 'none';
+
+  var fd = new FormData();
+  fd.append('image', file);
+
+  fetch(INGRESS + '/api/analyze-wine', {
+    method: 'POST',
+    body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    document.getElementById('aiLoading').style.display = 'none';
+
+    if (data.ok) {
+      populateFormFromAi(data.fields, data.image_filename);
+    } else {
+      if (data.image_filename) {
+        document.getElementById('aiImageField').value = data.image_filename;
+      }
+      document.getElementById('aiError').style.display = '';
+    }
+  })
+  .catch(function() {
+    document.getElementById('aiLoading').style.display = 'none';
+    document.getElementById('aiError').style.display = '';
+  });
+}
+
+function populateFormFromAi(fields, imageFilename) {
+  if (_reloadMode) { populateFormMerge(fields, imageFilename); return; }
+  if (fields.name) document.getElementById('wine_name').value = fields.name;
+  if (fields.vintage) document.getElementById('wine_year').value = fields.vintage;
+  if (fields.wine_type) document.getElementById('wine_type').value = fields.wine_type;
+  if (fields.region) document.getElementById('wine_region').value = fields.region;
+  if (fields.grape) document.getElementById('wine_grape').value = fields.grape;
+  if (fields.price) document.getElementById('wine_price').value = fields.price;
+  if (fields.drink_from) document.getElementById('wine_drink_from').value = fields.drink_from;
+  if (fields.drink_until) document.getElementById('wine_drink_until').value = fields.drink_until;
+  if (fields.notes) document.getElementById('wine_notes').value = fields.notes;
+  if (fields.bottle_format) document.getElementById('wine_bottle_format').value = fields.bottle_format;
+
+  if (imageFilename) {
+    document.getElementById('aiImageField').value = imageFilename;
+    var preview = document.getElementById('winePreview');
+    var img = preview.querySelector('img');
+    if (!img) { img = document.createElement('img'); preview.prepend(img); }
+    img.src = INGRESS + '/uploads/' + imageFilename;
+    var cam = preview.querySelector('.mdi-camera');
+    if (cam) cam.style.display = 'none';
+  }
+
+  showFormStep();
+}
+
+function aiRetry() {
+  if (_aiLastFile) {
+    startAiAnalysis(_aiLastFile);
+  }
+}
+
+function aiChangePhoto() {
+  document.getElementById('aiUploadArea').style.display = '';
+  document.getElementById('aiPreviewWrap').style.display = 'none';
+  document.getElementById('aiLoading').style.display = 'none';
+  document.getElementById('aiError').style.display = 'none';
+  var aiFileInput = document.querySelector('#aiStep input[type=file]');
+  if (aiFileInput) aiFileInput.value = '';
+  _aiLastFile = null;
+}
+
+// ── Form Merge (reload mode) ────────────────────────────────────────────────
+
+function populateFormMerge(fields, imageFilename) {
+  var filled = 0;
+  function setIfEmpty(elId, val) {
+    if (!val) return;
+    var el = document.getElementById(elId);
+    if (el && !el.value.trim()) { el.value = val; filled++; }
+  }
+  setIfEmpty('wine_name', fields.name);
+  setIfEmpty('wine_year', fields.vintage);
+  setIfEmpty('wine_type', fields.wine_type);
+  setIfEmpty('wine_region', fields.region);
+  setIfEmpty('wine_grape', fields.grape);
+  setIfEmpty('wine_price', fields.price);
+  setIfEmpty('wine_drink_from', fields.drink_from);
+  setIfEmpty('wine_drink_until', fields.drink_until);
+  setIfEmpty('wine_notes', fields.notes);
+  if (fields.bottle_format && fields.bottle_format != 0.75) {
+    document.getElementById('wine_bottle_format').value = fields.bottle_format;
+    filled++;
+  }
+
+  if (fields.maturity_data) {
+    document.getElementById('wine_maturity_data').value = JSON.stringify(fields.maturity_data);
+    filled++;
+  }
+  if (fields.taste_profile) {
+    document.getElementById('wine_taste_profile').value = JSON.stringify(fields.taste_profile);
+    filled++;
+  }
+  if (fields.food_pairings) {
+    document.getElementById('wine_food_pairings').value = JSON.stringify(fields.food_pairings);
+    filled++;
+  }
+
+  if (fields.rating) {
+    var anyChecked = false;
+    for (var i = 1; i <= 5; i++) {
+      if (document.getElementById('wine_star' + i) && document.getElementById('wine_star' + i).checked) anyChecked = true;
+    }
+    if (!anyChecked) {
+      var starVal = Math.round(Number(fields.rating));
+      if (starVal >= 1 && starVal <= 5) {
+        var starEl = document.getElementById('wine_star' + starVal);
+        if (starEl) { starEl.checked = true; filled++; }
+      }
+    }
+  }
+
+  if (imageFilename) {
+    var existingImg = document.getElementById('aiImageField').value;
+    var preview = document.getElementById('winePreview');
+    var previewImg = preview ? preview.querySelector('img') : null;
+    if (!existingImg && !previewImg) {
+      document.getElementById('aiImageField').value = imageFilename;
+      if (preview) {
+        var img = document.createElement('img');
+        img.src = INGRESS + '/uploads/' + imageFilename;
+        preview.prepend(img);
+        var cam = preview.querySelector('.mdi-camera');
+        if (cam) cam.style.display = 'none';
+      }
+      filled++;
+    }
+  }
+
+  showFormStep();
+
+  var msg = filled > 0 ? T.reload_filled : T.reload_nothing;
+  showReloadToast(msg, filled > 0);
+}
+
+function showReloadToast(msg, success) {
+  var toast = document.getElementById('reloadToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'reloadToast';
+    toast.className = 'reload-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.className = 'reload-toast ' + (success ? 'success' : 'neutral');
+  toast.style.display = 'block';
+  toast.style.opacity = '1';
+  setTimeout(function() {
+    toast.style.opacity = '0';
+    setTimeout(function() { toast.style.display = 'none'; }, 400);
+  }, 2500);
+}
+
+// ── Reload Popover ────────────────────────────────────────────────────────────
+
+function toggleReloadPopover() {
+  var pop = document.getElementById('reloadPopover');
+  if (pop) pop.style.display = pop.style.display === 'none' ? '' : 'none';
+}
+function closeReloadPopover() {
+  var pop = document.getElementById('reloadPopover');
+  if (pop) pop.style.display = 'none';
+}
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('reloadPopoverWrap');
+  if (wrap && !wrap.contains(e.target)) closeReloadPopover();
+});
+
+function setReloadLoading(on) {
+  var btn = document.getElementById('reloadTriggerBtn');
+  if (!btn) return;
+  var icon = btn.querySelector('.mdi');
+  if (on) {
+    btn.disabled = true;
+    btn.classList.add('loading');
+    if (icon) { icon.className = 'mdi mdi-loading mdi-spin'; }
+  } else {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    if (icon) { icon.className = 'mdi mdi-refresh'; }
+  }
+}
+
+function reloadViaAi() {
+  var imageFilename = document.getElementById('aiImageField').value;
+  if (!imageFilename) {
+    var preview = document.getElementById('winePreview');
+    var img = preview ? preview.querySelector('img') : null;
+    if (img && img.src) {
+      var parts = img.src.split('/uploads/');
+      if (parts.length > 1) imageFilename = parts[1];
+    }
+  }
+
+  var context = {};
+  var v;
+  v = document.getElementById('wine_name').value.trim();    if (v) context.name = v;
+  v = document.getElementById('wine_year').value.trim();    if (v) context.year = v;
+  v = document.getElementById('wine_type').value;           if (v) context.type = v;
+  v = document.getElementById('wine_region').value.trim();  if (v) context.region = v;
+  v = document.getElementById('wine_grape').value.trim();   if (v) context.grape = v;
+
+  if (!imageFilename && Object.keys(context).length === 0) {
+    showReloadToast(T.ai_no_data || 'Kein Bild und kein Weinname vorhanden', false);
+    return;
+  }
+
+  setReloadLoading(true);
+
+  fetch(INGRESS + '/api/reanalyze-wine', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      image_filename: imageFilename || null,
+      wine_context: context
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    setReloadLoading(false);
+    if (data.ok && data.fields) {
+      populateFormMerge(data.fields, null);
+    } else {
+      showReloadToast(T.ai_error, false);
+    }
+  })
+  .catch(function() {
+    setReloadLoading(false);
+    showReloadToast(T.ai_error, false);
+  });
+}
+
+function reloadViaVivino() {
+  var wineName = document.getElementById('wine_name').value.trim();
+  var wineYear = document.getElementById('wine_year').value.trim();
+  var query = wineName + (wineYear ? ' ' + wineYear : '');
+  if (!query) {
+    _reloadMode = true;
+    showVivinoPanel();
+    return;
+  }
+
+  setReloadLoading(true);
+
+  fetch(INGRESS + '/api/vivino-search?q=' + encodeURIComponent(query))
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    setReloadLoading(false);
+    if (data.ok && data.results && data.results.length > 0) {
+      var item = data.results[0];
+      var fields = {};
+      if (item.name) fields.name = item.name;
+      if (item.year) fields.vintage = item.year;
+      if (item.wine_type) fields.wine_type = item.wine_type;
+      if (item.region) fields.region = item.region;
+      if (item.grape) fields.grape = item.grape;
+      if (item.price) fields.price = item.price;
+      if (item.rating) fields.rating = item.rating;
+
+      var vivinoField = document.getElementById('wine_vivino_id');
+      if (vivinoField && item.vivino_id) {
+        vivinoField.value = item.vivino_id;
+      }
+
+      var hasImage = document.getElementById('aiImageField').value
+        || document.querySelector('#winePreview img');
+      if (!hasImage && item.image_url) {
+        downloadVivinoImage(item.image_url);
+      }
+
+      populateFormMerge(fields, null);
+    } else {
+      showReloadToast(T.vivino_no_results, false);
+    }
+  })
+  .catch(function() {
+    setReloadLoading(false);
+    showReloadToast(T.vivino_error, false);
+  });
+}
+
+// ── AJAX form submit (wineModal) ──────────────────────────────────────────────
+// Uses a callback pattern: if window._onWineSaved is defined, call it;
+// otherwise reload the page.
+
+document.getElementById('wineForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var form = this;
+  var fd = new FormData(form);
+  fetch(form.action, {
+    method: 'POST', body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.ok) return;
+    closeModal('wineModal');
+    if (typeof window._onWineSaved === 'function') {
+      window._onWineSaved(data);
+    } else {
+      window.location.reload();
+    }
+  });
+});
+
+// ── Modal overlay / ESC handling for wineModal ──────────────────────────────
+// Other pages set up generic overlay click handlers; we need the wineModal-specific
+// dirty-guard behavior. We attach it once here on the wineModal overlay.
+(function() {
+  var wm = document.getElementById('wineModal');
+  if (!wm) return;
+  wm.addEventListener('click', function(e) {
+    if (e.target !== wm) return;
+    if (isWineFormDirty()) return;
+    closeModal('wineModal');
+  });
+})();
+</script>

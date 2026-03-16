@@ -281,7 +281,7 @@ def format_date_filter(value):
 @app.context_processor
 def inject_globals():
     ai_enabled = _is_ai_configured(load_options())
-    return {
+    ctx = {
         "ingress": g.get("ingress", ""),
         "currency": HA_OPTIONS.get("currency", "CHF"),
         "t": T,
@@ -290,7 +290,37 @@ def inject_globals():
         "auth_user": session.get("user") if AUTH_ENABLED else None,
         "auth_readonly": session.get("role") == "readonly" if AUTH_ENABLED else False,
         "app_version": APP_VERSION,
+        "wine_types": WINE_TYPES,
     }
+    # Provide form datalist values for the shared edit modal on every page
+    try:
+        db = get_db()
+        ctx["used_regions_list"] = [
+            row[0] for row in db.execute(
+                "SELECT DISTINCT region FROM wines WHERE region IS NOT NULL AND region != '' ORDER BY region"
+            ).fetchall()
+        ]
+        ctx["used_grapes"] = [
+            row[0] for row in db.execute(
+                "SELECT DISTINCT grape FROM wines WHERE grape IS NOT NULL AND grape != '' ORDER BY grape"
+            ).fetchall()
+        ]
+        ctx["used_purchased_at"] = [
+            row[0] for row in db.execute(
+                "SELECT DISTINCT purchased_at FROM wines WHERE purchased_at IS NOT NULL AND purchased_at != '' ORDER BY purchased_at"
+            ).fetchall()
+        ]
+        ctx["used_locations"] = [
+            row[0] for row in db.execute(
+                "SELECT DISTINCT location FROM wines WHERE location IS NOT NULL AND location != '' ORDER BY location"
+            ).fetchall()
+        ]
+    except Exception:
+        ctx.setdefault("used_regions_list", [])
+        ctx.setdefault("used_grapes", [])
+        ctx.setdefault("used_purchased_at", [])
+        ctx.setdefault("used_locations", [])
+    return ctx
 
 
 def ingress_redirect(endpoint, **kwargs):
@@ -545,43 +575,10 @@ def index():
         ).fetchall()
     ]
 
-    # Distinct locations for datalist autocomplete
-    used_locations = [
-        row[0] for row in db.execute(
-            "SELECT DISTINCT location FROM wines WHERE location IS NOT NULL AND location != '' ORDER BY location"
-        ).fetchall()
-    ]
-
-    # Distinct grape varieties for datalist autocomplete
-    used_grapes = [
-        row[0] for row in db.execute(
-            "SELECT DISTINCT grape FROM wines WHERE grape IS NOT NULL AND grape != '' ORDER BY grape"
-        ).fetchall()
-    ]
-
-    # Distinct purchased_at values for datalist autocomplete
-    used_purchased_at = [
-        row[0] for row in db.execute(
-            "SELECT DISTINCT purchased_at FROM wines WHERE purchased_at IS NOT NULL AND purchased_at != '' ORDER BY purchased_at"
-        ).fetchall()
-    ]
-
-    # Distinct regions for datalist autocomplete
-    used_regions = [
-        row[0] for row in db.execute(
-            "SELECT DISTINCT region FROM wines WHERE region IS NOT NULL AND region != '' ORDER BY region"
-        ).fetchall()
-    ]
-
     return render_template(
         "index.html",
         wines=wines,
-        wine_types=WINE_TYPES,
         used_types=used_types,
-        used_locations=used_locations,
-        used_grapes=used_grapes,
-        used_purchased_at=used_purchased_at,
-        used_regions_list=used_regions,
         query=q,
         active_type=t,
         show_empty=show_empty,
@@ -1040,28 +1037,6 @@ def stats_page():
 
     type_translations = {t: T.get(f"wine_type_{t}", t) for t in WINE_TYPES}
 
-    # Datalist values for edit modal
-    used_locations = [
-        row[0] for row in db.execute(
-            "SELECT DISTINCT location FROM wines WHERE location IS NOT NULL AND location != '' ORDER BY location"
-        ).fetchall()
-    ]
-    used_grapes = [
-        row[0] for row in db.execute(
-            "SELECT DISTINCT grape FROM wines WHERE grape IS NOT NULL AND grape != '' ORDER BY grape"
-        ).fetchall()
-    ]
-    used_purchased_at = [
-        row[0] for row in db.execute(
-            "SELECT DISTINCT purchased_at FROM wines WHERE purchased_at IS NOT NULL AND purchased_at != '' ORDER BY purchased_at"
-        ).fetchall()
-    ]
-    used_regions_list = [
-        row[0] for row in db.execute(
-            "SELECT DISTINCT region FROM wines WHERE region IS NOT NULL AND region != '' ORDER BY region"
-        ).fetchall()
-    ]
-
     return render_template(
         "stats.html",
         totals=totals,
@@ -1086,11 +1061,6 @@ def stats_page():
         wines_by_region=wines_by_region,
         type_translations=type_translations,
         current_year=current_year,
-        wine_types=WINE_TYPES,
-        used_regions_list=used_regions_list,
-        used_locations=used_locations,
-        used_grapes=used_grapes,
-        used_purchased_at=used_purchased_at,
     )
 
 

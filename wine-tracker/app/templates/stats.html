@@ -341,59 +341,6 @@
   <div class="chart-tooltip-list"></div>
 </div>
 
-<!-- ═══════════════ WINE EDIT MODAL ═══════════════ -->
-<div class="modal-overlay" id="wineModal">
-  <div class="modal">
-    <div class="modal-header">
-      <span id="wineModalTitle">{{ t.modal_edit_title }}</span>
-      <div class="modal-header-actions">
-        <div class="vivino-id-popover-wrap" id="vivinoIdWrap" style="display:none">
-          <button type="button" class="btn-header-icon" id="vivinoIdTriggerBtn" onclick="toggleVivinoIdPopover()" title="{{ t.vivino_id_title }}">
-            <i class="mdi mdi-code-tags"></i>
-          </button>
-          <div class="vivino-id-popover" id="vivinoIdPopover" style="display:none">
-            <label class="vivino-id-label">{{ t.vivino_id_title }}</label>
-            <div class="vivino-id-row">
-              <input type="text" id="vivinoIdInput" class="vivino-id-input" placeholder="{{ t.vivino_id_placeholder }}" oninput="updateVivinoIdFromPopover()">
-              <a id="vivinoIdTestLink" class="vivino-id-test-link" href="#" target="_blank" rel="noopener" style="display:none" title="{{ t.vivino_id_test }}"><i class="mdi mdi-open-in-new"></i></a>
-            </div>
-          </div>
-        </div>
-        <button class="modal-close" onclick="tryCloseWineModal()">×</button>
-      </div>
-    </div>
-
-    <form method="post" id="wineForm" enctype="multipart/form-data">
-      <input type="hidden" name="ai_image" id="aiImageField" value="">
-      <input type="hidden" name="vivino_id" id="wine_vivino_id" value="">
-      <input type="hidden" name="delete_image" id="deleteImageField" value="">
-      <div class="modal-body" id="formStep">
-
-        <div class="form-photo-panel">
-          <label>{{ t.label_photo }}</label>
-          <div class="img-preview" id="winePreview">
-            <i class="mdi mdi-camera" style="font-size:2rem; opacity:.5"></i>
-            <input type="file" name="image" accept="image/*"
-                   onchange="previewImg(this,'winePreview')">
-            <div class="img-actions" id="imgActions" style="display:none">
-              <button type="button" class="img-action-btn" onclick="rotateWineImage()" title="Rotate"><i class="mdi mdi-rotate-right"></i></button>
-              <button type="button" class="img-action-btn danger" onclick="deleteWineImage()" title="Delete"><i class="mdi mdi-delete"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-fields-panel">
-        {% include '_wine_form_fields.html' %}
-
-        <div class="form-footer" id="formFooter">
-          <button type="submit" class="btn-submit" id="wineSubmitBtn">{{ t.btn_save_changes }}</button>
-        </div>
-        </div><!-- /form-fields-panel -->
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- ═══════════════ WINE VIEW MODAL ═══════════════ -->
 {% include '_wine_view_modal.html' %}
 {% include '_wine_view_extras.html' %}
@@ -420,26 +367,21 @@ var T = {{ t | tojson }};
 var CURRENCY = '{{ currency }}';
 var AUTH_READONLY = {{ auth_readonly | tojson }};
 </script>
-<script src="{{ ingress }}/static/wine-modal.js"></script>
+{% include '_wine_edit_modal.html' %}
 <script>
 function openModal(id) {
   document.getElementById(id).classList.add('open');
   if (id === 'settingsModal') { updateThemeSegmented(); updateThemeDropdown(); initChatRecordingToggle(); }
-  if (id === 'wineModal') { document.getElementById(id).classList.add('form-active'); }
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-// Close modal on overlay click (wineModal: block if dirty)
+// Close modal on overlay click (skip wineModal — handled by _wine_edit_modal.html)
 document.querySelectorAll('.modal-overlay').forEach(function(el) {
   el.addEventListener('click', function(e) {
     if (e.target !== el) return;
-    if (el.id === 'wineModal') {
-      if (isWineFormDirty()) return;
-      closeModal('wineModal');
-      return;
-    }
+    if (el.id === 'wineModal') return;
     closeModal(el.id);
   });
 });
@@ -570,11 +512,8 @@ function openViewModal(id, wine) {
 
 function editFromView() {
   closeModal('viewModal');
-  window.open(INGRESS + '/?edit=' + window._viewWineId, '_blank');
+  openWineModal(window._viewWineId, window._viewWineData);
 }
-
-var _editWineId = null;
-var wineFormSnapshot = '';
 
 function editWine(id) {
   fetch(INGRESS + '/api/wine/' + id)
@@ -583,23 +522,6 @@ function editWine(id) {
       if (data.ok) openViewModal(data.wine.id, data.wine);
     });
 }
-
-// AJAX form submit
-document.getElementById('wineForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  var form = this;
-  var fd = new FormData(form);
-  fetch(form.action, {
-    method: 'POST', body: fd,
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (!data.ok) return;
-    closeModal('wineModal');
-    window.location.reload();
-  });
-});
 
 (function() {
   var tip = document.getElementById('chartTooltip');

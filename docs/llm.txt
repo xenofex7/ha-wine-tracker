@@ -1,0 +1,295 @@
+# Wine Tracker
+
+> Wine Tracker is a modern, privacy-focused wine cellar management application for Home Assistant and Docker.
+
+## Project Overview
+
+Wine Tracker helps wine enthusiasts manage their personal wine collection with AI-powered label recognition, Vivino integration, and beautiful visualizations. It runs locally on your server — no cloud, no subscription, no data sharing.
+
+**Tech Stack:**
+- Backend: Python 3 + Flask
+- Database: SQLite
+- Frontend: Vanilla HTML/CSS/JavaScript (no build tools)
+- AI: Anthropic Claude, OpenAI GPT, OpenRouter, Ollama
+- Visualization: COBE (WebGL 3D globe), Chart.js
+
+**Deployment:**
+- Home Assistant Add-on (recommended)
+- Standalone Docker container
+
+## Core Features
+
+### Wine Management
+- Track wine cards with photo, vintage, type, region, grape variety, rating & notes
+- Photo upload from phone (label photos)
+- Quantity tracking with quick +/− buttons
+- Bottle format support (0.1875l Piccolo → 15l Nebuchadnezzar)
+- Empty bottle placeholders
+- Storage location with autocomplete
+- Drink window (from/until year)
+- Purchase price & source tracking
+- 1-5 star ratings
+
+### AI-Powered Recognition
+- Snap a label photo → AI fills in all fields automatically
+- Supports 4 AI providers: Anthropic Claude, OpenAI GPT, OpenRouter, Ollama (local, free)
+- Reload missing data feature for incomplete wines
+- Cost: ~$0.001/wine with GPT-4o-mini, free with Ollama
+
+### Vivino Integration
+- Search wines by name
+- View community ratings, region, price
+- Import wine data directly
+- Vivino ID management in edit modal
+- Test Vivino links directly
+
+### Visualization
+- **Interactive 3D Globe**: See your wine regions on a WebGL globe (powered by COBE)
+- **Statistics**: Donut charts by type, total bottles, total liters, collection value, average age
+- **Responsive UI**: Works seamlessly on desktop & mobile
+- **7 Languages**: German, English, French, Italian, Spanish, Portuguese, Dutch
+
+### Home Assistant Integration
+- HA Ingress support (embedded in sidebar)
+- REST API at `/api/summary` for HA sensors
+- Local-first architecture
+- Data stored in `/share/wine-tracker/`
+
+## Project Structure
+
+```
+ha-wine-tracker/
+├── wine-tracker/          # Main application
+│   ├── app.py            # Flask app entry point
+│   ├── templates/        # HTML templates
+│   ├── static/           # CSS, JS, images
+│   └── tests/            # pytest test suite
+├── docs/                 # Landing page (GitHub Pages)
+│   ├── index.html        # Main landing page
+│   └── llm.txt           # This file
+├── docker/               # Docker standalone setup
+│   └── docker-compose.yml
+├── CHANGELOG.md          # Version history
+├── CLAUDE.md             # Project guidelines (German)
+└── STYLE_GUIDE.md        # UI design system
+
+```
+
+## Key URLs
+
+- **Homepage**: https://xenofex7.github.io/ha-wine-tracker/
+- **GitHub**: https://github.com/xenofex7/ha-wine-tracker
+- **Home Assistant Community**: https://community.home-assistant.io/t/wine-tracker-home-assistant-app-add-on/989021
+- **Docker Image**: ghcr.io/xenofex7/wine-tracker:latest
+
+## Quick Start
+
+### Home Assistant Add-on
+1. Add repository: `https://github.com/xenofex7/ha-wine-tracker`
+2. Install "Wine Tracker" from add-on store
+3. Configure currency, language, AI provider (optional)
+4. Start → Access from HA sidebar
+
+### Docker Standalone
+```yaml
+services:
+  wine-tracker:
+    image: ghcr.io/xenofex7/wine-tracker:latest
+    ports:
+      - "5050:5050"
+    volumes:
+      - wine-data:/data
+    environment:
+      - AUTH_ENABLED=true
+      - USERS=admin:changeme
+      - SECRET_KEY=your-random-secret
+      - CURRENCY=CHF
+      - LANGUAGE=de
+    restart: unless-stopped
+
+volumes:
+  wine-data:
+```
+
+Access at `http://localhost:5050`
+
+## Configuration Options
+
+### General
+- `currency`: CHF, EUR, USD, GBP, CAD, AUD
+- `language`: de, en, fr, it, es, pt, nl
+
+### Authentication (Docker only)
+- `AUTH_ENABLED`: true/false
+- `USERS`: user1:password1,user2:password2,guest:pass:readonly
+- `SECRET_KEY`: Session encryption key
+
+### AI Providers (Optional)
+- `ai_provider`: none, anthropic, openai, openrouter, ollama
+- Provider-specific API keys and model names
+- Ollama runs locally without API key
+
+## Database Schema
+
+SQLite database with single `wines` table:
+
+**Core Fields:**
+- name, year, type, region, grape, quantity, rating, notes
+- image (label photo filename)
+- added (date)
+
+**Additional:**
+- purchased_at, price, location
+- drink_from, drink_until (drinking window)
+- vivino_id (link to Vivino data)
+- bottle_format (size in liters, default 0.75)
+
+## Development Guidelines
+
+See `CLAUDE.md` for full project guidelines (in German):
+
+### Testing
+- **Every feature and bugfix must include tests**
+- Routes: `tests/test_routes.py`, `tests/test_api.py`
+- Helpers: `tests/test_helpers.py`
+- Database: `tests/test_database.py`
+- Mock external APIs — no real HTTP calls in tests
+- Run: `pytest tests/ -v`
+
+### Style Guide
+- All UI decisions in `STYLE_GUIDE.md`
+- Interactive hover: `var(--accent2)` or `color-mix()`
+- Danger/error: hardcoded `#e74c3c` / `#c0392b`
+- Border-radius: Container 12px, Popover 10px, Button 8px, Tag 4px
+- Test in all 6 themes × Dark + Light
+
+### Language
+- Code & commits: English
+- Changelogs: English
+- User communication: German
+
+## API Endpoints
+
+- `/` - Main app (wine cards)
+- `/add` - Add wine form
+- `/edit/<id>` - Edit wine modal
+- `/stats` - Statistics page with globe & charts
+- `/api/summary` - JSON stats for HA sensors
+- `/api/vivino/search` - Vivino search endpoint
+- `/api/analyze` - AI label recognition
+
+## Supported Languages
+
+| Language | Code | Flag |
+|----------|------|------|
+| German | de | 🇩🇪 |
+| English | en | 🇬🇧 |
+| French | fr | 🇫🇷 |
+| Italian | it | 🇮🇹 |
+| Spanish | es | 🇪🇸 |
+| Portuguese | pt | 🇵🇹 |
+| Dutch | nl | 🇳🇱 |
+
+## Wine Types
+
+- Rotwein / Red Wine
+- Weisswein / White Wine
+- Rosé
+- Schaumwein / Sparkling Wine
+- Dessertwein / Dessert Wine
+- Likörwein / Fortified Wine
+- Anderes / Other
+
+## Bottle Formats
+
+| Name | Size |
+|------|------|
+| Piccolo | 0.1875l |
+| Demi | 0.375l |
+| Standard | 0.75l (default) |
+| Magnum | 1.5l |
+| Jeroboam | 3l |
+| Rehoboam | 4.5l |
+| Methuselah | 6l |
+| Salmanazar | 9l |
+| Balthazar | 12l |
+| Nebuchadnezzar | 15l |
+
+## Roadmap Highlights
+
+### Near Future
+- Export/Import (CSV, JSON)
+- Custom sorting (name, year, price, rating, etc.)
+- Display modes (card grid, compact list, table)
+
+### Analytics & Tracking
+- Consumption tracking (when opened)
+- Spending trends by month/region/type
+- Collection timeline chart
+- Maturity calendar
+
+### Home Assistant
+- Drink window notifications
+- Extended REST API
+- Native Lovelace dashboard card
+
+### UI & Personalization
+- In-app settings page
+- Custom themes & colors
+- Keyboard shortcuts
+- Wishlist mode
+
+## Architecture Highlights
+
+### Local First
+- Everything runs on your server
+- No cloud services required
+- No subscriptions or data sharing
+- SQLite database in `/data` (Docker) or `/share/wine-tracker/` (HA)
+
+### AI Integration (Optional)
+- AI providers are optional
+- Works without AI (manual entry + Vivino search)
+- Multiple provider support for flexibility
+- Free local option via Ollama
+
+### Privacy & Security
+- User authentication (Docker mode)
+- Readonly user role available
+- Session encryption
+- No telemetry or tracking
+
+## Common Use Cases
+
+1. **Add wine via AI**: Photo → AI analyzes → Fill fields → Save
+2. **Add wine via Vivino**: Search name → Select result → Import data
+3. **Manual entry**: Fill form manually with autocomplete suggestions
+4. **Quick quantity update**: +/− buttons on wine cards
+5. **Duplicate wine**: Clone existing wine (change only vintage)
+6. **View statistics**: See globe, charts, totals on stats page
+7. **Filter & search**: Type in search box, filter by wine type
+8. **Reload missing data**: Re-analyze incomplete wines via AI or Vivino
+
+## Support & Community
+
+- **GitHub Issues**: Bug reports, feature requests
+- **HA Community Forum**: Discussion, help, showcase
+- **License**: MIT
+
+## Version History
+
+Current version: **v1.5.0**
+
+See `CHANGELOG.md` for complete version history.
+
+Latest features (v1.5.0):
+- Chat interface with AI sommelier
+- Persistent chat history with session management
+- Timeline page with activity log
+- Improved wine detail modals
+- Enhanced UI consistency
+
+---
+
+**Built by wine lovers, for wine lovers.**
+Made with 🍷 by xenofex7
