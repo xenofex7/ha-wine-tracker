@@ -563,6 +563,101 @@
       height: 20px;
     }
 
+    .hero-badges {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .hero-pill svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ========================================
+       Why Wine Tracker Section
+       ======================================== */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .why-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px 28px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .why-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .why-card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-tertiary);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .why-card:hover::before {
+      opacity: 1;
+    }
+
+    .why-card-icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 16px;
+      display: block;
+      color: var(--accent, #4a6741);
+    }
+
+    .why-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+    }
+
+    .why-card p {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
     /* ========================================
        Screenshots Section
        ======================================== */
@@ -1099,6 +1194,11 @@
       .features-grid {
         grid-template-columns: 1fr 1fr;
       }
+
+      .why-grid {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+      }
     }
 
     @media (max-width: 640px) {
@@ -1211,6 +1311,7 @@
         <span></span>
       </button>
       <ul class="nav-links">
+        <li><a href="#why">Why</a></li>
         <li><a href="#screenshots">Screenshots</a></li>
         <li><a href="#features">Features</a></li>
         <li><a href="#docker">Docker</a></li>
@@ -1255,13 +1356,45 @@
           Run with Docker
         </a>
       </div>
-      <div class="hero-badge fade-in fade-in-delay-4">
-        <a href="https://github.com/xenofex7/ha-wine-tracker" target="_blank" rel="noopener">
+      <div class="hero-badges fade-in fade-in-delay-4">
+        <a href="https://github.com/xenofex7/ha-wine-tracker" class="hero-badge" target="_blank" rel="noopener">
           <img src="https://img.shields.io/github/stars/xenofex7/ha-wine-tracker?style=flat&logo=github&color=009ac7&labelColor=111111" alt="GitHub Stars">
         </a>
+        <span class="hero-badge"><img src="https://img.shields.io/badge/Local%20First-your%20server-009ac7?style=flat&logo=homeassistant&logoColor=white&labelColor=111111" alt="Local First"></span>
+        <span class="hero-badge"><img src="https://img.shields.io/badge/No%20Subscription-free-brightgreen?style=flat&logo=cashapp&logoColor=white&labelColor=111111" alt="No Subscription"></span>
+        <span class="hero-badge"><img src="https://img.shields.io/badge/Your%20Data-full%20ownership-blueviolet?style=flat&logo=sqlite&logoColor=white&labelColor=111111" alt="Your Data"></span>
       </div>
     </div>
   </section>
+
+  <!-- ========================================
+       Why Wine Tracker Section
+       ======================================== -->
+  <section id="why">
+    <div class="container">
+      <h2 class="section-title fade-in">Why Wine Tracker?</h2>
+      <p class="section-subtitle fade-in fade-in-delay-1">Built for privacy, designed for simplicity, driven by the community.</p>
+      <div class="why-grid">
+        <div class="why-card fade-in">
+          <svg class="why-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10"/></svg>
+          <h3>Local First</h3>
+          <p>Everything runs on your Home Assistant or Docker. No cloud, no subscription, no data sharing. Your wine cellar stays yours — always.</p>
+        </div>
+        <div class="why-card fade-in fade-in-delay-1">
+          <svg class="why-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 008.5 14.063l-6.135-1.582a.5.5 0 010-.962L8.5 9.936A2 2 0 009.937 8.5l1.582-6.135a.5.5 0 01.962 0L14.063 8.5A2 2 0 0015.5 9.937l6.135 1.582a.5.5 0 010 .962L15.5 14.063a2 2 0 00-1.437 1.437l-1.582 6.135a.5.5 0 01-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg>
+          <h3>AI — Optional &amp; Affordable</h3>
+          <p>Snap a label photo → AI fills in everything. Choose your provider: OpenAI, Anthropic, or Ollama (free, local). Analyzing 100 wines costs less than $0.10 with GPT-4o-mini.</p>
+        </div>
+        <div class="why-card fade-in fade-in-delay-2">
+          <svg class="why-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <h3>Community Driven</h3>
+          <p>Built by wine lovers, for wine lovers. Feature requests, feedback, and contributions are always welcome. Join us on GitHub or the HA Community forum.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
 
   <!-- ========================================
        Screenshots Section
@@ -1366,6 +1499,27 @@
           </span>
           <h3>Star Ratings</h3>
           <p>Rate your wines from 1 to 5 stars. Filter and sort by your personal ratings.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-2">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </span>
+          <h3>Maturity Graph</h3>
+          <p>Visualize your wine's drinking window with an interactive maturity curve. Know exactly when each bottle is at its peak.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-3">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="12" x2="16" y2="14"/></svg>
+          </span>
+          <h3>Timeline</h3>
+          <p>Track every addition, edit, and tasting in a chronological activity log. See your cellar's full history at a glance.</p>
+        </div>
+        <div class="feature-card fade-in">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          </span>
+          <h3>Taste Profile &amp; Pairings</h3>
+          <p>AI-generated taste profiles with body, tannin, acidity, and sweetness. Get food pairing suggestions for every wine.</p>
         </div>
       </div>
     </div>
