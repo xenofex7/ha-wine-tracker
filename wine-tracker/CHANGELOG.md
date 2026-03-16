@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.6.0
+
+- **Activity Timeline** — new page showing a chronological log of every wine added, consumed, restocked, or removed, grouped by month with localized day headers
+- **Maturity graph** — smooth bell curve visualizing a wine's drinking phases (Youth, Maturity, Peak, Decline) with a "Today" marker, powered by AI analysis
+- **Taste profile** — AI-generated horizontal bars for body, tannin, acidity, and sweetness (1–5 scale), displayed in the wine detail view
+- **Food pairings** — AI suggests matching dishes as clickable tags in the detail view
+- **Persistent chat history** — sommelier conversations are saved to the database with full session management (load, continue, delete); chat recording can be toggled in settings
+- **Wine detail view everywhere** — the detail modal now opens in-place on all pages (cellar, stats, timeline, chat) — no more redirecting to the index page
+- **Edit modal everywhere** — extracted the edit form into a shared include so you can edit wines on any page without navigating away
+- **Timeline stats cards** — monthly overview showing wines consumed, added, restocked, and total activities
+- **Chat sessions in timeline** — sommelier conversations appear as timeline entries and open the correct session on click
+- **Landing page update** — new "Why Wine Tracker" section with Local First, AI cost transparency, and Community cards; shields.io badges for data ownership
+- **AI cost estimation** — README now includes a per-wine cost table for all supported providers
+- **201 tests** — 48 new tests covering timeline, chat sessions, maturity/taste/food data, and edit modal on all pages
+
 ## 1.5.1
 
 - **Fix OpenAI compatibility** — replace deprecated `max_tokens` with `max_completion_tokens` for newer OpenAI models (o1, o3, gpt-4o-2024-11-20+) that reject the old parameter
