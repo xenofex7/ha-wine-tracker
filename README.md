@@ -53,9 +53,18 @@ A sleek, modern wine cellar tracker. Run it as a **Home Assistant add-on** or as
 - **Storage location** with autocomplete from existing entries
 - **Region & purchase source** autocomplete from existing entries
 - **Grape variety** (e.g. Merlot, Pinot Noir, Chardonnay) with autocomplete
+- **Cellar view modes** — switch between Cards, List, Grid, and Table view in settings
+- **Sortable table view** — sort by any column with persistent sort direction; responsive column hiding on smaller screens
+- **Activity timeline** — chronological log of wines added, consumed, restocked, or removed, grouped by month
+- **AI sommelier chat** — ask your personal sommelier questions about your cellar, with persistent chat history
+- **Maturity graph** — AI-generated bell curve showing drinking phases (Youth, Maturity, Peak, Decline)
+- **Taste profile & food pairings** — AI-generated body/tannin/acidity/sweetness bars and matching dish suggestions
 - **Interactive globe** — see your wine regions on a 3D globe (COBE)
 - **Statistics** — donut charts, total bottles, total liters, value overview & average age
+- **6 themes** — each with dark & light mode, switchable in settings
+- **Hamburger menu** — navigation collapses on narrow viewports
 - **Multi-language** — 7 languages supported
+- **DEV_AUTH mode** — `DEV_AUTH` env var for quick local development without Home Assistant
 - **HA Ingress** — embedded directly in the Home Assistant sidebar
 - **REST API** at `/api/summary` for HA sensors
 - **Fully responsive** — works great on desktop & mobile
@@ -304,13 +313,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 
 ### 🔜 Up Next
 - **Export / Import** — CSV & JSON export of your full collection; import to restore or migrate
-- **Custom sorting** — sort by name, year, price, rating, date added, or drinking window
-- **Display modes** — switch between card grid, compact list, and table view
-
-### 📊 Analytics & Tracking
-- **Consumption tracking** — record when a bottle was opened; track drinking history over time
 - **Spending trends** — visualize spending by month, region, or wine type
-- **Collection timeline** — chart showing how your cellar grew over time
 - **Maturity calendar** — overview of which wines become drinkable each year
 
 ### 🏠 Home Assistant Integration
@@ -319,8 +322,6 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 - **HA Dashboard card** — native Lovelace card to embed wine stats on any dashboard
 
 ### 🎨 UI & Personalization
-- **New settings section** — manage all options (currency, language, AI keys, display prefs) in-app
-- **Theming** — custom accent colors, font sizes, and layout density
 - **Keyboard shortcuts** — `/` to search, `+` to add, `Esc` to close modals
 - **Wishlist mode** — mark wines you want to buy (separate from owned bottles)
 
@@ -338,7 +339,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 
 MIT
 
-[version-badge]: https://img.shields.io/badge/version-v1.6.0-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v1.7.0-blue.svg
 [stage-badge]: https://img.shields.io/badge/project%20stage-stable-brightgreen.svg
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-green.svg

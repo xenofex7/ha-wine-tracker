@@ -23,6 +23,11 @@ Vivino to import wines with ratings and pricing.
 - 🔎 Vivino wine search with direct import
 - 🌍 Interactive 3D globe showing your wine regions
 - 📊 Statistics with donut charts, total liters & value overview
+- 📋 Cellar view modes — Cards, List, Grid, and sortable Table view
+- 📅 Activity timeline — track wines added, consumed, restocked & removed
+- 💬 AI sommelier chat with persistent conversation history
+- 📈 Maturity graph, taste profile & food pairings (AI-powered)
+- 🎨 6 themes with dark & light mode
 - 🌐 7 languages (DE, EN, FR, IT, ES, PT, NL)
 - 🍾 Bottle formats from Piccolo to Nebuchadnezzar
 - ⭐ Star ratings, drink windows, storage locations & more
@@ -30,7 +35,7 @@ Vivino to import wines with ratings and pricing.
 Data is stored locally under `/share/wine-tracker/` and preserved across
 updates and restarts.
 
-[version-badge]: https://img.shields.io/badge/version-v1.6.0-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v1.7.0-blue.svg
 [stage-badge]: https://img.shields.io/badge/project%20stage-stable-brightgreen.svg
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-green.svg

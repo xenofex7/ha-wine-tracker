@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.0
+
+- **Cellar view modes** — four ways to browse your wine collection: Cards (default), List, Grid, and Table — switchable in settings
+- **List view** — compact one-line rows with corner ribbons matching the stats page style, wine details (year, region, grape, drink window) as a subtitle
+- **Grid view** — image-first square tiles with an overlay name, perfect for visual browsing
+- **Table view** — sortable columns with persistent sort direction (saved in localStorage), right-aligned price/quantity, and a centered color dot per wine type
+- **Responsive table** — columns hide progressively on smaller screens (<900px: grape + price, <700px: region, <500px: only dot + name + qty); fixed-width columns in px for consistent layout at any viewport
+- **Settings modal redesign** — theme mode and view mode now use radio buttons instead of segmented controls; scrollable modal body for smaller screens
+- **Hamburger menu** — navigation collapses into a menu on narrow viewports
+- **DEV_AUTH mode** — `DEV_AUTH` environment variable for quick dev login (`user:pass:role`) without needing Home Assistant
+- **217 tests** — 16 new tests covering view modes, hamburger menu, DEV_AUTH parsing, and password hashing
+
 ## 1.6.0
 
 - **Activity Timeline** — new page showing a chronological log of every wine added, consumed, restocked, or removed, grouped by month with localized day headers
