@@ -369,18 +369,9 @@
           {% set label_val = (y_max - (i / 4) * y_range)|round|int %}
           <text x="40" y="{{ gy + 4 }}" text-anchor="end" fill="var(--text-muted)" font-size="11">{{ label_val }}</text>
           {% endfor %}
-          <!-- Area fill -->
-          {% set ns = namespace(area_points="", line_points="") %}
-          {% for pt in stock_chart %}
-          {% set px = 60 + loop.index0 * ((525) / ([stock_chart|length - 1, 1]|max)) %}
-          {% set py = 20 + ((y_max - pt.stock) / y_range * 220) %}
-          {% set ns.line_points = ns.line_points ~ px|string ~ "," ~ py|round|string ~ " " %}
-          {% if loop.first %}{% set ns.area_points = px|string ~ ",240 " %}{% endif %}
-          {% set ns.area_points = ns.area_points ~ px|string ~ "," ~ py|round|string ~ " " %}
-          {% if loop.last %}{% set ns.area_points = ns.area_points ~ px|string ~ ",240" %}{% endif %}
-          {% endfor %}
-          <polygon points="{{ ns.area_points }}" fill="url(#stockGrad)"/>
-          <polyline points="{{ ns.line_points }}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <!-- Area fill + line (smoothed via JS) -->
+          <path class="stock-area-path" fill="url(#stockGrad)" d=""/>
+          <path class="stock-line-path" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d=""/>
           <!-- Data points & invisible hover targets -->
           {% for pt in stock_chart %}
           {% set px = 60 + loop.index0 * ((525) / ([stock_chart|length - 1, 1]|max)) %}
@@ -726,6 +717,48 @@ function editWine(id) {
   }, { passive: false });
 })();
 
+// ── Stock Chart: smooth Bézier curve ──
+document.addEventListener('DOMContentLoaded', function() {
+  var dots = document.querySelectorAll('.stock-dot');
+  if (dots.length < 2) return;
+  var pts = [];
+  dots.forEach(function(d) { pts.push([parseFloat(d.getAttribute('cx')), parseFloat(d.getAttribute('cy'))]); });
+
+  // Catmull-Rom → cubic Bézier control points
+  function smoothLine(pts) {
+    var d = 'M' + pts[0][0] + ',' + pts[0][1];
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[Math.max(i - 1, 0)];
+      var p1 = pts[i];
+      var p2 = pts[i + 1];
+      var p3 = pts[Math.min(i + 2, pts.length - 1)];
+      var t = 0.35;
+      var cp1x = p1[0] + (p2[0] - p0[0]) * t;
+      var cp1y = Math.max(20, Math.min(p1[1] + (p2[1] - p0[1]) * t, 240));
+      var cp2x = p2[0] - (p3[0] - p1[0]) * t;
+      var cp2y = Math.max(20, Math.min(p2[1] - (p3[1] - p1[1]) * t, 240));
+      d += ' C' + cp1x.toFixed(1) + ',' + cp1y.toFixed(1)
+         + ' ' + cp2x.toFixed(1) + ',' + cp2y.toFixed(1)
+         + ' ' + p2[0].toFixed(1) + ',' + p2[1].toFixed(1);
+    }
+    return d;
+  }
+
+  var lineD = smoothLine(pts);
+  // Area: go down to baseline, follow smooth curve, back down
+  var cIdx = lineD.indexOf(' C');
+  var curvePart = cIdx >= 0 ? lineD.substring(cIdx) : '';
+  var areaD = 'M' + pts[0][0] + ',240'
+            + ' L' + pts[0][0] + ',' + pts[0][1]
+            + curvePart
+            + ' L' + pts[pts.length - 1][0] + ',240 Z';
+
+  var linePath = document.querySelector('.stock-line-path');
+  var areaPath = document.querySelector('.stock-area-path');
+  if (linePath) linePath.setAttribute('d', lineD);
+  if (areaPath) areaPath.setAttribute('d', areaD);
+});
+
 // ── Stock Chart Tooltip ──
 (function() {
   var tip = document.getElementById('stockTooltip');
@@ -757,9 +790,18 @@ function editWine(id) {
       var px = (cx / 600) * rect.width;
       var py = (cy / 260) * rect.height;
       tip.style.display = '';
+      tip.style.transform = 'translate(-50%, -100%)';
       tip.style.left = px + 'px';
       tip.style.top = (py - 10) + 'px';
       tip.classList.add('visible');
+      // Clamp: keep tooltip within card bounds
+      var tipRect = tip.getBoundingClientRect();
+      var wrapRect = wrap.getBoundingClientRect();
+      if (tipRect.right > wrapRect.right - 4) {
+        tip.style.transform = 'translate(-100%, -100%)';
+      } else if (tipRect.left < wrapRect.left + 4) {
+        tip.style.transform = 'translate(0, -100%)';
+      }
     }
     function hide() { tip.classList.remove('visible'); setTimeout(function() { if (!tip.classList.contains('visible')) tip.style.display = 'none'; }, 200); }
     el.addEventListener('mouseenter', show);

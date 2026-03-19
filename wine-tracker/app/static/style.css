@@ -1476,8 +1476,9 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .dw-legend-item { display: flex; align-items: center; gap: .3rem; }
 
 /* ── Stats: Stock History Chart ─────────────────────────────────────────────── */
-.stock-chart-card { grid-column: 1 / -1; }
-.stock-chart-wrap { position: relative; }
+.stock-chart-card { grid-column: 1 / -1; overflow: visible; }
+.stock-chart-card .stat-body { overflow: visible; }
+.stock-chart-wrap { position: relative; overflow: visible; }
 .stock-chart-svg {
   width: 100%; height: auto; display: block;
   aspect-ratio: 600 / 260;
