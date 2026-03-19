@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+
+- **Fix: Globe not rendering** — pin COBE library to v0.6.3 after upstream v2.0 breaking change (released 2026-03-18)
+
 ## 1.7.0
 
 - **Cellar view modes** — four ways to browse your wine collection: Cards (default), List, Grid, and Table — switchable in settings
