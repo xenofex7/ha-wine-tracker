@@ -430,6 +430,8 @@ function applyFilters() {
     var searchOk = !query ||
       (d.name || '').toLowerCase().indexOf(query) !== -1 ||
       (d.region || '').toLowerCase().indexOf(query) !== -1 ||
+      (d.year || '').indexOf(query) !== -1 ||
+      (d.grape || '').toLowerCase().indexOf(query) !== -1 ||
       (d.notes || '').toLowerCase().indexOf(query) !== -1;
     // Drink window match
     var dwOk = true;
@@ -496,6 +498,8 @@ function updateTabCounts() {
     var searchOk = !query ||
       (d.name || '').toLowerCase().indexOf(query) !== -1 ||
       (d.region || '').toLowerCase().indexOf(query) !== -1 ||
+      (d.year || '').indexOf(query) !== -1 ||
+      (d.grape || '').toLowerCase().indexOf(query) !== -1 ||
       (d.notes || '').toLowerCase().indexOf(query) !== -1;
     var dwOk = true;
     if (activeDrinkWindow) {
