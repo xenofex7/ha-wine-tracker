@@ -40,10 +40,7 @@
   <div class="chat-fullpage-sidebar" id="chatSidebar">
     <div class="chat-sidebar-header">
       <span>{{ t.chat_history }}</span>
-      <div style="display:flex;gap:.25rem">
-        <button class="chat-header-btn" onclick="startNewChatSession();if(window.innerWidth<=768)toggleChatSidebar();" title="{{ t.chat_new }}"><i class="mdi mdi-plus"></i></button>
-        <button class="chat-header-btn chat-sidebar-close" onclick="toggleChatSidebar()" title="{{ t.close or 'Close' }}"><i class="mdi mdi-close"></i></button>
-      </div>
+      <button class="chat-header-btn chat-sidebar-close" onclick="toggleChatSidebar()" title="{{ t.close or 'Close' }}"><i class="mdi mdi-close"></i></button>
     </div>
     <div class="chat-sidebar-body" id="chatSidebarBody"></div>
   </div>
@@ -376,11 +373,16 @@ function loadChatSidebarList() {
       data.sessions.forEach(function(s) {
         var isActive = s.id === _chatSessionId;
         var title = s.title || (T.chat_new || 'New chat');
-        var dateStr = s.updated ? s.updated.substring(0, 10) : '';
+        var dateStr = '';
+        if (s.updated) {
+          var d = new Date(s.updated);
+          dateStr = d.toLocaleDateString('{{ lang }}', {day: '2-digit', month: '2-digit', year: 'numeric'});
+        }
+        var msgLabel = s.message_count === 1 ? (T.chat_message || 'message') : (T.chat_messages || 'messages');
         html += '<div class="chat-session-item' + (isActive ? ' active' : '') + '" onclick="loadChatSession(' + s.id + ')">';
         html += '<div class="chat-session-item-info">';
         html += '<div class="chat-session-item-title">' + escapeHtmlChat(title) + '</div>';
-        html += '<div class="chat-session-item-date">' + escapeHtmlChat(dateStr) + ' (' + s.message_count + ')</div>';
+        html += '<div class="chat-session-item-date">' + escapeHtmlChat(dateStr) + ' · ' + s.message_count + ' ' + msgLabel + '</div>';
         html += '</div>';
         if (!AUTH_READONLY) {
           html += '<button class="chat-session-delete" onclick="event.stopPropagation();deleteChatSession(' + s.id + ')" title="' + (T.chat_delete || 'Delete chat') + '"><i class="mdi mdi-delete-outline"></i></button>';
