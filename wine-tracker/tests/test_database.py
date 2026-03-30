@@ -187,7 +187,7 @@ class TestChatSessionTables:
         conn = sqlite3.connect(wine_app.DB_PATH)
         cols = {row[1] for row in conn.execute("PRAGMA table_info(chat_messages)")}
         conn.close()
-        expected = {"id", "session_id", "role", "content", "timestamp"}
+        expected = {"id", "session_id", "role", "content", "timestamp", "image_path"}
         assert expected.issubset(cols)
 
     def test_cascade_delete(self, app, db):

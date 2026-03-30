@@ -444,6 +444,11 @@ def init_db():
             )
         """)
 
+        # ── chat_messages migration: image_path ─────────────────────────
+        chat_cols = {row[1] for row in db.execute("PRAGMA table_info(chat_messages)")}
+        if "image_path" not in chat_cols:
+            db.execute("ALTER TABLE chat_messages ADD COLUMN image_path TEXT")
+
         db.commit()
 
 
@@ -518,6 +523,38 @@ def _downscale(filepath):
             img.save(filepath, quality=85, optimize=True)
     except Exception as e:
         app.logger.warning("Image downscale failed: %s", e)
+
+
+def _downscale_bytes(file_storage):
+    """Read an uploaded image, resize in memory, return (base64_str, media_type)."""
+    import base64
+    from io import BytesIO
+    ext = file_storage.filename.rsplit(".", 1)[1].lower()
+    media_type = {"jpg": "image/jpeg", "jpeg": "image/jpeg",
+                  "png": "image/png", "webp": "image/webp",
+                  "gif": "image/gif"}.get(ext, "image/jpeg")
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(file_storage.stream) as img:
+            img = ImageOps.exif_transpose(img)
+            w, h = img.size
+            if max(w, h) > MAX_IMAGE_PX:
+                ratio = MAX_IMAGE_PX / max(w, h)
+                img = img.resize((int(w * ratio), int(h * ratio)), Image.LANCZOS)
+            buf = BytesIO()
+            fmt = "JPEG" if ext in ("jpg", "jpeg") else ext.upper()
+            if fmt == "WEBP":
+                img.save(buf, format=fmt, quality=85)
+            else:
+                img.save(buf, format=fmt, quality=85, optimize=True)
+            buf.seek(0)
+            return base64.standard_b64encode(buf.read()).decode("utf-8"), media_type
+    except Exception as e:
+        app.logger.warning("Image downscale_bytes failed: %s", e)
+        # Fallback: read raw bytes
+        file_storage.stream.seek(0)
+        raw = file_storage.stream.read()
+        return base64.standard_b64encode(raw).decode("utf-8"), media_type
 
 
 def save_image(file):
@@ -1229,12 +1266,20 @@ def _call_ollama(image_b64, media_type, prompt, opts):
 
 # ── AI Chat Functions ─────────────────────────────────────────────────────────
 
-def _call_chat_anthropic(messages, system_prompt, opts):
-    """Chat via Anthropic Claude (multi-turn, text-only)."""
+def _call_chat_anthropic(messages, system_prompt, opts, image_b64=None, media_type=None):
+    """Chat via Anthropic Claude (multi-turn, with optional image)."""
     import anthropic
     api_key = opts.get("anthropic_api_key", "").strip()
     model = opts.get("anthropic_model", "claude-opus-4-6").strip() or "claude-opus-4-6"
     client = anthropic.Anthropic(api_key=api_key)
+    # Attach image to the last user message if provided
+    if image_b64 and messages:
+        last = messages[-1]
+        if last["role"] == "user":
+            messages = messages[:-1] + [{"role": "user", "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": image_b64}},
+                {"type": "text", "text": last["content"]},
+            ]}]
     message = client.messages.create(
         model=model,
         max_tokens=2048,
@@ -1244,12 +1289,19 @@ def _call_chat_anthropic(messages, system_prompt, opts):
     return message.content[0].text
 
 
-def _call_chat_openai(messages, system_prompt, opts):
-    """Chat via OpenAI (multi-turn, text-only)."""
+def _call_chat_openai(messages, system_prompt, opts, image_b64=None, media_type=None):
+    """Chat via OpenAI (multi-turn, with optional image)."""
     from openai import OpenAI
     api_key = opts.get("openai_api_key", "").strip()
     model = opts.get("openai_model", "gpt-5.2").strip() or "gpt-5.2"
     client = OpenAI(api_key=api_key)
+    if image_b64 and messages:
+        last = messages[-1]
+        if last["role"] == "user":
+            messages = messages[:-1] + [{"role": "user", "content": [
+                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
+                {"type": "text", "text": last["content"]},
+            ]}]
     full_messages = [{"role": "system", "content": system_prompt}] + messages
     response = client.chat.completions.create(
         model=model,
@@ -1259,8 +1311,8 @@ def _call_chat_openai(messages, system_prompt, opts):
     return response.choices[0].message.content
 
 
-def _call_chat_openrouter(messages, system_prompt, opts):
-    """Chat via OpenRouter (multi-turn, text-only)."""
+def _call_chat_openrouter(messages, system_prompt, opts, image_b64=None, media_type=None):
+    """Chat via OpenRouter (multi-turn, with optional image)."""
     from openai import OpenAI
     api_key = opts.get("openrouter_api_key", "").strip()
     model = opts.get("openrouter_model", "anthropic/claude-opus-4.6").strip() or "anthropic/claude-opus-4.6"
@@ -1268,6 +1320,13 @@ def _call_chat_openrouter(messages, system_prompt, opts):
         api_key=api_key,
         base_url="https://openrouter.ai/api/v1",
     )
+    if image_b64 and messages:
+        last = messages[-1]
+        if last["role"] == "user":
+            messages = messages[:-1] + [{"role": "user", "content": [
+                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
+                {"type": "text", "text": last["content"]},
+            ]}]
     full_messages = [{"role": "system", "content": system_prompt}] + messages
     response = client.chat.completions.create(
         model=model,
@@ -1277,11 +1336,15 @@ def _call_chat_openrouter(messages, system_prompt, opts):
     return response.choices[0].message.content
 
 
-def _call_chat_ollama(messages, system_prompt, opts):
-    """Chat via local Ollama (multi-turn, text-only)."""
+def _call_chat_ollama(messages, system_prompt, opts, image_b64=None, media_type=None):
+    """Chat via local Ollama (multi-turn, with optional image)."""
     import requests as req
     host = opts.get("ollama_host", "http://localhost:11434").strip().rstrip("/")
     model = opts.get("ollama_model", "llava").strip() or "llava"
+    if image_b64 and messages:
+        last = messages[-1]
+        if last["role"] == "user":
+            messages = messages[:-1] + [{"role": "user", "content": last["content"], "images": [image_b64]}]
     full_messages = [{"role": "system", "content": system_prompt}] + messages
     response = req.post(
         f"{host}/api/chat",
@@ -1292,7 +1355,7 @@ def _call_chat_ollama(messages, system_prompt, opts):
     return response.json()["message"]["content"]
 
 
-def _call_chat(provider, messages, system_prompt, opts):
+def _call_chat(provider, messages, system_prompt, opts, image_b64=None, media_type=None):
     """Dispatch chat to the configured AI provider."""
     dispatch = {
         "anthropic": _call_chat_anthropic,
@@ -1303,7 +1366,7 @@ def _call_chat(provider, messages, system_prompt, opts):
     fn = dispatch.get(provider)
     if not fn:
         raise ValueError(f"Unknown chat provider: {provider}")
-    return fn(messages, system_prompt, opts)
+    return fn(messages, system_prompt, opts, image_b64=image_b64, media_type=media_type)
 
 
 def _build_wine_cellar_context():
@@ -1783,10 +1846,16 @@ def api_chat_session_detail(session_id):
         if not sess:
             return jsonify(ok=False, error="not_found"), 404
         messages = db.execute(
-            "SELECT id, role, content, timestamp FROM chat_messages WHERE session_id = ? ORDER BY id",
+            "SELECT id, role, content, timestamp, image_path FROM chat_messages WHERE session_id = ? ORDER BY id",
             (session_id,),
         ).fetchall()
-        return jsonify(ok=True, session=dict(sess), messages=[dict(m) for m in messages])
+        msg_list = []
+        for m in messages:
+            d = dict(m)
+            # image_path is relative (e.g. "chat/1/abc.jpg"),
+            # frontend builds full URL with INGRESS prefix
+            msg_list.append(d)
+        return jsonify(ok=True, session=dict(sess), messages=msg_list)
 
     # DELETE
     if AUTH_ENABLED and session.get("role") == "readonly":
@@ -1796,6 +1865,11 @@ def api_chat_session_detail(session_id):
     ).fetchone()
     if not sess:
         return jsonify(ok=False, error="not_found"), 404
+    # Delete chat image folder
+    import shutil
+    chat_img_dir = os.path.join(UPLOAD_DIR, "chat", str(session_id))
+    if os.path.isdir(chat_img_dir):
+        shutil.rmtree(chat_img_dir, ignore_errors=True)
     db.execute("PRAGMA foreign_keys = ON")
     db.execute("DELETE FROM chat_sessions WHERE id = ?", (session_id,))
     db.commit()
@@ -1812,11 +1886,26 @@ def api_chat():
     if provider == "none" or not _is_ai_configured(opts):
         return jsonify({"ok": False, "error": "ai_not_configured"}), 400
 
-    body = request.get_json(silent=True) or {}
-    user_message = (body.get("message") or "").strip()
-    history = body.get("history") or []
-    session_id = body.get("session_id")
-    save = body.get("save", True)
+    # Support both JSON and multipart/form-data (for image uploads)
+    image_b64 = None
+    media_type = None
+    if request.content_type and "multipart/form-data" in request.content_type:
+        user_message = (request.form.get("message") or "").strip()
+        import json as _json
+        history = _json.loads(request.form.get("history", "[]"))
+        session_id = request.form.get("session_id", type=int)
+        save_raw = request.form.get("save", "true")
+        save = save_raw.lower() != "false"
+        # Process uploaded image
+        img_file = request.files.get("image")
+        if img_file and img_file.filename and allowed(img_file.filename):
+            image_b64, media_type = _downscale_bytes(img_file)
+    else:
+        body = request.get_json(silent=True) or {}
+        user_message = (body.get("message") or "").strip()
+        history = body.get("history") or []
+        session_id = body.get("session_id")
+        save = body.get("save", True)
 
     if not user_message:
         return jsonify({"ok": False, "error": "empty_message"}), 400
@@ -1851,10 +1940,23 @@ def api_chat():
                     (user_message[:50], session_id),
                 )
 
-        # Save user message to DB
+        # Save user message to DB (with optional image)
+        saved_image_path = None
+        if image_b64 and session_id:
+            import base64 as _b64
+            ext_map = {"image/jpeg": ".jpg", "image/png": ".png",
+                       "image/webp": ".webp", "image/gif": ".gif"}
+            ext = ext_map.get(media_type, ".jpg")
+            chat_dir = os.path.join(UPLOAD_DIR, "chat", str(session_id))
+            os.makedirs(chat_dir, exist_ok=True)
+            fname = uuid.uuid4().hex + ext
+            fpath = os.path.join(chat_dir, fname)
+            with open(fpath, "wb") as f:
+                f.write(_b64.b64decode(image_b64))
+            saved_image_path = f"chat/{session_id}/{fname}"
         db.execute(
-            "INSERT INTO chat_messages (session_id, role, content, timestamp) VALUES (?, ?, ?, ?)",
-            (session_id, "user", user_message, now),
+            "INSERT INTO chat_messages (session_id, role, content, timestamp, image_path) VALUES (?, ?, ?, ?, ?)",
+            (session_id, "user", user_message, now, saved_image_path),
         )
         db.commit()
 
@@ -1897,7 +1999,8 @@ def api_chat():
         f"- Answer questions about wines, regions, grape varieties, and winemaking\n"
         f"- Give advice on drinking windows and when to open specific bottles\n"
         f"- Compare wines in the cellar\n"
-        f"- Suggest what wines to buy to complement the collection\n\n"
+        f"- Suggest what wines to buy to complement the collection\n"
+        f"- Analyze wine label images the user sends you — identify the wine, describe it, and give recommendations\n\n"
         f"Rules:\n"
         f"- When recommending wines, ALWAYS pick from the user's cellar first\n"
         f"- If no wine in the cellar fits, say so and suggest what to buy\n"
@@ -1912,7 +2015,8 @@ def api_chat():
     messages = valid_history + [{"role": "user", "content": user_message}]
 
     try:
-        response_text = _call_chat(provider, messages, system_prompt, opts)
+        response_text = _call_chat(provider, messages, system_prompt, opts,
+                                    image_b64=image_b64, media_type=media_type)
 
         if save:
             # Save assistant response to DB

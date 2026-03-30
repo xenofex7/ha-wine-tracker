@@ -613,6 +613,177 @@ class TestWineChat:
         assert "markdown link" in system_prompt.lower() or "[Wine" in system_prompt
 
 
+# ── Chat Image Upload ────────────────────────────────────────────────────────
+
+class TestChatImageUpload:
+    """Tests for image upload in the chat endpoint."""
+
+    CHAT_OPTS = TestWineChat.CHAT_OPTS
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_with_image(self, mock_opts, mock_chat, client):
+        """Should send image to AI provider via multipart form data."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = "This looks like a Bordeaux wine."
+
+        # Create a minimal valid JPEG
+        from io import BytesIO
+        img = BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * 100)
+
+        resp = client.post(
+            "/api/chat",
+            data={
+                "message": "What wine is this?",
+                "image": (img, "test.jpg"),
+            },
+            content_type="multipart/form-data",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 200
+        assert data["ok"] is True
+        # Verify _call_chat received image params
+        call_kwargs = mock_chat.call_args[1]
+        assert call_kwargs.get("image_b64") is not None
+        assert call_kwargs.get("media_type") == "image/jpeg"
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_without_image_still_works(self, mock_opts, mock_chat, client):
+        """JSON chat should still work without image (backward compat)."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = "Sure, here's a recommendation."
+
+        resp = client.post(
+            "/api/chat",
+            data=json.dumps({"message": "Recommend a wine"}),
+            content_type="application/json",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 200
+        assert data["ok"] is True
+        call_kwargs = mock_chat.call_args[1]
+        assert call_kwargs.get("image_b64") is None
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_rejects_invalid_image_type(self, mock_opts, mock_chat, client):
+        """Should ignore files with disallowed extensions."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = "OK"
+
+        from io import BytesIO
+        resp = client.post(
+            "/api/chat",
+            data={
+                "message": "Check this",
+                "image": (BytesIO(b"not an image"), "test.bmp"),
+            },
+            content_type="multipart/form-data",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 200
+        # Image should NOT be passed to AI
+        call_kwargs = mock_chat.call_args[1]
+        assert call_kwargs.get("image_b64") is None
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_image_persisted_to_disk(self, mock_opts, mock_chat, client):
+        """Uploaded chat image should be saved to uploads/chat/<session_id>/."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = "Nice Bordeaux label!"
+
+        from io import BytesIO
+        img = BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * 100)
+
+        resp = client.post(
+            "/api/chat",
+            data={"message": "What is this?", "image": (img, "label.jpg")},
+            content_type="multipart/form-data",
+        )
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        session_id = data["session_id"]
+
+        # Load session and check image_path is present
+        resp = client.get(f"/api/chat/sessions/{session_id}")
+        sdata = json.loads(resp.data)
+        user_msg = sdata["messages"][0]
+        assert user_msg["role"] == "user"
+        assert user_msg.get("image_path") is not None
+        assert f"chat/{session_id}/" in user_msg["image_path"]
+
+        # Verify file exists on disk
+        assert user_msg["image_path"] is not None
+        fpath = os.path.join(wine_app.UPLOAD_DIR, user_msg["image_path"])
+        assert os.path.isfile(fpath)
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_image_deleted_with_session(self, mock_opts, mock_chat, client):
+        """Deleting a chat session should remove its image folder."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = "Looks great!"
+
+        from io import BytesIO
+        img = BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * 100)
+
+        resp = client.post(
+            "/api/chat",
+            data={"message": "Check this", "image": (img, "photo.jpg")},
+            content_type="multipart/form-data",
+        )
+        session_id = json.loads(resp.data)["session_id"]
+
+        # Verify image dir exists
+        chat_dir = os.path.join(wine_app.UPLOAD_DIR, "chat", str(session_id))
+        assert os.path.isdir(chat_dir)
+
+        # Delete session
+        resp = client.delete(f"/api/chat/sessions/{session_id}")
+        assert json.loads(resp.data)["ok"] is True
+
+        # Image dir should be gone
+        assert not os.path.isdir(chat_dir)
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_multiple_images_in_session(self, mock_opts, mock_chat, client):
+        """Multiple images in one session should all be persisted separately."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = "Interesting wine!"
+
+        from io import BytesIO
+
+        # First message with image
+        img1 = BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * 100)
+        resp = client.post(
+            "/api/chat",
+            data={"message": "First wine", "image": (img1, "wine1.jpg")},
+            content_type="multipart/form-data",
+        )
+        session_id = json.loads(resp.data)["session_id"]
+
+        # Second message with image in same session
+        img2 = BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * 50)
+        resp = client.post(
+            "/api/chat",
+            data={"message": "Second wine", "image": (img2, "wine2.jpg"),
+                  "session_id": str(session_id)},
+            content_type="multipart/form-data",
+        )
+        assert json.loads(resp.data)["ok"] is True
+
+        # Load session — should have 4 messages (2 user + 2 assistant), 2 with images
+        resp = client.get(f"/api/chat/sessions/{session_id}")
+        msgs = json.loads(resp.data)["messages"]
+        image_msgs = [m for m in msgs if m.get("image_path")]
+        assert len(image_msgs) == 2
+        # Different file paths
+        assert image_msgs[0]["image_path"] != image_msgs[1]["image_path"]
+
+
 # ── Chat Sessions API ────────────────────────────────────────────────────────
 
 class TestChatSessions:
