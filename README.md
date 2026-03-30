@@ -333,6 +333,9 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 - **Extended REST API** - more endpoints (single wine, stats, collection export) for dashboards & automations
 - **HA Dashboard card** - native Lovelace card to embed wine stats on any dashboard
 
+### 🤖 AI & Chat
+- **Add wine via chat** - snap a photo, discuss the wine with the sommelier, then tell it to add the wine to your cellar directly from the conversation
+
 ### 🎨 UI & Personalization
 - **Keyboard shortcuts** - `/` to search, `+` to add, `Esc` to close modals
 - **Wishlist mode** - mark wines you want to buy (separate from owned bottles)

@@ -36,7 +36,10 @@
   <div class="chat-fullpage-sidebar" id="chatSidebar">
     <div class="chat-sidebar-header">
       <span>{{ t.chat_history }}</span>
-      <button class="chat-header-btn" onclick="startNewChatSession()" title="{{ t.chat_new }}"><i class="mdi mdi-plus"></i></button>
+      <div style="display:flex;gap:.25rem">
+        <button class="chat-header-btn" onclick="startNewChatSession();if(window.innerWidth<=768)toggleChatSidebar();" title="{{ t.chat_new }}"><i class="mdi mdi-plus"></i></button>
+        <button class="chat-header-btn chat-sidebar-close" onclick="toggleChatSidebar()" title="{{ t.close or 'Close' }}"><i class="mdi mdi-close"></i></button>
+      </div>
     </div>
     <div class="chat-sidebar-body" id="chatSidebarBody"></div>
   </div>

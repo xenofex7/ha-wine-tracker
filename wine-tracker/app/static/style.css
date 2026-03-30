@@ -1990,7 +1990,7 @@ body.chat-page .grid { display: none; }
   gap: .75rem;
   padding: .5rem .6rem;
   background: var(--bg);
-  border-radius: 8px;
+  border-radius: 0;
   cursor: pointer;
   transition: background .15s;
 }
@@ -2059,7 +2059,16 @@ body.chat-page .grid { display: none; }
   border-bottom: 1px solid var(--border);
   color: var(--text);
 }
-.chat-sidebar-header .chat-header-btn { color: var(--accent); }
+.chat-sidebar-header .chat-header-btn {
+  color: var(--accent);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.chat-sidebar-close { display: none; }
 .chat-sidebar-body {
   flex: 1;
   overflow-y: auto;
@@ -2084,4 +2093,5 @@ body.chat-page .grid { display: none; }
     box-shadow: 4px 0 16px rgba(0,0,0,.2);
   }
   .chat-fullpage-toolbar { display: flex; }
+  .chat-sidebar-close { display: inline-flex; }
 }
