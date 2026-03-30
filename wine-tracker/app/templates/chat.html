@@ -52,11 +52,21 @@
       </div>
     </div>
     <div class="chat-fullpage-input">
-      <input type="text" id="chatInput" placeholder="{{ t.chat_placeholder }}"
-             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
-      <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()" title="{{ t.chat_send }}">
-        <i class="mdi mdi-send"></i>
-      </button>
+      <div class="chat-image-preview" id="chatImagePreview" style="display:none">
+        <img id="chatImageThumb" src="" alt="">
+        <button class="chat-image-remove" onclick="removeChatImage()" title="{{ t.chat_remove_image }}">&times;</button>
+      </div>
+      <div class="chat-input-row">
+        <button class="chat-upload-btn" onclick="document.getElementById('chatImageInput').click()" title="{{ t.chat_upload_image }}">
+          <i class="mdi mdi-camera"></i>
+        </button>
+        <input type="file" id="chatImageInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="previewChatImage(this)">
+        <input type="text" id="chatInput" placeholder="{{ t.chat_placeholder }}"
+               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}">
+        <button class="chat-send" id="chatSendBtn" onclick="sendChatMessage()" title="{{ t.chat_send }}">
+          <i class="mdi mdi-send"></i>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -289,7 +299,7 @@ function scrollChatBottom() {
   el.scrollTop = el.scrollHeight;
 }
 
-function appendChatMessage(role, text) {
+function appendChatMessage(role, text, isHtml) {
   var container = document.getElementById('chatMessages');
   var welcome = container.querySelector('.chat-welcome');
   if (welcome) welcome.remove();
@@ -299,6 +309,8 @@ function appendChatMessage(role, text) {
   bubble.className = 'chat-bubble';
   if (role === 'assistant') {
     bubble.innerHTML = renderMarkdown(text);
+  } else if (isHtml) {
+    bubble.innerHTML = text;
   } else {
     bubble.textContent = text;
   }
@@ -381,7 +393,11 @@ function loadChatSession(sessionId) {
       clearChatMessages();
       if (data.messages && data.messages.length > 0) {
         data.messages.forEach(function(msg) {
-          appendChatMessage(msg.role, msg.content);
+          if (msg.image_path && msg.role === 'user') {
+            appendChatMessage(msg.role, '<img class="chat-msg-thumb" src="' + INGRESS + '/uploads/' + msg.image_path + '" alt="">\n' + msg.content, true);
+          } else {
+            appendChatMessage(msg.role, msg.content);
+          }
         });
       }
       // Refresh sidebar to update active state
@@ -414,6 +430,27 @@ function deleteChatSession(sessionId) {
     });
 }
 
+var _chatImageFile = null;
+
+function previewChatImage(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  _chatImageFile = file;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('chatImageThumb').src = e.target.result;
+    document.getElementById('chatImagePreview').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeChatImage() {
+  _chatImageFile = null;
+  document.getElementById('chatImageInput').value = '';
+  document.getElementById('chatImagePreview').style.display = 'none';
+  document.getElementById('chatImageThumb').src = '';
+}
+
 function sendChatMessage() {
   if (_chatSending) return;
   var input = document.getElementById('chatInput');
@@ -422,19 +459,32 @@ function sendChatMessage() {
   input.value = '';
   _chatSending = true;
   document.getElementById('chatSendBtn').disabled = true;
-  appendChatMessage('user', text);
+
+  // Show user message with optional image thumbnail
+  var thumbSrc = _chatImageFile ? document.getElementById('chatImageThumb').src : null;
+  if (thumbSrc) {
+    appendChatMessage('user', '<img class="chat-msg-thumb" src="' + thumbSrc + '" alt="">\n' + text, true);
+  } else {
+    appendChatMessage('user', text);
+  }
   appendChatLoading();
 
-  var payload = {message: text};
-  if (_chatSessionId) {
-    payload.session_id = _chatSessionId;
+  var fetchOpts = {method: 'POST'};
+  if (_chatImageFile) {
+    var fd = new FormData();
+    fd.append('message', text);
+    fd.append('image', _chatImageFile);
+    if (_chatSessionId) fd.append('session_id', _chatSessionId);
+    fetchOpts.body = fd;
+    removeChatImage();
+  } else {
+    var payload = {message: text};
+    if (_chatSessionId) payload.session_id = _chatSessionId;
+    fetchOpts.headers = {'Content-Type': 'application/json'};
+    fetchOpts.body = JSON.stringify(payload);
   }
 
-  fetch(INGRESS + '/api/chat', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(payload)
-  })
+  fetch(INGRESS + '/api/chat', fetchOpts)
   .then(function(r) { return r.json(); })
   .then(function(data) {
     removeChatLoading();

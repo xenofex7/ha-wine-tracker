@@ -426,6 +426,44 @@ class TestStatsPage:
         assert 'id="wineModal"' in html
         assert 'id="wineForm"' in html
 
+    def test_stats_stock_chart_with_timeline(self, client, sample_wine, db):
+        """Stats page should include stock chart data when timeline entries exist."""
+        resp = client.get("/stats")
+        html = resp.data.decode()
+        # sample_wine creates a timeline entry via /add, so the chart should render
+        assert "stock-chart-svg" in html
+        assert "Bestandsverlauf" in html  # translated title (de)
+
+    def test_stats_stock_chart_shows_correct_stock(self, client, db):
+        """Stock chart final value should match current total bottles."""
+        client.post("/add", data={"name": "Wine A", "quantity": "5"}, headers=AJAX)
+        client.post("/add", data={"name": "Wine B", "quantity": "3"}, headers=AJAX)
+        resp = client.get("/stats")
+        html = resp.data.decode()
+        # Current stock is 8, chart should contain data-stock="8"
+        assert 'data-stock="8"' in html
+
+    def test_stats_stock_chart_empty_db(self, client):
+        """Stats page with no wines should not render stock chart."""
+        resp = client.get("/stats")
+        html = resp.data.decode()
+        assert "stock-chart-svg" not in html
+
+    def test_stats_stock_chart_tracks_consumption(self, client, db):
+        """Stock chart should reflect consumption changes."""
+        # Add wine with qty=10
+        resp = client.post("/add", data={"name": "Consumed Wine", "quantity": "10"}, headers=AJAX)
+        import json
+        wine_id = json.loads(resp.data)["wine"]["id"]
+        # Consume 4 bottles via edit
+        client.post(f"/edit/{wine_id}", data={
+            "name": "Consumed Wine", "quantity": "6",
+        }, headers=AJAX)
+        resp = client.get("/stats")
+        html = resp.data.decode()
+        # Final stock should be 6
+        assert 'data-stock="6"' in html
+
 
 # ── GET /api/wine/<id> ────────────────────────────────────────────────────────
 

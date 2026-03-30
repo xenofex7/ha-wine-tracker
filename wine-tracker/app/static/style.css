@@ -285,7 +285,7 @@ html.light .filter-option:hover { background: rgba(0,0,0,.05); }
   .search-wrap input { font-size: .8rem; }
   .filter-btn { height: 30px; width: 30px; }
   .theme-toggle { height: 30px; width: 30px; }
-  .nav-hamburger { height: 30px; width: 30px; }
+  .nav-hamburger { display: none; }
 
   /* Bottom Tab Bar */
   .bottom-tab-bar {
@@ -1475,6 +1475,38 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .dw-legend { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-top: 1rem; font-size: .78rem; }
 .dw-legend-item { display: flex; align-items: center; gap: .3rem; }
 
+/* ── Stats: Stock History Chart ─────────────────────────────────────────────── */
+.stock-chart-card { grid-column: 1 / -1; overflow: visible; }
+.stock-chart-card .stat-body { overflow: visible; }
+.stock-chart-wrap { position: relative; overflow: visible; }
+.stock-chart-svg {
+  width: 100%; height: auto; display: block;
+  aspect-ratio: 600 / 260;
+}
+.stock-dot { transition: r .15s ease; }
+.stock-hover-target { cursor: pointer; }
+.stock-hover-target:hover ~ .stock-dot,
+.stock-hover-target:hover + .stock-dot { r: 6; }
+.stock-chart-labels {
+  display: flex; justify-content: space-between;
+  padding: 8px 10% 0 10%;
+  font-size: .75rem; color: var(--muted);
+}
+.stock-tooltip {
+  position: absolute; z-index: 10;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: .5rem .7rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  pointer-events: none; white-space: nowrap;
+  transform: translate(-50%, -100%);
+  opacity: 0; transition: opacity .15s ease;
+  font-size: .8rem;
+}
+.stock-tooltip.visible { opacity: 1; }
+.stock-tooltip-label { font-weight: 700; font-size: .82rem; margin-bottom: 2px; }
+.stock-tooltip-value { color: var(--accent); font-weight: 600; }
+.stock-tooltip-detail { color: var(--muted); font-size: .72rem; margin-top: 2px; }
+
 /* ── Stats: Chart Tooltip ────────────────────────────────────────────────────── */
 .chart-tooltip {
   position: fixed; z-index: 500;
@@ -1765,15 +1797,18 @@ body.no-scroll { overflow: hidden; }
 }
 
 .chat-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
+  display: block;
   padding: .6rem .75rem;
   border-top: 1px solid var(--border);
   background: var(--surface);
   border-radius: 0 0 var(--radius) var(--radius);
 }
-.chat-input-wrap input {
+.chat-input-wrap .chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.chat-input-wrap input[type="text"] {
   flex: 1;
   padding: .55rem .75rem;
   border: 1px solid var(--border);
@@ -1787,7 +1822,7 @@ body.no-scroll { overflow: hidden; }
   outline: none;
   transition: border-color .2s;
 }
-.chat-input-wrap input:focus { border-color: var(--accent); }
+.chat-input-wrap input[type="text"]:focus { border-color: var(--accent); }
 
 .chat-send {
   display: flex;
@@ -1848,12 +1883,14 @@ body.chat-page .grid { display: none; }
 }
 
 .chat-fullpage-input {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
   padding: .75rem;
   border-top: 1px solid var(--border);
   background: var(--bg);
+}
+.chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
 }
 
 .chat-fullpage-input input {
@@ -1870,6 +1907,35 @@ body.chat-page .grid { display: none; }
 }
 
 .chat-fullpage-input input:focus { border-color: var(--accent); }
+
+/* ── Chat Image Upload ──────────────────────────────────────────────────────── */
+.chat-upload-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--muted); font-size: 1.1rem;
+  cursor: pointer; transition: color .2s, border-color .2s; flex-shrink: 0;
+}
+.chat-upload-btn:hover { color: var(--accent); border-color: var(--accent); }
+.chat-image-preview {
+  display: inline-flex; align-items: center; gap: .5rem;
+  margin-bottom: .5rem; padding: .4rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.chat-image-preview img {
+  width: 56px; height: 56px; object-fit: cover; border-radius: 6px;
+}
+.chat-image-remove {
+  background: none; border: none; color: var(--muted);
+  font-size: 1.2rem; cursor: pointer; padding: 0 .3rem;
+  line-height: 1;
+}
+.chat-image-remove:hover { color: #e74c3c; }
+.chat-msg-thumb {
+  display: block; max-width: 120px; border-radius: 6px;
+  margin-bottom: .4rem;
+}
 
 /* ── Chat Header Buttons ─────────────────────────────────────────────────────── */
 .chat-header-btn {
