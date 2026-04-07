@@ -39,8 +39,8 @@ TRANSLATIONS = {
     # Stats pill (header)
     "stats_pill_bottle": "Flasche",
     "stats_pill_bottles": "Flaschen",
-    "stats_pill_wine": "Weinsorte",
-    "stats_pill_wines": "Weinsorten",
+    "stats_pill_wine": "Sorte",
+    "stats_pill_wines": "Sorten",
 
     # Toolbar
     "search_placeholder": "Suchen\u2026",
@@ -92,7 +92,8 @@ TRANSLATIONS = {
     "wine_type_Anderes": "Anderes",
 
     # Card
-    "bottles_abbr": "Fl.",
+    "bottle_abbr": "Flasche",
+    "bottles_abbr": "Flaschen",
     "btn_less": "Eine Flasche weniger",
     "btn_more": "Eine Flasche mehr",
     "btn_edit": "Bearbeiten",
@@ -353,7 +354,8 @@ TRANSLATIONS = {
     "wine_type_Likörwein": "Fortified Wine",
     "wine_type_Anderes": "Other",
 
-    "bottles_abbr": "btl.",
+    "bottle_abbr": "Bottle",
+    "bottles_abbr": "Bottles",
     "btn_less": "One bottle less",
     "btn_more": "One bottle more",
     "btn_edit": "Edit",
@@ -608,7 +610,8 @@ TRANSLATIONS = {
     "wine_type_Likörwein": "Vin muté",
     "wine_type_Anderes": "Autre",
 
-    "bottles_abbr": "bout.",
+    "bottle_abbr": "Bouteille",
+    "bottles_abbr": "Bouteilles",
     "btn_less": "Une bouteille de moins",
     "btn_more": "Une bouteille de plus",
     "btn_edit": "Modifier",
@@ -863,7 +866,8 @@ TRANSLATIONS = {
     "wine_type_Likörwein": "Vino liquoroso",
     "wine_type_Anderes": "Altro",
 
-    "bottles_abbr": "bott.",
+    "bottle_abbr": "Bottiglia",
+    "bottles_abbr": "Bottiglie",
     "btn_less": "Una bottiglia in meno",
     "btn_more": "Una bottiglia in più",
     "btn_edit": "Modifica",
@@ -1118,7 +1122,8 @@ TRANSLATIONS = {
     "wine_type_Likörwein": "Vino generoso",
     "wine_type_Anderes": "Otro",
 
-    "bottles_abbr": "bot.",
+    "bottle_abbr": "Botella",
+    "bottles_abbr": "Botellas",
     "btn_less": "Una botella menos",
     "btn_more": "Una botella más",
     "btn_edit": "Editar",
@@ -1373,7 +1378,8 @@ TRANSLATIONS = {
     "wine_type_Likörwein": "Vinho generoso",
     "wine_type_Anderes": "Outro",
 
-    "bottles_abbr": "gar.",
+    "bottle_abbr": "Garrafa",
+    "bottles_abbr": "Garrafas",
     "btn_less": "Uma garrafa a menos",
     "btn_more": "Uma garrafa a mais",
     "btn_edit": "Editar",
@@ -1628,7 +1634,8 @@ TRANSLATIONS = {
     "wine_type_Likörwein": "Versterkte wijn",
     "wine_type_Anderes": "Overig",
 
-    "bottles_abbr": "fl.",
+    "bottle_abbr": "Fles",
+    "bottles_abbr": "Flessen",
     "btn_less": "Eén fles minder",
     "btn_more": "Eén fles meer",
     "btn_edit": "Bewerken",

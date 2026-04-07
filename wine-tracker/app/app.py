@@ -61,6 +61,8 @@ def load_options():
         "openrouter_model": "anthropic/claude-opus-4.6",
         "ollama_host": "http://localhost:11434",
         "ollama_model": "llava",
+        "minimax_api_key": "",
+        "minimax_model": "MiniMax-VL-01",
     }
     try:
         with open(OPTIONS_PATH, "r") as f:
@@ -82,6 +84,8 @@ def load_options():
         "OPENROUTER_MODEL": "openrouter_model",
         "OLLAMA_HOST": "ollama_host",
         "OLLAMA_MODEL": "ollama_model",
+        "MINIMAX_API_KEY": "minimax_api_key",
+        "MINIMAX_MODEL": "minimax_model",
     }
     for env_key, opt_key in env_map.items():
         val = os.environ.get(env_key)
@@ -104,6 +108,8 @@ def _is_ai_configured(opts):
         return bool(opts.get("openrouter_api_key", "").strip())
     elif provider == "ollama":
         return bool(opts.get("ollama_host", "").strip())
+    elif provider == "minimax":
+        return bool(opts.get("minimax_api_key", "").strip())
     return False
 
 
@@ -1263,6 +1269,23 @@ def _call_ollama(image_b64, media_type, prompt, opts):
     return response.json()["message"]["content"]
 
 
+def _call_minimax(image_b64, media_type, prompt, opts):
+    """Call MiniMax API (OpenAI-compatible, vision or text-only)."""
+    from openai import OpenAI
+    api_key = opts.get("minimax_api_key", "").strip()
+    model = opts.get("minimax_model", "MiniMax-VL-01").strip() or "MiniMax-VL-01"
+    client = OpenAI(api_key=api_key, base_url="https://api.minimaxi.chat/v1")
+    content = []
+    if image_b64:
+        content.append({"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}})
+    content.append({"type": "text", "text": prompt})
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": content}],
+        max_tokens=1024,
+    )
+    return response.choices[0].message.content
+
 
 # ── AI Chat Functions ─────────────────────────────────────────────────────────
 
@@ -1355,6 +1378,28 @@ def _call_chat_ollama(messages, system_prompt, opts, image_b64=None, media_type=
     return response.json()["message"]["content"]
 
 
+def _call_chat_minimax(messages, system_prompt, opts, image_b64=None, media_type=None):
+    """Chat via MiniMax (OpenAI-compatible, multi-turn, with optional image)."""
+    from openai import OpenAI
+    api_key = opts.get("minimax_api_key", "").strip()
+    model = opts.get("minimax_model", "MiniMax-VL-01").strip() or "MiniMax-VL-01"
+    client = OpenAI(api_key=api_key, base_url="https://api.minimaxi.chat/v1")
+    if image_b64 and messages:
+        last = messages[-1]
+        if last["role"] == "user":
+            messages = messages[:-1] + [{"role": "user", "content": [
+                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
+                {"type": "text", "text": last["content"]},
+            ]}]
+    full_messages = [{"role": "system", "content": system_prompt}] + messages
+    response = client.chat.completions.create(
+        model=model,
+        messages=full_messages,
+        max_tokens=2048,
+    )
+    return response.choices[0].message.content
+
+
 def _call_chat(provider, messages, system_prompt, opts, image_b64=None, media_type=None):
     """Dispatch chat to the configured AI provider."""
     dispatch = {
@@ -1362,6 +1407,7 @@ def _call_chat(provider, messages, system_prompt, opts, image_b64=None, media_ty
         "openai": _call_chat_openai,
         "openrouter": _call_chat_openrouter,
         "ollama": _call_chat_ollama,
+        "minimax": _call_chat_minimax,
     }
     fn = dispatch.get(provider)
     if not fn:
@@ -1480,6 +1526,7 @@ Rules:
             "openai": _call_openai,
             "openrouter": _call_openrouter,
             "ollama": _call_ollama,
+            "minimax": _call_minimax,
         }
         call_fn = dispatch.get(provider)
         if not call_fn:
@@ -1760,6 +1807,7 @@ def reanalyze_wine():
             "openai": _call_openai,
             "openrouter": _call_openrouter,
             "ollama": _call_ollama,
+            "minimax": _call_minimax,
         }
         call_fn = dispatch.get(provider)
         if not call_fn:

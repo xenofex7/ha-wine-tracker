@@ -209,10 +209,13 @@ html.light .nav-menu-item:hover { background: rgba(0,0,0,.04); }
 /* ── bottleCountBadge ───────────────────────────────────────────────────────────────── */
 #bottleCountBadge {
    display:flex;
-   gap:.35rem;
-   font-size:.85rem;
+   flex-direction:column;
+   gap:.05rem;
+   font-size:.75rem;
    font-weight:700;
    color:var(--gold);
+   line-height:1.2;
+   text-align:right;
 }
 
 /* ── Search ───────────────────────────────────────────────────────────────── */

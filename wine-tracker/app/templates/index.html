@@ -30,9 +30,8 @@
   </div>
   <div class="header-spacer"></div>
   <div id="bottleCountBadge">
-    <i class="mdi mdi-bottle-wine"></i>
-    <span id="wineCountNum">{{ wines|length }}</span> {{ t.stats_pill_wines }} 
-    <span id="bottleCountNum">{{ wines|sum(attribute='quantity') }}</span> {{ t.bottles_abbr }}
+    <span><span id="bottleCountNum">{{ wines|sum(attribute='quantity') }}</span> {{ t.bottles_abbr }}</span>
+    <span><span id="wineCountNum">{{ wines|length }}</span> {{ t.stats_pill_wines }}</span>
   </div>
   <div class="search-wrap">
     <i class="mdi mdi-magnify search-icon"></i>
@@ -120,7 +119,7 @@
 
     <!-- Quantity badge -->
     <div class="qty-badge {% if w['quantity'] > 0 %}has{% endif %}">
-      {{ w['quantity'] }} {{ t.bottles_abbr }}
+      {{ w['quantity'] }} {{ t.bottle_abbr if w['quantity'] == 1 else t.bottles_abbr }}
     </div>
 
     <div class="card-body" onclick="viewFromCard(this)">
@@ -1113,7 +1112,7 @@ function renderCard(w) {
 
   return ribbonHtml +
     '<div class="card-img' + (w.image ? ' shimmer' : '') + '" onclick="cardImgClick(this)">' + imgHtml + '</div>' +
-    '<div class="qty-badge ' + (w.quantity > 0 ? 'has' : '') + '">' + w.quantity + ' ' + T.bottles_abbr + '</div>' +
+    '<div class="qty-badge ' + (w.quantity > 0 ? 'has' : '') + '">' + w.quantity + ' ' + (w.quantity === 1 ? T.bottle_abbr : T.bottles_abbr) + '</div>' +
     '<div class="card-body" onclick="viewFromCard(this)">' +
       '<div class="card-name" title="' + escapeHtml(w.name) + '">' + escapeHtml(w.name) + '</div>' +
       '<div class="card-meta">' + metaParts + '</div>' +
@@ -1223,7 +1222,7 @@ function changeQty(el, delta) {
   // Optimistic UI update
   card.dataset.quantity = newQty;
   card.querySelector('.qty-display').textContent = newQty;
-  card.querySelector('.qty-badge').textContent = newQty + ' ' + T.bottles_abbr;
+  card.querySelector('.qty-badge').textContent = newQty + ' ' + (newQty === 1 ? T.bottle_abbr : T.bottles_abbr);
   card.querySelector('.qty-badge').classList.toggle('has', newQty > 0);
   card.classList.toggle('empty', newQty == 0);
   applyFilters();

@@ -126,6 +126,41 @@ class TestAnalyzeWine:
         assert data["ok"] is True
         assert data["fields"]["name"] == "Test Wine"
 
+    @patch("app._call_minimax")
+    @patch("app.load_options")
+    def test_minimax_provider(self, mock_opts, mock_call, client):
+        """Should use MiniMax when configured."""
+        mock_opts.return_value = {
+            **wine_app.HA_OPTIONS,
+            "ai_provider": "minimax",
+            "minimax_api_key": "mm-test-key",
+            "minimax_model": "MiniMax-VL-01",
+        }
+        mock_call.return_value = json.dumps({
+            "name": "Penfolds Grange",
+            "wine_type": "Rotwein",
+            "vintage": 2018,
+            "region": "South Australia",
+            "grape": "Shiraz",
+            "price": None,
+            "notes": "",
+            "drink_from": None,
+            "drink_until": None,
+            "bottle_format": None,
+        })
+
+        fake_image = (io.BytesIO(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100), "test.jpg")
+        resp = client.post(
+            "/api/analyze-wine",
+            data={"image": fake_image},
+            content_type="multipart/form-data",
+        )
+        assert resp.status_code == 200
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert data["fields"]["name"] == "Penfolds Grange"
+        mock_call.assert_called_once()
+
     @patch("app._call_anthropic")
     @patch("app.load_options")
     def test_ai_json_parse_error(self, mock_opts, mock_call, client):
@@ -475,6 +510,25 @@ class TestWineChat:
         assert messages[1]["role"] == "assistant"
         assert messages[2]["role"] == "user"
         assert messages[2]["content"] == "Tell me about Merlot"
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_minimax_provider(self, mock_opts, mock_chat, client):
+        """Should pass 'minimax' as provider to _call_chat when MiniMax is configured."""
+        mock_opts.return_value = {
+            **wine_app.HA_OPTIONS,
+            "ai_provider": "minimax",
+            "minimax_api_key": "mm-test-key",
+            "minimax_model": "MiniMax-VL-01",
+        }
+        mock_chat.return_value = "MiniMax recommends a Barolo."
+
+        resp = self._post_chat(client, message="Suggest a red wine")
+        data = json.loads(resp.data)
+        assert resp.status_code == 200
+        assert data["ok"] is True
+        provider_arg = mock_chat.call_args[0][0]
+        assert provider_arg == "minimax"
 
     @patch("app._call_chat")
     @patch("app.load_options")

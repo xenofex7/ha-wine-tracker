@@ -32,10 +32,12 @@ options:
   openrouter_model: "anthropic/claude-opus-4.6"
   ollama_host: "http://localhost:11434"
   ollama_model: "llava"
+  minimax_api_key: ""
+  minimax_model: "MiniMax-VL-01"
 schema:
   currency: str
   language: str
-  ai_provider: list(none|anthropic|openai|openrouter|ollama)
+  ai_provider: list(none|anthropic|openai|openrouter|ollama|minimax)
   anthropic_api_key: str?
   anthropic_model: str?
   openai_api_key: str?
@@ -44,5 +46,7 @@ schema:
   openrouter_model: str?
   ollama_host: str?
   ollama_model: str?
+  minimax_api_key: str?
+  minimax_model: str?
 map:
   - share:rw
