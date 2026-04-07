@@ -29,6 +29,11 @@
     <a href="{{ ingress }}/stats" class="nav-menu-item">{{ t.stats_title }}</a>
   </div>
   <div class="header-spacer"></div>
+  <div id="bottleCountBadge">
+    <i class="mdi mdi-bottle-wine"></i>
+    <span id="wineCountNum">{{ wines|length }}</span> {{ t.stats_pill_wines }} 
+    <span id="bottleCountNum">{{ wines|sum(attribute='quantity') }}</span> {{ t.bottles_abbr }}
+  </div>
   <div class="search-wrap">
     <i class="mdi mdi-magnify search-icon"></i>
     <input type="text" id="searchInput" placeholder="{{ t.search_placeholder }}" autocomplete="off" oninput="debouncedFilter()">
@@ -54,13 +59,13 @@
         <div class="filter-section-title">{{ t.filter_title_dw }}</div>
         <div class="filter-list" id="filterDrinkWindow">
           <label class="filter-option active" data-dw="">
-            <input type="radio" name="drinkWindow" value="" checked onchange="filterByDrinkWindow('')"> {{ t.filter_all }}
+            <input type="radio" name="drinkWindow" value="" checked onchange="filterByDrinkWindow('')"> {{ filter_all }}
           </label>
           <label class="filter-option" data-dw="in">
-            <input type="radio" name="drinkWindow" value="in" onchange="filterByDrinkWindow('in')"> {{ t.filter_dw_in }}
+            <input type="radio" name="drinkWindow" value="in" onchange="filterByDrinkWindow('in')"> {{ filter_dw_in }}
           </label>
           <label class="filter-option" data-dw="last">
-            <input type="radio" name="drinkWindow" value="last" onchange="filterByDrinkWindow('last')"> {{ t.filter_dw_last }}
+            <input type="radio" name="drinkWindow" value="last" onchange="filterByDrinkWindow('last')"> {{ filter_dw_last }}
           </label>
           <label class="filter-option" data-dw="past">
             <input type="radio" name="drinkWindow" value="past" onchange="filterByDrinkWindow('past')"> {{ t.filter_dw_past }}
@@ -454,7 +459,8 @@ function applyFilters() {
 
     var visible = typeOk && searchOk && dwOk && emptyOk;
     card.style.display = visible ? '' : 'none';
-    if (visible) visibleCount++;
+    if (visible) bottleVisibleCount += parseInt(d.quantity) || 0;
+    if (visible) wineVisibleCount++;
   });
 
   // Sync table row visibility if table view is active
@@ -463,7 +469,7 @@ function applyFilters() {
   // Show/hide empty state
   var grid = document.querySelector('.grid');
   var emptyState = grid.querySelector('.empty-state');
-  if (visibleCount === 0 && cards.length > 0) {
+  if (wineVisibleCount === 0 && cards.length > 0) {
     if (!emptyState) {
       emptyState = document.createElement('div');
       emptyState.className = 'empty-state';
@@ -477,6 +483,10 @@ function applyFilters() {
   }
 
   // Update search-clear button visibility
+  var bottleCountEl = document.getElementById('bottleCountNum');
+  if (bottleCountEl) bottleCountEl.textContent = bottleVisibleCount;
+  var wineCountEl = document.getElementById('wineCountNum');
+  if (wineCountEl) wineCountEl.textContent = wineVisibleCount;
   var clearBtn = document.querySelector('.search-clear');
   if (clearBtn) clearBtn.style.display = query ? 'block' : '';
 

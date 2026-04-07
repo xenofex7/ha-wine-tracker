@@ -206,6 +206,15 @@ html.light .nav-menu-item:hover { background: rgba(0,0,0,.04); }
 }
 .theme-toggle:hover { color: var(--text); border-color: var(--text); }
 
+/* ── bottleCountBadge ───────────────────────────────────────────────────────────────── */
+#bottleCountBadge {
+   display:flex;
+   gap:.35rem;
+   font-size:.85rem;
+   font-weight:700;
+   color:var(--gold);
+}
+
 /* ── Search ───────────────────────────────────────────────────────────────── */
 .search-wrap {
   position: relative; width: 200px; flex-shrink: 0;
