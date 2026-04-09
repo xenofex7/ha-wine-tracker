@@ -43,7 +43,7 @@ TRANSLATIONS = {
     "stats_pill_wines": "Sorten",
 
     # Toolbar
-    "search_placeholder": "Suchen\u2026",
+    "search_placeholder": "Suchen",
     "filter_title_type": "Weintyp",
     "filter_title_dw": "Trinkfenster",
     "filter_all": "Alle",
@@ -308,7 +308,7 @@ TRANSLATIONS = {
     "stats_pill_wine": "Wine",
     "stats_pill_wines": "Wines",
 
-    "search_placeholder": "Search\u2026",
+    "search_placeholder": "Search",
     "filter_title_type": "Wine type",
     "filter_title_dw": "Drink window",
     "filter_all": "All",
@@ -564,7 +564,7 @@ TRANSLATIONS = {
     "stats_pill_wine": "Vin",
     "stats_pill_wines": "Vins",
 
-    "search_placeholder": "Rechercher\u2026",
+    "search_placeholder": "Rechercher",
     "filter_title_type": "Type de vin",
     "filter_title_dw": "Fenêtre de dégustation",
     "filter_all": "Tous",
@@ -820,7 +820,7 @@ TRANSLATIONS = {
     "stats_pill_wine": "Vino",
     "stats_pill_wines": "Vini",
 
-    "search_placeholder": "Cerca\u2026",
+    "search_placeholder": "Cerca",
     "filter_title_type": "Tipo di vino",
     "filter_title_dw": "Finestra di consumo",
     "filter_all": "Tutti",
@@ -1076,7 +1076,7 @@ TRANSLATIONS = {
     "stats_pill_wine": "Vino",
     "stats_pill_wines": "Vinos",
 
-    "search_placeholder": "Buscar\u2026",
+    "search_placeholder": "Buscar",
     "filter_title_type": "Tipo de vino",
     "filter_title_dw": "Ventana de consumo",
     "filter_all": "Todos",
@@ -1332,7 +1332,7 @@ TRANSLATIONS = {
     "stats_pill_wine": "Vinho",
     "stats_pill_wines": "Vinhos",
 
-    "search_placeholder": "Pesquisar\u2026",
+    "search_placeholder": "Pesquisar",
     "filter_title_type": "Tipo de vinho",
     "filter_title_dw": "Janela de consumo",
     "filter_all": "Todos",
@@ -1588,7 +1588,7 @@ TRANSLATIONS = {
     "stats_pill_wine": "Wijn",
     "stats_pill_wines": "Wijnen",
 
-    "search_placeholder": "Zoeken\u2026",
+    "search_placeholder": "Zoeken",
     "filter_title_type": "Wijnsoort",
     "filter_title_dw": "Drinkvenster",
     "filter_all": "Alle",
