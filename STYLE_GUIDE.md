@@ -276,6 +276,36 @@ Each theme defines: `--bg`, `--surface`, `--border`, `--accent`, `--accent2`, `-
 
 ---
 
+## Icons — Landing Page (`docs/`)
+
+The landing page uses a **minimal custom Lucide bundle** (`docs/assets/lucide-custom.js`, ~4.5 KB) instead of the full Lucide UMD package (388 KB).
+
+### Usage
+
+```html
+<i data-lucide="icon-name"></i>
+<!-- Then at end of <body>: -->
+<script src="./assets/lucide-custom.js"></script>
+<script>lucide.createIcons();</script>
+```
+
+`createIcons()` replaces every `<i data-lucide="…">` with a proper `<svg>`. All attributes on the `<i>` (e.g. `class`, `aria-hidden`) are copied to the `<svg>`.
+
+### Currently included icons (20)
+
+`activity`, `box`, `chart-bar`, `clock`, `external-link`, `globe`, `house`, `languages`, `lock`, `message-circle`, `moon`, `scan-line`, `search`, `sliders-horizontal`, `sparkles`, `star`, `sun`, `users`, `wine`, `x`
+
+### Adding a new icon
+
+1. Find the icon SVG at `https://github.com/lucide-icons/lucide/tree/main/icons`
+2. Copy the inner SVG elements (paths, circles, rects) — not the outer `<svg>` tag
+3. Add an entry to the `icons` object in `docs/assets/lucide-custom.js`
+4. Use `<i data-lucide="icon-name">` in the HTML
+
+> Do NOT replace `lucide-custom.js` with the full `lucide.min.js` bundle to add a single icon.
+
+---
+
 ## Text Conventions
 
 - **Dashes**: Always use a plain hyphen-minus (`-`), never em-dashes (`—`) or en-dashes (`–`) - in code, commits, README, docs, and UI strings

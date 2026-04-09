@@ -1333,8 +1333,8 @@
         </li>
         <li>
           <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
-            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <i data-lucide="moon" class="icon-moon"></i>
+            <i data-lucide="sun" class="icon-sun"></i>
           </button>
         </li>
       </ul>
@@ -1385,17 +1385,17 @@
       <p class="section-subtitle fade-in fade-in-delay-1">Built for privacy, designed for simplicity, driven by the community.</p>
       <div class="why-grid">
         <div class="why-card fade-in">
-          <svg class="why-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10"/></svg>
+          <i data-lucide="house" class="why-card-icon"></i>
           <h3>Local First</h3>
           <p>Everything runs on your Home Assistant or Docker. No cloud, no subscription, no data sharing. Your wine cellar stays yours - always.</p>
         </div>
         <div class="why-card fade-in fade-in-delay-1">
-          <svg class="why-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 008.5 14.063l-6.135-1.582a.5.5 0 010-.962L8.5 9.936A2 2 0 009.937 8.5l1.582-6.135a.5.5 0 01.962 0L14.063 8.5A2 2 0 0015.5 9.937l6.135 1.582a.5.5 0 010 .962L15.5 14.063a2 2 0 00-1.437 1.437l-1.582 6.135a.5.5 0 01-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg>
+          <i data-lucide="sparkles" class="why-card-icon"></i>
           <h3>AI - Optional &amp; Affordable</h3>
           <p>Snap a label photo → AI fills in everything. Choose your provider: OpenAI, Anthropic, or Ollama (free, local). Analyzing 100 wines costs less than $0.10 with GPT-4o-mini.</p>
         </div>
         <div class="why-card fade-in fade-in-delay-2">
-          <svg class="why-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <i data-lucide="users" class="why-card-icon"></i>
           <h3>Community Driven</h3>
           <p>Built by wine lovers, for wine lovers. Feature requests, feedback, and contributions are always welcome. Join us on GitHub or the HA Community forum.</p>
         </div>
@@ -1449,93 +1449,67 @@
       <p class="section-subtitle fade-in fade-in-delay-1">From AI-powered label recognition to interactive globe visualization - Wine Tracker has you covered.</p>
       <div class="features-grid">
         <div class="feature-card fade-in">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="1" width="4" height="3" rx="0.5"/><path d="M10 4h4v2.5c0 0 2 1 2 4v9.5a2 2 0 01-2 2h-4a2 2 0 01-2-2V10.5c0-3 2-4 2-4V4z"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="wine"></i></span>
           <h3>Wine Cards</h3>
           <p>Beautiful cards with photo, vintage, type, region, grape variety, star rating, and personal tasting notes.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-1">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="scan-line"></i></span>
           <h3>AI Label Recognition</h3>
           <p>Snap a photo of any wine label and let AI fill in all fields automatically. Supports Claude, GPT, OpenRouter, and Ollama.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-2">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="search"></i></span>
           <h3>Vivino Search</h3>
           <p>Search by name, see community ratings, regions, and prices. Import wine data directly into your collection.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-3">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="globe"></i></span>
           <h3>Interactive Globe</h3>
           <p>See your wine regions on a beautiful 3D WebGL globe. A stunning way to visualize your collection geographically.</p>
         </div>
         <div class="feature-card fade-in">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="chart-bar"></i></span>
           <h3>Statistics</h3>
           <p>Donut charts, stock history, total bottles, total liters, collection value, and average age - all at a glance.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-1">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="message-circle"></i></span>
           <h3>AI Sommelier</h3>
           <p>Ask for food pairings, serving temperature, and recommendations. Upload wine label photos directly in the chat.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-2">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="languages"></i></span>
           <h3>7 Languages</h3>
           <p>Full support for German, English, French, Italian, Spanish, Portuguese, and Dutch.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-3">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M12 11v4"/><path d="M2 11h20"/><path d="M7 11V7"/><path d="M17 11V7"/><path d="M17 7H7a2 2 0 00-2 2"/><path d="M17 7a2 2 0 012 2"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="box"></i></span>
           <h3>Docker Standalone</h3>
           <p>Run without Home Assistant. Simple Docker Compose setup with persistent data volumes.</p>
         </div>
         <div class="feature-card fade-in">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="lock"></i></span>
           <h3>User Authentication</h3>
           <p>Built-in login with admin and readonly roles. Secure your collection with multi-user support.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-1">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="star"></i></span>
           <h3>Star Ratings</h3>
           <p>Rate your wines from 1 to 5 stars. Filter and sort by your personal ratings.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-2">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="activity"></i></span>
           <h3>Maturity Graph</h3>
           <p>Visualize your wine's drinking window with an interactive maturity curve. Know exactly when each bottle is at its peak.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-3">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="12" x2="16" y2="14"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="clock"></i></span>
           <h3>Timeline</h3>
           <p>Track every addition, edit, and tasting in a chronological activity log. See your cellar's full history at a glance.</p>
         </div>
         <div class="feature-card fade-in">
-          <span class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
-          </span>
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="sliders-horizontal"></i></span>
           <h3>Taste Profile &amp; Pairings</h3>
           <p>AI-generated taste profiles with body, tannin, acidity, and sweetness. Get food pairing suggestions for every wine.</p>
         </div>
@@ -1563,7 +1537,7 @@
           <p>All data is stored in a Docker volume - your collection survives container updates.</p>
           <a href="https://github.com/xenofex7/ha-wine-tracker/blob/main/docker/docker-compose.yml" class="docker-link" target="_blank" rel="noopener">
             View full configuration on GitHub
-            <svg viewBox="0 0 24 24"><path d="M14 3v2h3.59l-9.3 9.29 1.42 1.42L19 6.41V10h2V3h-7zM5 5v14h14v-7h-2v5H7V7h5V5H5z"/></svg>
+            <i data-lucide="external-link"></i>
           </a>
         </div>
         <div class="code-block fade-in fade-in-delay-3">
@@ -1645,7 +1619,7 @@
        ======================================== -->
   <div class="lightbox" id="lightbox">
     <button class="lightbox-close" aria-label="Close lightbox">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <i data-lucide="x"></i>
     </button>
     <img id="lightboxImg" src="" alt="">
   </div>
@@ -1776,6 +1750,8 @@
       }
     });
   </script>
+  <script src="./assets/lucide-custom.js"></script>
+  <script>lucide.createIcons();</script>
 
 </body>
 </html>
