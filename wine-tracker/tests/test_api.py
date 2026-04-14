@@ -1401,6 +1401,132 @@ class TestChatWineEditing:
         assert data["ok"] is True
         assert data.get("wine_action") is None
 
+    # ── Enrichment: chat add must populate maturity/taste/food like /reload ──
+
+    ENRICHMENT_JSON = json.dumps({
+        "name": "Chateau Test",
+        "wine_type": "Rotwein",
+        "vintage": 2020,
+        "region": "Bordeaux",
+        "grape": "Merlot",
+        "maturity_data": {
+            "youth":    [2020, 2023],
+            "maturity": [2024, 2026],
+            "peak":     [2027, 2029],
+            "decline":  [2030, 2032],
+        },
+        "taste_profile": {"body": 4, "tannin": 3, "acidity": 3, "sweetness": 1},
+        "food_pairings": ["Rinderbraten", "Hartkäse", "Lammkeule"],
+    })
+
+    @patch("app._call_anthropic")
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_add_wine_enriches_maturity_taste_food(
+        self, mock_opts, mock_chat, mock_anthropic, client
+    ):
+        """Chat ADD_WINE should trigger an AI enrichment pass that fills
+        maturity_data, taste_profile and food_pairings in the DB."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = (
+            '[ADD_WINE]\n'
+            '{"name": "Chateau Test", "year": 2020, "wine_type": "Rotwein", '
+            '"region": "Bordeaux", "grape": "Merlot", "quantity": 1, '
+            '"image_index": null}\n'
+            '[/ADD_WINE]'
+        )
+        # Enrichment pass uses the provider dispatch (not _call_chat)
+        mock_anthropic.return_value = self.ENRICHMENT_JSON
+
+        resp = client.post(
+            "/api/chat",
+            data=json.dumps({"message": "Add it", "edit_wines": True}),
+            content_type="application/json",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 200
+        assert data["wine_action"]["name"] == "Chateau Test"
+        wine_id = data["wine_action"]["id"]
+
+        # Enrichment call must have happened
+        assert mock_anthropic.called
+
+        # DB row should now contain the enriched fields
+        row = client.get(f"/api/wine/{wine_id}").get_json()
+        assert row["ok"] is True
+        w = row["wine"]
+        assert w["maturity_data"]["peak"] == [2027, 2029]
+        assert w["taste_profile"]["body"] == 4
+        assert "Rinderbraten" in w["food_pairings"]
+
+    @patch("app._call_anthropic")
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_add_wine_enrichment_failure_soft(
+        self, mock_opts, mock_chat, mock_anthropic, client
+    ):
+        """If the enrichment call raises, the wine must still be created."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = (
+            '[ADD_WINE]\n'
+            '{"name": "Resilient Wine", "year": 2021, "wine_type": "Weisswein", '
+            '"quantity": 1, "image_index": null}\n'
+            '[/ADD_WINE]'
+        )
+        mock_anthropic.side_effect = RuntimeError("AI provider is down")
+
+        resp = client.post(
+            "/api/chat",
+            data=json.dumps({"message": "Add it", "edit_wines": True}),
+            content_type="application/json",
+        )
+        data = json.loads(resp.data)
+        assert resp.status_code == 200
+        assert data["wine_action"] is not None
+        assert data["wine_action"]["name"] == "Resilient Wine"
+
+        row = client.get(f"/api/wine/{data['wine_action']['id']}").get_json()
+        assert row["ok"] is True
+        assert row["wine"]["maturity_data"] is None
+        assert row["wine"]["taste_profile"] is None
+
+    @patch("app._call_anthropic")
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_add_wine_enrichment_preserves_chat_drink_window(
+        self, mock_opts, mock_chat, mock_anthropic, client
+    ):
+        """Enrichment must not overwrite drink_from/drink_until set by the chat."""
+        mock_opts.return_value = self.CHAT_OPTS
+        mock_chat.return_value = (
+            '[ADD_WINE]\n'
+            '{"name": "Window Wine", "year": 2020, "wine_type": "Rotwein", '
+            '"drink_from": 2025, "drink_until": 2035, "quantity": 1, '
+            '"image_index": null}\n'
+            '[/ADD_WINE]'
+        )
+        # Enrichment returns a *different* window — must be ignored
+        mock_anthropic.return_value = json.dumps({
+            "drink_from": 2099,
+            "drink_until": 2100,
+            "taste_profile": {"body": 3, "tannin": 3, "acidity": 3, "sweetness": 1},
+        })
+
+        resp = client.post(
+            "/api/chat",
+            data=json.dumps({"message": "Add it", "edit_wines": True}),
+            content_type="application/json",
+        )
+        data = json.loads(resp.data)
+        wine_id = data["wine_action"]["id"]
+
+        row = client.get(f"/api/wine/{wine_id}").get_json()
+        w = row["wine"]
+        assert w["drink_from"] == 2025
+        assert w["drink_until"] == 2035
+        # Taste still got enriched
+        assert w["taste_profile"]["body"] == 3
+
 
 # ── Maturity / Taste / Food Pairings ─────────────────────────────────────────
 

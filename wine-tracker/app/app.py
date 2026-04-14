@@ -1844,36 +1844,32 @@ def _wine_json_rules(lang="en"):
 - Return ONLY the JSON object, no markdown, no explanation"""
 
 
-@app.route("/api/reanalyze-wine", methods=["POST"])
-def reanalyze_wine():
-    """Re-analyze a wine using image, text context, or both."""
+def _load_image_b64(image_filename):
+    """Load an image from UPLOAD_DIR and return (b64, media_type) or (None, 'image/jpeg')."""
     import base64
 
-    opts = load_options()
-    provider = opts.get("ai_provider", "none").strip().lower()
+    if not image_filename:
+        return None, "image/jpeg"
+    image_path = os.path.join(UPLOAD_DIR, image_filename)
+    if not os.path.isfile(image_path):
+        return None, "image/jpeg"
+    with open(image_path, "rb") as f:
+        image_b64 = base64.standard_b64encode(f.read()).decode("utf-8")
+    ext = image_filename.rsplit(".", 1)[-1].lower() if "." in image_filename else "jpg"
+    media_type = {
+        "jpg": "image/jpeg", "jpeg": "image/jpeg",
+        "png": "image/png", "webp": "image/webp", "gif": "image/gif",
+    }.get(ext, "image/jpeg")
+    return image_b64, media_type
 
-    if provider == "none" or not _is_ai_configured(opts):
-        return jsonify({"ok": False, "error": "no_api_key"}), 400
 
-    body = request.get_json(silent=True) or {}
-    image_filename = (body.get("image_filename") or "").strip()
-    wine_context = body.get("wine_context") or {}
+def _analyze_wine_from_context(opts, image_b64, media_type, wine_context):
+    """Call the configured AI provider to extract/enrich wine fields.
 
-    # Prepare image if available
-    image_b64 = None
-    media_type = "image/jpeg"
-    if image_filename:
-        image_path = os.path.join(UPLOAD_DIR, image_filename)
-        if os.path.isfile(image_path):
-            with open(image_path, "rb") as f:
-                image_b64 = base64.standard_b64encode(f.read()).decode("utf-8")
-            ext = image_filename.rsplit(".", 1)[-1].lower() if "." in image_filename else "jpg"
-            media_type = {
-                "jpg": "image/jpeg", "jpeg": "image/jpeg",
-                "png": "image/png", "webp": "image/webp", "gif": "image/gif",
-            }.get(ext, "image/jpeg")
-
-    # Build context string from known fields
+    Returns a dict of wine fields (may be partial), or raises on error.
+    Accepts image, text context, or both. Used by both the /api/reanalyze-wine
+    HTTP endpoint and the chat ADD_WINE enrichment pass.
+    """
     context_parts = []
     if wine_context.get("name"):   context_parts.append(f"Name: {wine_context['name']}")
     if wine_context.get("year"):   context_parts.append(f"Vintage: {wine_context['year']}")
@@ -1882,7 +1878,7 @@ def reanalyze_wine():
     if wine_context.get("grape"):  context_parts.append(f"Grape: {wine_context['grape']}")
 
     if not image_b64 and not context_parts:
-        return jsonify({"ok": False, "error": "no_data"}), 400
+        raise ValueError("no_data")
 
     schema = _wine_json_schema()
     rules = _wine_json_rules(LANG)
@@ -1896,32 +1892,57 @@ def reanalyze_wine():
         ctx = "\n".join(context_parts)
         prompt = f"Based on the following wine information, fill in as many missing details as possible using your wine expertise. Known information:\n{ctx}\n\nReturn ONLY valid JSON with these fields (fill in what you can determine):\n{schema}\n{rules}"
 
+    provider = opts.get("ai_provider", "none").strip().lower()
+    dispatch = {
+        "anthropic": _call_anthropic,
+        "openai": _call_openai,
+        "openrouter": _call_openrouter,
+        "ollama": _call_ollama,
+        "minimax": _call_minimax,
+    }
+    call_fn = dispatch.get(provider)
+    if not call_fn:
+        raise ValueError("invalid_provider")
+
+    raw = call_fn(image_b64, media_type, prompt, opts).strip()
+
+    if raw.startswith("```"):
+        raw = raw.split("\n", 1)[-1]
+        if raw.endswith("```"):
+            raw = raw[:-3].strip()
+
+    fields = json.loads(raw)
+
+    if fields.get("wine_type") and fields["wine_type"] not in WINE_TYPES:
+        fields["wine_type"] = ""
+
+    return fields
+
+
+@app.route("/api/reanalyze-wine", methods=["POST"])
+def reanalyze_wine():
+    """Re-analyze a wine using image, text context, or both."""
+    opts = load_options()
+    provider = opts.get("ai_provider", "none").strip().lower()
+
+    if provider == "none" or not _is_ai_configured(opts):
+        return jsonify({"ok": False, "error": "no_api_key"}), 400
+
+    body = request.get_json(silent=True) or {}
+    image_filename = (body.get("image_filename") or "").strip()
+    wine_context = body.get("wine_context") or {}
+
+    image_b64, media_type = _load_image_b64(image_filename)
+
     try:
-        dispatch = {
-            "anthropic": _call_anthropic,
-            "openai": _call_openai,
-            "openrouter": _call_openrouter,
-            "ollama": _call_ollama,
-            "minimax": _call_minimax,
-        }
-        call_fn = dispatch.get(provider)
-        if not call_fn:
-            return jsonify({"ok": False, "error": "invalid_provider"}), 400
-
-        raw = call_fn(image_b64, media_type, prompt, opts).strip()
-
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[-1]
-            if raw.endswith("```"):
-                raw = raw[:-3].strip()
-
-        fields = json.loads(raw)
-
-        if fields.get("wine_type") and fields["wine_type"] not in WINE_TYPES:
-            fields["wine_type"] = ""
-
+        fields = _analyze_wine_from_context(opts, image_b64, media_type, wine_context)
         return jsonify({"ok": True, "fields": fields})
 
+    except ValueError as e:
+        code = str(e)
+        if code in ("no_data", "invalid_provider"):
+            return jsonify({"ok": False, "error": code}), 400
+        raise
     except json.JSONDecodeError:
         app.logger.exception("AI reanalyze-wine JSON parse error")
         return jsonify({"ok": False, "error": "parse_error"}), 500
@@ -2130,6 +2151,61 @@ def _process_chat_add_wine(response_text, session_id, session_images, db):
         (wine_id, "added", quantity, datetime.now().isoformat()),
     )
     db.commit()
+
+    # Enrichment pass: the chat ADD_WINE block is intentionally small and
+    # doesn't include maturity_data/taste_profile/food_pairings. Run the same
+    # AI analysis used by the "Reload" button so the new wine gets the full
+    # maturity graph, taste profile and food pairings out of the box.
+    try:
+        opts = load_options()
+        if opts.get("ai_provider", "none").strip().lower() != "none" and _is_ai_configured(opts):
+            image_b64, media_type = _load_image_b64(wine_image)
+            wine_ctx = {
+                "name":   name,
+                "year":   year,
+                "type":   wine_type,
+                "region": data.get("region", ""),
+                "grape":  data.get("grape", ""),
+            }
+            enriched = _analyze_wine_from_context(opts, image_b64, media_type, wine_ctx)
+
+            updates = []
+            params = []
+            maturity = enriched.get("maturity_data")
+            if maturity:
+                updates.append("maturity_data = ?")
+                params.append(json.dumps(maturity))
+            taste = enriched.get("taste_profile")
+            if taste:
+                updates.append("taste_profile = ?")
+                params.append(json.dumps(taste))
+            pairings = enriched.get("food_pairings")
+            if pairings:
+                updates.append("food_pairings = ?")
+                params.append(json.dumps(pairings))
+            # Only fill drink window from enrichment if the chat didn't supply one
+            if drink_from is None and enriched.get("drink_from"):
+                try:
+                    updates.append("drink_from = ?")
+                    params.append(int(enriched["drink_from"]))
+                except (ValueError, TypeError):
+                    pass
+            if drink_until is None and enriched.get("drink_until"):
+                try:
+                    updates.append("drink_until = ?")
+                    params.append(int(enriched["drink_until"]))
+                except (ValueError, TypeError):
+                    pass
+
+            if updates:
+                params.append(wine_id)
+                db.execute(
+                    f"UPDATE wines SET {', '.join(updates)} WHERE id = ?",
+                    params,
+                )
+                db.commit()
+    except Exception as e:
+        app.logger.warning("Chat ADD_WINE enrichment failed for wine %s: %s", wine_id, e)
 
     return {"action": "added", "id": wine_id, "name": name, "year": year, "type": wine_type}
 
