@@ -231,6 +231,64 @@ REGION_COORDS = {
     "marlborough":  [-41.5, 174.0], "hawke's bay": [-39.5, 176.8],
 }
 
+WINE_LABELS = {
+    "de": {
+        "vintage":      "Jahrgang",
+        "type":         "Typ",
+        "region":       "Region",
+        "grape":        "Rebsorte",
+        "drink_window": "Trinkfenster",
+        "notes":        "Notizen",
+    },
+    "en": {
+        "vintage":      "Vintage",
+        "type":         "Type",
+        "region":       "Region",
+        "grape":        "Grape variety",
+        "drink_window": "Drinking window",
+        "notes":        "Notes",
+    },
+    "fr": {
+        "vintage":      "Millésime",
+        "type":         "Type",
+        "region":       "Région",
+        "grape":        "Cépage",
+        "drink_window": "Fenêtre de dégustation",
+        "notes":        "Notes",
+    },
+    "it": {
+        "vintage":      "Annata",
+        "type":         "Tipo",
+        "region":       "Regione",
+        "grape":        "Vitigno",
+        "drink_window": "Finestra di consumo",
+        "notes":        "Note",
+    },
+    "es": {
+        "vintage":      "Añada",
+        "type":         "Tipo",
+        "region":       "Región",
+        "grape":        "Variedad",
+        "drink_window": "Ventana de consumo",
+        "notes":        "Notas",
+    },
+    "pt": {
+        "vintage":      "Colheita",
+        "type":         "Tipo",
+        "region":       "Região",
+        "grape":        "Casta",
+        "drink_window": "Janela de consumo",
+        "notes":        "Notas",
+    },
+    "nl": {
+        "vintage":      "Oogstjaar",
+        "type":         "Type",
+        "region":       "Regio",
+        "grape":        "Druivenras",
+        "drink_window": "Drinkvenster",
+        "notes":        "Notities",
+    },
+}
 
 # ── Ingress support ──────────────────────────────────────────────────────────
 # HA Ingress proxies the app under /api/hassio_ingress/<token>/
@@ -1417,6 +1475,8 @@ def _call_chat(provider, messages, system_prompt, opts, image_b64=None, media_ty
 
 def _build_wine_cellar_context():
     """Fetch all in-stock wines and format as structured text for the AI system prompt."""
+
+    labels = WINE_LABELS.get(LANG, WINE_LABELS['en'])
     db = get_db()
     wines = db.execute(
         "SELECT * FROM wines WHERE quantity > 0 ORDER BY type, name, year"
@@ -1427,19 +1487,20 @@ def _build_wine_cellar_context():
     for w in wines:
         w = dict(w)
         parts = [f"- [ID:{w['id']}] {w['name']}"]
-        if w.get("year"):       parts.append(f"Jahrgang {w['year']}")
-        if w.get("type"):       parts.append(f"Typ: {w['type']}")
-        if w.get("region"):     parts.append(f"Region: {w['region']}")
-        if w.get("grape"):      parts.append(f"Rebsorte: {w['grape']}")
-        if w.get("rating"):     parts.append(f"Bewertung: {w['rating']}/5")
-        if w.get("quantity"):   parts.append(f"Menge: {w['quantity']} Fl.")
+        if w.get("year"):
+            parts.append(f"{labels['vintage']} {w['year']}")
+        if w.get("type"):
+            parts.append(f"{labels['type']}: {w['type']}")
+        if w.get("region"):
+            parts.append(f"{labels['region']}: {w['region']}")
+        if w.get("grape"):
+            parts.append(f"{labels['grape']}: {w['grape']}")
         if w.get("drink_from") or w.get("drink_until"):
-            parts.append(f"Trinkfenster: {w.get('drink_from', '?')}-{w.get('drink_until', '?')}")
-        if w.get("notes"):      parts.append(f"Notizen: {w['notes']}")
-        if w.get("price"):      parts.append(f"Preis: {w['price']}")
-        if w.get("location"):   parts.append(f"Lagerort: {w['location']}")
-        if w.get("bottle_format") and w["bottle_format"] != 0.75:
-            parts.append(f"Format: {w['bottle_format']}L")
+            parts.append(
+                f"{labels['drink_window']}: {w.get('drink_from', '?')}-{w.get('drink_until', '?')}"
+            )
+        if w.get("notes"):
+            parts.append(f"{labels['notes']}: {w['notes']}")
         lines.append(" | ".join(parts))
     return "\n".join(lines), len(wines)
 
