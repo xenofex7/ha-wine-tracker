@@ -422,6 +422,8 @@ function startNewChatSession() {
   document.getElementById('chatInput').focus();
   // Refresh sidebar
   if (_chatSidebarOpen) loadChatSidebarList();
+  // On mobile, close the history sidebar so the new chat is actually visible
+  if (window.innerWidth <= 768 && _chatSidebarOpen) toggleChatSidebar();
 }
 
 function deleteChatSession(sessionId) {

@@ -777,6 +777,28 @@ class TestChatPage:
         assert "/api/wine/" in html
         assert 'id="viewModal"' in html
 
+    @patch("app.load_options")
+    def test_chat_new_button_closes_history_sidebar_on_mobile(self, mock_opts, client):
+        """The 'new chat' button must close the history sidebar on narrow viewports,
+        otherwise the new (empty) chat stays hidden behind the open sidebar."""
+        mock_opts.return_value = {
+            "currency": "CHF", "language": "en",
+            "ai_provider": "anthropic", "anthropic_api_key": "sk-test",
+            "anthropic_model": "claude-sonnet-4-20250514",
+            "openai_api_key": "", "openrouter_api_key": "",
+            "ollama_host": "", "ollama_model": "",
+        }
+        response = client.get("/chat")
+        html = response.data.decode()
+        # Locate the startNewChatSession function body
+        start = html.find("function startNewChatSession()")
+        assert start != -1, "startNewChatSession function not found in chat.html"
+        end = html.find("}", start)
+        body = html[start:end]
+        # It must contain the same mobile-close idiom used by loadChatSession
+        assert "window.innerWidth <= 768" in body
+        assert "toggleChatSidebar" in body
+
 
 # ── Authentication ────────────────────────────────────────────────────────────
 
