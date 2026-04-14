@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0
+
+- **Full analysis when adding via AI** - new wines added through the AI label scan or the sommelier chat now get their maturity phases, taste profile and food pairings filled in automatically, no more clicking "reload missing data" afterwards
+- **Vivino search for regional wines** - added a fallback chain of alternative Vivino endpoints so country-specific labels (e.g. Australian wines like Wynns Coonawarra Riesling) show up in search results even when the default endpoint silently redirects to an unparseable page
+- **Sommelier chat knows your stock, ratings and storage locations again** - the AI assistant can now answer questions like "how many bottles of X do I have left?", "show me my best-rated wines" or "where is my Barolo stored?" — these fields had regressed in an earlier release
+- **Fix: +/- buttons silently failing** - the quick quantity buttons on wine cards no longer throw a JavaScript error and actually persist the change to the database
+- **Fix: +/- buttons wiping enrichment data** - clicking the quantity buttons used to clear the maturity graph, taste profile and food pairings on affected wines; they are now preserved
+- **Fix: MiniMax provider** - updated the default MiniMax model name from the now-rejected `MiniMax-VL-01` to `MiniMax-Text-01` (still supports vision)
+- **Multilingual sommelier context** - the wine list sent to the AI assistant is now translated into the user's configured language (thanks @zoic21 for the contribution)
+
 ## 1.8.0
 
 - **Chat image upload** - attach photos directly in the chat to reference wine labels, menus, or bottles when chatting with the AI assistant
@@ -136,12 +146,6 @@
 - **2-column form layout** — grape variety and bottle format sit side-by-side for better space usage
 - **Database migration** — existing wines automatically set to standard 0.75L bottles
 - **Multilingual** — bottle format labels and total liters translated for all 7 languages
-
-## 1.1.4
-
-- **Improved SSL certificate handling** — force-reinstall requests, urllib3, and certifi packages to ensure reliable HTTPS connections to Vivino
-- **SSL debug logging** — certificate path detection now logs to console for easier troubleshooting
-- **Fix Vivino ID reload bug** — reload via Vivino now always updates the wine ID, fixing wines with wrong vintage IDs from previous searches
 
 ## 1.1.3
 
