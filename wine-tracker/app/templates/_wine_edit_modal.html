@@ -570,6 +570,17 @@ function populateFormFromAi(fields, imageFilename) {
   if (fields.notes) document.getElementById('wine_notes').value = fields.notes;
   if (fields.bottle_format) document.getElementById('wine_bottle_format').value = fields.bottle_format;
 
+  // Enrichment fields — hidden inputs that persist to DB on submit
+  if (fields.maturity_data) {
+    document.getElementById('wine_maturity_data').value = JSON.stringify(fields.maturity_data);
+  }
+  if (fields.taste_profile) {
+    document.getElementById('wine_taste_profile').value = JSON.stringify(fields.taste_profile);
+  }
+  if (fields.food_pairings) {
+    document.getElementById('wine_food_pairings').value = JSON.stringify(fields.food_pairings);
+  }
+
   if (imageFilename) {
     document.getElementById('aiImageField').value = imageFilename;
     var preview = document.getElementById('winePreview');
