@@ -827,9 +827,22 @@ def edit(wine_id):
     price_raw = request.form.get("price", "").strip()
     vivino_raw = request.form.get("vivino_id", "").strip()
     bottle_format_raw = request.form.get("bottle_format", "").strip()
-    maturity_data_raw = request.form.get("maturity_data", "").strip() or None
-    taste_profile_raw = request.form.get("taste_profile", "").strip() or None
-    food_pairings_raw = request.form.get("food_pairings", "").strip() or None
+    # For enrichment fields: if the form submission doesn't carry the key at
+    # all (e.g. quantity +/- buttons build a minimal FormData), keep whatever
+    # is already stored in the DB instead of wiping it. An explicitly present
+    # but empty key — as sent by the edit modal's hidden inputs — still clears.
+    if "maturity_data" in request.form:
+        maturity_data_raw = request.form.get("maturity_data", "").strip() or None
+    else:
+        maturity_data_raw = wine["maturity_data"]
+    if "taste_profile" in request.form:
+        taste_profile_raw = request.form.get("taste_profile", "").strip() or None
+    else:
+        taste_profile_raw = wine["taste_profile"]
+    if "food_pairings" in request.form:
+        food_pairings_raw = request.form.get("food_pairings", "").strip() or None
+    else:
+        food_pairings_raw = wine["food_pairings"]
     new_quantity = int(request.form.get("quantity", 0))
     db.execute(
         """UPDATE wines SET name=?, year=?, type=?, region=?, quantity=?, rating=?,

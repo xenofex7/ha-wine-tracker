@@ -248,6 +248,97 @@ class TestEditWine:
         # Should redirect (wine not found)
         assert resp.status_code == 302
 
+    def test_edit_preserves_enrichment_on_minimal_form(self, client, sample_wine):
+        """Minimal FormData (as sent by the quantity +/- buttons) must not wipe
+        maturity_data, taste_profile or food_pairings."""
+        wine_id = sample_wine["wine"]["id"]
+        # First, seed enrichment via a full form submission (edit modal style)
+        client.post(
+            f"/edit/{wine_id}",
+            data={
+                "name": "Château Test",
+                "year": "2020",
+                "type": "Rotwein",
+                "region": "Bordeaux",
+                "quantity": "3",
+                "rating": "4",
+                "notes": "",
+                "grape": "Merlot",
+                "bottle_format": "0.75",
+                "maturity_data": '{"youth":[2020,2022],"maturity":[2022,2025],"peak":[2025,2028],"decline":[2028,2032]}',
+                "taste_profile": '{"body":4,"tannin":3,"acidity":3,"sweetness":1}',
+                "food_pairings": '["Steak","Cheese"]',
+            },
+            headers=AJAX,
+        )
+        # Sanity check
+        row = client.get(f"/api/wine/{wine_id}").get_json()
+        assert row["wine"]["maturity_data"]["peak"] == [2025, 2028]
+        assert row["wine"]["taste_profile"]["body"] == 4
+        assert row["wine"]["food_pairings"] == ["Steak", "Cheese"]
+
+        # Now simulate a quantity +1 click — minimal FormData without the
+        # enrichment fields (as built by changeQty in index.html).
+        resp = client.post(
+            f"/edit/{wine_id}",
+            data={
+                "name": "Château Test",
+                "year": "2020",
+                "type": "Rotwein",
+                "region": "Bordeaux",
+                "quantity": "4",
+                "rating": "4",
+                "notes": "",
+                "grape": "Merlot",
+                "bottle_format": "0.75",
+            },
+            headers=AJAX,
+        )
+        assert resp.status_code == 200
+        row = client.get(f"/api/wine/{wine_id}").get_json()
+        w = row["wine"]
+        # Quantity was updated
+        assert w["quantity"] == 4
+        # Enrichment MUST still be there
+        assert w["maturity_data"]["peak"] == [2025, 2028]
+        assert w["taste_profile"]["body"] == 4
+        assert w["food_pairings"] == ["Steak", "Cheese"]
+
+    def test_edit_explicit_empty_clears_enrichment(self, client, sample_wine):
+        """When the edit modal explicitly submits empty enrichment hidden
+        inputs, the values should be cleared (explicit intent)."""
+        wine_id = sample_wine["wine"]["id"]
+        # Seed enrichment
+        client.post(
+            f"/edit/{wine_id}",
+            data={
+                "name": "Château Test",
+                "type": "Rotwein",
+                "quantity": "3",
+                "maturity_data": '{"youth":[2020,2022],"maturity":[2022,2025],"peak":[2025,2028],"decline":[2028,2032]}',
+                "taste_profile": '{"body":4,"tannin":3,"acidity":3,"sweetness":1}',
+                "food_pairings": '["Steak"]',
+            },
+            headers=AJAX,
+        )
+        # Now submit with explicit empty strings (edit modal default)
+        client.post(
+            f"/edit/{wine_id}",
+            data={
+                "name": "Château Test",
+                "type": "Rotwein",
+                "quantity": "3",
+                "maturity_data": "",
+                "taste_profile": "",
+                "food_pairings": "",
+            },
+            headers=AJAX,
+        )
+        row = client.get(f"/api/wine/{wine_id}").get_json()
+        assert row["wine"]["maturity_data"] is None
+        assert row["wine"]["taste_profile"] is None
+        assert row["wine"]["food_pairings"] is None
+
     def test_edit_updates_stats(self, client, sample_wine):
         wine_id = sample_wine["wine"]["id"]
         resp = client.post(
