@@ -424,7 +424,8 @@ function debouncedFilter() {
 function applyFilters() {
   var query = document.getElementById('searchInput').value.trim().toLowerCase();
   var cards = document.querySelectorAll('.grid .card');
-  var visibleCount = 0;
+  var bottleVisibleCount = 0;
+  var wineVisibleCount = 0;
 
   cards.forEach(function(card) {
     var d = card.dataset;
