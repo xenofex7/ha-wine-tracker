@@ -2,13 +2,20 @@
 
 ## 1.9.0
 
-- **Full analysis when adding via AI** - new wines added through the AI label scan or the sommelier chat now get their maturity phases, taste profile and food pairings filled in automatically, no more clicking "reload missing data" afterwards
-- **Vivino search for regional wines** - added a fallback chain of alternative Vivino endpoints so country-specific labels (e.g. Australian wines like Wynns Coonawarra Riesling) show up in search results even when the default endpoint silently redirects to an unparseable page
-- **Sommelier chat knows your stock, ratings and storage locations again** - the AI assistant can now answer questions like "how many bottles of X do I have left?", "show me my best-rated wines" or "where is my Barolo stored?" — these fields had regressed in an earlier release
-- **Fix: +/- buttons silently failing** - the quick quantity buttons on wine cards no longer throw a JavaScript error and actually persist the change to the database
-- **Fix: +/- buttons wiping enrichment data** - clicking the quantity buttons used to clear the maturity graph, taste profile and food pairings on affected wines; they are now preserved
-- **Fix: MiniMax provider** - updated the default MiniMax model name from the now-rejected `MiniMax-VL-01` to `MiniMax-Text-01` (still supports vision)
+- **Sommelier chat with full cellar CRUD** - the AI assistant can now add, edit, and delete wines directly from the conversation. Snap a label photo in the chat, discuss the wine, then tell the assistant to add it — it confirms before any action and writes timeline entries just like manual edits. Gated behind a new "Edit wines via chat" setting (off by default).
+- **MiniMax as a new AI provider** - added MiniMax (OpenAI-compatible API) as a fifth AI provider for both label recognition and the sommelier chat, alongside Anthropic, OpenAI, OpenRouter, and Ollama. The default model is `MiniMax-Text-01` (supports vision despite the name).
+- **Full analysis when adding via AI** - new wines added through the AI label scan or the sommelier chat now get their maturity phases, taste profile, and food pairings filled in automatically — no more clicking "reload missing data" afterwards.
+- **Vivino search for regional wines** - added a fallback chain of alternative Vivino endpoints so country-specific labels (e.g. Australian wines like Wynns Coonawarra Riesling) show up in search results even when the default endpoint silently redirects to an unparseable page.
+- **Sommelier knows your stock, ratings, and storage locations again** - the AI assistant can now answer questions like "how many bottles of X do I have left?", "show me my best-rated wines" or "where is my Barolo stored?" — these fields had regressed in an earlier release.
 - **Multilingual sommelier context** - the wine list sent to the AI assistant is now translated into the user's configured language (thanks @zoic21 for the contribution)
+- **Smart bottle labels** - the cellar header now shows singular / plural bottle forms in your language ("1 Flasche" vs "2 Flaschen", "1 bottle" vs "2 bottles", …) in all seven supported languages
+- **Smarter chat session handling** - the chat now only auto-loads your most recent conversation if it's less than an hour old, so a new visit starts fresh instead of jumping back into yesterday's session
+- **Mobile chat polish** - chat history and new-chat buttons moved into the header on narrow viewports, the history panel has a dedicated close button, and the plus button closes the sidebar on mobile so the new chat is actually visible
+- **Wider hamburger breakpoint** - the navigation now collapses into the hamburger menu up to 900px instead of 640px, so tablets get a cleaner layout
+- **Landing page GDPR-friendly** - the landing page now self-hosts the Inter font family as WOFF2 instead of loading it from Google Fonts, and the screenshots were re-encoded to WebP (12 MB → 381 KB, −97%) for a much faster first paint
+- **Tiny Lucide icon bundle** - replaced the full 388 KB Lucide icon library with a hand-picked 4.5 KB custom bundle (−99%), shaving another big chunk off the landing page payload
+- **Fix: +/- buttons silently failing** - the quick quantity buttons on wine cards no longer throw a JavaScript error and actually persist the change to the database
+- **Fix: +/- buttons wiping enrichment data** - clicking the quantity buttons used to clear the maturity graph, taste profile, and food pairings on affected wines; they are now preserved
 
 ## 1.8.0
 

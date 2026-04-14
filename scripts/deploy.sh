@@ -124,6 +124,50 @@ if [[ -z "$CHANGELOG_ENTRY" ]]; then
   error "No '## ${SEMVER}' section found in CHANGELOG.md. Add it manually before running deploy."
 fi
 
+# ── 5a. Completeness sanity check ────────────────────────
+# Count commits since the previous tag and compare to the number of bullet
+# points in the changelog section. This catches the common failure mode where
+# the changelog only lists commits from the current terminal session but
+# ignores earlier commits that already landed on main. If the two numbers are
+# wildly different we refuse to deploy with a loud, specific error.
+PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+if [[ -n "$PREV_TAG" ]]; then
+  COMMIT_COUNT=$(git log "${PREV_TAG}..HEAD" --oneline --no-merges \
+    --invert-grep --grep='^Release v' --grep='^Prepare v.* release' \
+    2>/dev/null | wc -l | tr -d ' ')
+  BULLET_COUNT=$(echo "$CHANGELOG_ENTRY" | grep -c '^- ' || true)
+
+  echo ""
+  echo -e "${CYAN}── Completeness check ───────────────────${NC}"
+  info "Commits since ${PREV_TAG} (excluding release commits): ${COMMIT_COUNT}"
+  info "Bullet points in CHANGELOG ## ${SEMVER}:              ${BULLET_COUNT}"
+  echo ""
+
+  if [[ "$COMMIT_COUNT" -gt 0 ]]; then
+    info "Commits that will ship in ${TAG}:"
+    git log "${PREV_TAG}..HEAD" --oneline --no-merges \
+      --invert-grep --grep='^Release v' --grep='^Prepare v.* release' \
+      2>/dev/null | sed 's/^/    /'
+    echo ""
+
+    # Guard: a bullet-to-commit ratio below 0.4 is very likely an incomplete
+    # changelog — the author wrote it from session memory instead of from the
+    # git log. Refuse to deploy.
+    # Use bash arithmetic: need BULLET*10 >= COMMIT*4 to pass.
+    if (( BULLET_COUNT * 10 < COMMIT_COUNT * 4 )); then
+      echo -e "${RED}[ERROR]${NC} CHANGELOG looks incomplete:"
+      echo -e "${RED}[ERROR]${NC}   ${BULLET_COUNT} bullet(s) for ${COMMIT_COUNT} commit(s) since ${PREV_TAG}."
+      echo -e "${RED}[ERROR]${NC}   Go through the commit list above and make sure every"
+      echo -e "${RED}[ERROR]${NC}   user-visible change is represented in the CHANGELOG."
+      echo -e "${RED}[ERROR]${NC}   DO NOT write the changelog from memory — use 'git log ${PREV_TAG}..HEAD'."
+      exit 1
+    fi
+  fi
+  ok "Completeness check passed"
+  echo -e "${CYAN}─────────────────────────────────────────${NC}"
+  echo ""
+fi
+
 # Mirror the root CHANGELOG.md into wine-tracker/CHANGELOG.md so both stay in sync
 if [[ -f "wine-tracker/CHANGELOG.md" ]]; then
   cp CHANGELOG.md wine-tracker/CHANGELOG.md
