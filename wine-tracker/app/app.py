@@ -62,7 +62,7 @@ def load_options():
         "ollama_host": "http://localhost:11434",
         "ollama_model": "llava",
         "minimax_api_key": "",
-        "minimax_model": "MiniMax-VL-01",
+        "minimax_model": "MiniMax-Text-01",
     }
     try:
         with open(OPTIONS_PATH, "r") as f:
@@ -1359,7 +1359,7 @@ def _call_minimax(image_b64, media_type, prompt, opts):
     """Call MiniMax API (OpenAI-compatible, vision or text-only)."""
     from openai import OpenAI
     api_key = opts.get("minimax_api_key", "").strip()
-    model = opts.get("minimax_model", "MiniMax-VL-01").strip() or "MiniMax-VL-01"
+    model = opts.get("minimax_model", "MiniMax-Text-01").strip() or "MiniMax-Text-01"
     client = OpenAI(api_key=api_key, base_url="https://api.minimaxi.chat/v1")
     content = []
     if image_b64:
@@ -1468,7 +1468,7 @@ def _call_chat_minimax(messages, system_prompt, opts, image_b64=None, media_type
     """Chat via MiniMax (OpenAI-compatible, multi-turn, with optional image)."""
     from openai import OpenAI
     api_key = opts.get("minimax_api_key", "").strip()
-    model = opts.get("minimax_model", "MiniMax-VL-01").strip() or "MiniMax-VL-01"
+    model = opts.get("minimax_model", "MiniMax-Text-01").strip() or "MiniMax-Text-01"
     client = OpenAI(api_key=api_key, base_url="https://api.minimaxi.chat/v1")
     if image_b64 and messages:
         last = messages[-1]

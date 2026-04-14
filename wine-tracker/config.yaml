@@ -33,7 +33,7 @@ options:
   ollama_host: "http://localhost:11434"
   ollama_model: "llava"
   minimax_api_key: ""
-  minimax_model: "MiniMax-VL-01"
+  minimax_model: "MiniMax-Text-01"
 schema:
   currency: str
   language: str

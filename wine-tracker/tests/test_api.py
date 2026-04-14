@@ -134,7 +134,7 @@ class TestAnalyzeWine:
             **wine_app.HA_OPTIONS,
             "ai_provider": "minimax",
             "minimax_api_key": "mm-test-key",
-            "minimax_model": "MiniMax-VL-01",
+            "minimax_model": "MiniMax-Text-01",
         }
         mock_call.return_value = json.dumps({
             "name": "Penfolds Grange",
@@ -519,7 +519,7 @@ class TestWineChat:
             **wine_app.HA_OPTIONS,
             "ai_provider": "minimax",
             "minimax_api_key": "mm-test-key",
-            "minimax_model": "MiniMax-VL-01",
+            "minimax_model": "MiniMax-Text-01",
         }
         mock_chat.return_value = "MiniMax recommends a Barolo."
 
