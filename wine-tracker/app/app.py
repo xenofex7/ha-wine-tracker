@@ -239,6 +239,10 @@ WINE_LABELS = {
         "grape":        "Rebsorte",
         "drink_window": "Trinkfenster",
         "notes":        "Notizen",
+        "quantity":     "Menge",
+        "bottles":      "Fl.",
+        "rating":       "Bewertung",
+        "location":     "Lagerort",
     },
     "en": {
         "vintage":      "Vintage",
@@ -247,6 +251,10 @@ WINE_LABELS = {
         "grape":        "Grape variety",
         "drink_window": "Drinking window",
         "notes":        "Notes",
+        "quantity":     "Quantity",
+        "bottles":      "btl.",
+        "rating":       "Rating",
+        "location":     "Location",
     },
     "fr": {
         "vintage":      "Millésime",
@@ -255,6 +263,10 @@ WINE_LABELS = {
         "grape":        "Cépage",
         "drink_window": "Fenêtre de dégustation",
         "notes":        "Notes",
+        "quantity":     "Quantité",
+        "bottles":      "btl.",
+        "rating":       "Note",
+        "location":     "Emplacement",
     },
     "it": {
         "vintage":      "Annata",
@@ -263,6 +275,10 @@ WINE_LABELS = {
         "grape":        "Vitigno",
         "drink_window": "Finestra di consumo",
         "notes":        "Note",
+        "quantity":     "Quantità",
+        "bottles":      "btl.",
+        "rating":       "Valutazione",
+        "location":     "Posizione",
     },
     "es": {
         "vintage":      "Añada",
@@ -271,6 +287,10 @@ WINE_LABELS = {
         "grape":        "Variedad",
         "drink_window": "Ventana de consumo",
         "notes":        "Notas",
+        "quantity":     "Cantidad",
+        "bottles":      "bot.",
+        "rating":       "Valoración",
+        "location":     "Ubicación",
     },
     "pt": {
         "vintage":      "Colheita",
@@ -279,6 +299,10 @@ WINE_LABELS = {
         "grape":        "Casta",
         "drink_window": "Janela de consumo",
         "notes":        "Notas",
+        "quantity":     "Quantidade",
+        "bottles":      "gf.",
+        "rating":       "Avaliação",
+        "location":     "Localização",
     },
     "nl": {
         "vintage":      "Oogstjaar",
@@ -287,6 +311,10 @@ WINE_LABELS = {
         "grape":        "Druivenras",
         "drink_window": "Drinkvenster",
         "notes":        "Notities",
+        "quantity":     "Aantal",
+        "bottles":      "fl.",
+        "rating":       "Beoordeling",
+        "location":     "Locatie",
     },
 }
 
@@ -1495,6 +1523,12 @@ def _build_wine_cellar_context():
             parts.append(f"{labels['region']}: {w['region']}")
         if w.get("grape"):
             parts.append(f"{labels['grape']}: {w['grape']}")
+        if w.get("quantity"):
+            parts.append(f"{labels['quantity']}: {w['quantity']} {labels['bottles']}")
+        if w.get("rating"):
+            parts.append(f"{labels['rating']}: {w['rating']}/5")
+        if w.get("location"):
+            parts.append(f"{labels['location']}: {w['location']}")
         if w.get("drink_from") or w.get("drink_until"):
             parts.append(
                 f"{labels['drink_window']}: {w.get('drink_from', '?')}-{w.get('drink_until', '?')}"

@@ -356,3 +356,61 @@ class TestParseUserString:
         result = wine_app.parse_user_string("test:hunter2")
         assert check_password_hash(result["test"]["hash"], "hunter2")
         assert not check_password_hash(result["test"]["hash"], "wrongpass")
+
+
+# ── _build_wine_cellar_context() ──────────────────────────────────────────────
+
+class TestBuildWineCellarContext:
+    """AI sommelier context must include the fields the chat CRUD feature needs."""
+
+    def test_empty_cellar_returns_empty_string(self, app):
+        with app.app_context():
+            text, count = wine_app._build_wine_cellar_context()
+        assert text == ""
+        assert count == 0
+
+    def test_includes_quantity_rating_and_location(self, app, sample_wine):
+        """Chat CRUD needs quantity, rating and location to answer stock/search questions."""
+        with app.app_context():
+            text, count = wine_app._build_wine_cellar_context()
+        assert count == 1
+        assert "Château Test" in text
+        # Context must carry data required for CRUD / search use cases
+        assert "Menge: 3" in text
+        assert "Bewertung: 4/5" in text
+        assert "Lagerort: Keller A" in text
+
+    def test_includes_id_for_crud_references(self, app, sample_wine):
+        """IDs are required so the AI can reference a specific wine for CRUD ops."""
+        wine_id = sample_wine["wine"]["id"]
+        with app.app_context():
+            text, _ = wine_app._build_wine_cellar_context()
+        assert f"[ID:{wine_id}]" in text
+
+    def test_skips_out_of_stock_wines(self, app, client, sample_wine):
+        """Wines with quantity=0 should not appear in the AI context."""
+        wine_id = sample_wine["wine"]["id"]
+        # Drain the wine
+        with app.app_context():
+            db = wine_app.get_db()
+            db.execute("UPDATE wines SET quantity = 0 WHERE id = ?", (wine_id,))
+            db.commit()
+            text, count = wine_app._build_wine_cellar_context()
+        assert count == 0
+        assert text == ""
+
+    def test_respects_language_setting(self, app, sample_wine, monkeypatch):
+        """Labels should follow the configured language."""
+        monkeypatch.setattr(wine_app, "LANG", "en")
+        with app.app_context():
+            text, _ = wine_app._build_wine_cellar_context()
+        assert "Quantity: 3 btl." in text
+        assert "Rating: 4/5" in text
+        assert "Location: Keller A" in text
+
+    def test_falls_back_to_english_for_unknown_language(self, app, sample_wine, monkeypatch):
+        monkeypatch.setattr(wine_app, "LANG", "xx")
+        with app.app_context():
+            text, _ = wine_app._build_wine_cellar_context()
+        # English fallback applied
+        assert "Vintage 2020" in text
