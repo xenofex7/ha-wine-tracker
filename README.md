@@ -53,11 +53,11 @@ A sleek, modern wine cellar tracker. Run it as a **Home Assistant add-on** or as
 
 ### AI & Integrations
 
-- **AI label recognition** - snap a label photo and let AI fill in all fields (Anthropic, OpenAI, OpenRouter, Ollama)
-- **Vivino wine search** - search by name, see ratings, region & price, and import directly
+- **AI label recognition** - snap a label photo and let AI fill in all fields, including maturity phases, taste profile and food pairings (5 providers: Anthropic, OpenAI, OpenRouter, Ollama, MiniMax)
+- **Vivino wine search** - search by name, see ratings, region & price, and import directly — with a regional fallback chain so country-specific wines (e.g. Australian labels) actually show up
 - **Vivino ID management** - view, edit & test Vivino wine links directly in the edit modal
 - **Reload missing data** - re-analyze wines with incomplete fields via AI or Vivino
-- **AI sommelier chat** - ask questions about your cellar, upload wine label photos, with persistent chat history
+- **AI sommelier chat with full CRUD** - ask questions about your cellar, upload wine label photos, and add / edit / delete wines directly from the conversation — with persistent chat history
 - **Maturity graph** - AI-generated bell curve showing drinking phases (Youth, Maturity, Peak, Decline)
 - **Taste profile & food pairings** - AI-generated body/tannin/acidity/sweetness bars and matching dish suggestions
 
@@ -176,7 +176,7 @@ docker-compose up -d
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `AI_PROVIDER` | `none` | AI provider: `none`, `anthropic`, `openai`, `openrouter`, `ollama` |
+| `AI_PROVIDER` | `none` | AI provider: `none`, `anthropic`, `openai`, `openrouter`, `ollama`, `minimax` |
 
 **Anthropic (Claude):**
 
@@ -208,6 +208,15 @@ docker-compose up -d
 
 > **Tip:** When running Ollama in a separate container, use `http://host.docker.internal:11434` as the host.
 
+**MiniMax:**
+
+| Variable | Default |
+|----------|---------|
+| `MINIMAX_API_KEY` | _(empty)_ |
+| `MINIMAX_MODEL` | `MiniMax-Text-01` |
+
+> **Note:** `MiniMax-Text-01` is MiniMax's current vision-capable model — despite the name it accepts image input. The older `MiniMax-VL-01` name is no longer accepted by the API.
+
 ### Updating
 
 ```bash
@@ -236,7 +245,7 @@ The AI feature lets you snap a photo of a wine label and automatically fills in 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `ai_provider` | dropdown | `none` | AI provider: `none`, `anthropic`, `openai`, `openrouter`, `ollama` |
+| `ai_provider` | dropdown | `none` | AI provider: `none`, `anthropic`, `openai`, `openrouter`, `ollama`, `minimax` |
 | `anthropic_api_key` | string | _(empty)_ | API key for Anthropic (Claude) |
 | `anthropic_model` | string | `claude-opus-4-6` | Anthropic model name |
 | `openai_api_key` | string | _(empty)_ | API key for OpenAI |
@@ -245,12 +254,15 @@ The AI feature lets you snap a photo of a wine label and automatically fills in 
 | `openrouter_model` | string | `anthropic/claude-opus-4.6` | OpenRouter model identifier |
 | `ollama_host` | string | `http://localhost:11434` | Ollama server URL (for local AI) |
 | `ollama_model` | string | `llava` | Ollama vision model name |
+| `minimax_api_key` | string | _(empty)_ | API key for MiniMax |
+| `minimax_model` | string | `MiniMax-Text-01` | MiniMax model name (vision-capable despite the name) |
 
 **Provider notes:**
 - **Anthropic** - uses the Claude API directly. Requires an API key from [console.anthropic.com](https://console.anthropic.com)
 - **OpenAI** - uses the OpenAI API. Requires an API key from [platform.openai.com](https://platform.openai.com)
 - **OpenRouter** - a unified API that routes to many models. Requires an API key from [openrouter.ai](https://openrouter.ai). You can choose any vision-capable model.
 - **Ollama** - runs fully local, no API key needed. Install [Ollama](https://ollama.com) and pull a vision model (e.g. `llava`). Set the host to your Ollama server address.
+- **MiniMax** - OpenAI-compatible API from [minimaxi.chat](https://api.minimaxi.chat). The default model `MiniMax-Text-01` supports vision input despite the name; the older `MiniMax-VL-01` name is no longer accepted by the API.
 
 **Estimated token cost per wine analysis** (~2,500 tokens):
 
@@ -309,13 +321,16 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 | `location` | Text | Storage location |
 | `vivino_id` | Integer | Vivino wine ID (linked when imported via Vivino search) |
 | `bottle_format` | Real | Bottle size in liters (default: 0.75) |
+| `maturity_data` | JSON | AI-estimated maturity phases: `youth`, `maturity`, `peak`, `decline` year ranges |
+| `taste_profile` | JSON | AI-estimated body, tannin, acidity, sweetness (1–5) |
+| `food_pairings` | JSON | AI-generated list of matching dishes, localized to the UI language |
 
 ## Technology
 
 - **Backend**: Python 3 + Flask
-- **Database**: SQLite (single file)
-- **Frontend**: Vanilla HTML / CSS / JS (no framework, no Node.js)
-- **AI**: Anthropic SDK, OpenAI SDK, Ollama REST API
+- **Database**: SQLite (single file, 250+ tests)
+- **Frontend**: Vanilla HTML / CSS / JS (no framework, no Node.js, no build tools)
+- **AI**: Anthropic SDK, OpenAI SDK, OpenRouter, Ollama REST API, MiniMax (OpenAI-compatible)
 - **Globe**: COBE (WebGL 3D globe)
 - **Base image**: Home Assistant Alpine-based
 
@@ -332,9 +347,6 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 - **Drink window notifications** - HA alerts when wines enter or leave their optimal window
 - **Extended REST API** - more endpoints (single wine, stats, collection export) for dashboards & automations
 - **HA Dashboard card** - native Lovelace card to embed wine stats on any dashboard
-
-### 🤖 AI & Chat
-- **Add wine via chat** - snap a photo, discuss the wine with the sommelier, then tell it to add the wine to your cellar directly from the conversation
 
 ### 🎨 UI & Personalization
 - **Keyboard shortcuts** - `/` to search, `+` to add, `Esc` to close modals

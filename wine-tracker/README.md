@@ -19,14 +19,14 @@ Vivino to import wines with ratings and pricing.
 
 **Key features:**
 
-- 📸 AI wine label recognition (Anthropic, OpenAI, OpenRouter, Ollama)
-- 🔎 Vivino wine search with direct import
+- 📸 AI wine label recognition with 5 providers (Anthropic, OpenAI, OpenRouter, Ollama, MiniMax)
+- 🔎 Vivino wine search with direct import and a regional fallback chain for country-specific labels
 - 🌍 Interactive 3D globe showing your wine regions
-- 📊 Statistics with donut charts, stock history, total liters & value overview
+- 📊 Statistics with donut charts, stock history chart, total liters & value overview
 - 📋 Cellar view modes - Cards, List, Grid, and sortable Table view
 - 📅 Activity timeline - track wines added, consumed, restocked & removed
-- 💬 AI sommelier chat with image upload and persistent conversation history
-- 📈 Maturity graph, taste profile & food pairings (AI-powered)
+- 💬 AI sommelier chat with image upload, persistent history, and full cellar CRUD (add/edit/delete wines from the conversation)
+- 📈 Maturity graph, taste profile & food pairings (AI-generated, auto-filled on every AI add)
 - 🎨 6 themes with dark & light mode
 - 🌐 7 languages (DE, EN, FR, IT, ES, PT, NL)
 - 🍾 Bottle formats from Piccolo to Nebuchadnezzar

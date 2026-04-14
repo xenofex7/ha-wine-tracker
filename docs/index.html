@@ -57,18 +57,20 @@
       "priceCurrency": "USD"
     },
     "featureList": [
-      "AI-powered wine label recognition",
-      "Vivino search integration",
+      "AI-powered wine label recognition (Anthropic, OpenAI, OpenRouter, Ollama, MiniMax)",
+      "AI sommelier chat with full cellar CRUD — add, edit and delete wines from the conversation",
+      "Vivino search integration with regional fallback chain",
       "Interactive 3D globe visualization",
       "Wine collection statistics and stock history chart",
-      "AI sommelier with image upload for food pairings",
+      "Four cellar view modes — Cards, List, Grid, and sortable Table",
       "7 language support",
       "Docker standalone deployment",
-      "Home Assistant add-on",
-      "User authentication",
+      "Home Assistant add-on with Ingress",
+      "User authentication with admin and readonly roles",
       "Star ratings and tasting notes",
       "Activity timeline",
-      "Maturity graph and taste profiles"
+      "Maturity graph, taste profile and AI-generated food pairings",
+      "Bottle formats from Piccolo to Nebuchadnezzar"
     ],
     "softwareRequirements": "Docker or Home Assistant",
     "codeRepository": "https://github.com/xenofex7/ha-wine-tracker",
@@ -1392,7 +1394,7 @@
         <div class="why-card fade-in fade-in-delay-1">
           <i data-lucide="sparkles" class="why-card-icon"></i>
           <h3>AI - Optional &amp; Affordable</h3>
-          <p>Snap a label photo → AI fills in everything. Choose your provider: OpenAI, Anthropic, or Ollama (free, local). Analyzing 100 wines costs less than $0.10 with GPT-4o-mini.</p>
+          <p>Snap a label photo → AI fills in everything, including maturity phases, taste profile and food pairings. Choose from five providers: Anthropic Claude, OpenAI, OpenRouter, MiniMax, or Ollama (free, local). Analyzing 100 wines costs less than $0.10 with GPT-4o-mini.</p>
         </div>
         <div class="why-card fade-in fade-in-delay-2">
           <i data-lucide="users" class="why-card-icon"></i>
@@ -1456,12 +1458,12 @@
         <div class="feature-card fade-in fade-in-delay-1">
           <span class="feature-icon" aria-hidden="true"><i data-lucide="scan-line"></i></span>
           <h3>AI Label Recognition</h3>
-          <p>Snap a photo of any wine label and let AI fill in all fields automatically. Supports Claude, GPT, OpenRouter, and Ollama.</p>
+          <p>Snap a photo of any wine label and let AI fill in all fields automatically — including maturity phases, taste profile and food pairings. Supports Claude, GPT, OpenRouter, Ollama, and MiniMax.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-2">
           <span class="feature-icon" aria-hidden="true"><i data-lucide="search"></i></span>
           <h3>Vivino Search</h3>
-          <p>Search by name, see community ratings, regions, and prices. Import wine data directly into your collection.</p>
+          <p>Search by name, see community ratings, regions, and prices. Import wine data directly into your collection — with a regional fallback chain that surfaces country-specific labels too.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-3">
           <span class="feature-icon" aria-hidden="true"><i data-lucide="globe"></i></span>
@@ -1476,7 +1478,7 @@
         <div class="feature-card fade-in fade-in-delay-1">
           <span class="feature-icon" aria-hidden="true"><i data-lucide="message-circle"></i></span>
           <h3>AI Sommelier</h3>
-          <p>Ask for food pairings, serving temperature, and recommendations. Upload wine label photos directly in the chat.</p>
+          <p>Ask for food pairings, serving temperature, and recommendations. Upload label photos and add, edit or delete wines directly from the conversation.</p>
         </div>
         <div class="feature-card fade-in fade-in-delay-2">
           <span class="feature-icon" aria-hidden="true"><i data-lucide="languages"></i></span>
@@ -1512,6 +1514,11 @@
           <span class="feature-icon" aria-hidden="true"><i data-lucide="sliders-horizontal"></i></span>
           <h3>Taste Profile &amp; Pairings</h3>
           <p>AI-generated taste profiles with body, tannin, acidity, and sweetness. Get food pairing suggestions for every wine.</p>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-1">
+          <span class="feature-icon" aria-hidden="true"><i data-lucide="layout-grid"></i></span>
+          <h3>Four View Modes</h3>
+          <p>Switch between Cards, List, Grid, and a sortable Table view with persistent sort direction — whichever fits the moment.</p>
         </div>
       </div>
     </div>

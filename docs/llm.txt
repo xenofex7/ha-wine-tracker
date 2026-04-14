@@ -4,14 +4,14 @@
 
 ## Project Overview
 
-Wine Tracker helps wine enthusiasts manage their personal wine collection with AI-powered label recognition, Vivino integration, and beautiful visualizations. It runs locally on your server — no cloud, no subscription, no data sharing.
+Wine Tracker helps wine enthusiasts manage their personal wine collection with AI-powered label recognition, an AI sommelier chat with full cellar CRUD, Vivino integration, and rich visualizations. It runs locally on your server — no cloud, no subscription, no data sharing.
 
 **Tech Stack:**
 - Backend: Python 3 + Flask
 - Database: SQLite
 - Frontend: Vanilla HTML/CSS/JavaScript (no build tools)
-- AI: Anthropic Claude, OpenAI GPT, OpenRouter, Ollama
-- Visualization: COBE (WebGL 3D globe), Chart.js
+- AI: Anthropic Claude, OpenAI GPT, OpenRouter, Ollama (local), MiniMax
+- Visualization: COBE (WebGL 3D globe), SVG charts
 
 **Deployment:**
 - Home Assistant Add-on (recommended)
@@ -20,59 +20,100 @@ Wine Tracker helps wine enthusiasts manage their personal wine collection with A
 ## Core Features
 
 ### Wine Management
-- Track wine cards with photo, vintage, type, region, grape variety, rating & notes
+- Wine cards with photo, vintage, type, region, grape variety, rating & notes
 - Photo upload from phone (label photos)
-- Quantity tracking with quick +/− buttons
-- Bottle format support (0.1875l Piccolo → 15l Nebuchadnezzar)
-- Empty bottle placeholders
+- Quick quantity tracking with `+`/`−` buttons on every card
+- Bottle format support (0.1875 l Piccolo → 15 l Nebuchadnezzar)
+- Duplicate wines — perfect when only the vintage changes
+- Empty bottles stay visible as placeholders (toggle to hide)
 - Storage location with autocomplete
-- Drink window (from/until year)
-- Purchase price & source tracking
-- 1-5 star ratings
+- Drink window (from/until year) with AI estimation
+- Purchase price and source tracking
+- 1–5 star ratings
+- Region, grape variety, purchase source & storage location autocomplete
 
-### AI-Powered Recognition
-- Snap a label photo → AI fills in all fields automatically
-- Supports 4 AI providers: Anthropic Claude, OpenAI GPT, OpenRouter, Ollama (local, free)
-- Reload missing data feature for incomplete wines
-- Cost: ~$0.001/wine with GPT-4o-mini, free with Ollama
+### Cellar Views
+- **Four view modes** switchable in settings:
+  - **Cards** — classic image-first grid (default)
+  - **List** — compact one-line rows with corner ribbons
+  - **Grid** — image-only square tiles with overlay name
+  - **Table** — sortable columns with persistent sort direction, right-aligned price/quantity, responsive column hiding
+- **Search & filter** by wine type, vintage year, grape variety, name, region, or notes
+- **Hamburger menu** on narrow viewports
+- **6 themes** × dark & light mode
+
+### AI-Powered Recognition & Analysis
+- **Label scan:** snap a photo → AI fills in name, vintage, type, region, grape, price, drinking window, notes
+- **Automatic enrichment:** every AI-added wine also gets its maturity phases, taste profile, and food pairings filled in — no manual reload needed
+- **Reload missing data:** re-analyze existing wines with incomplete fields via AI or Vivino
+- **5 AI providers supported:**
+  - **Anthropic Claude** (`anthropic`) — direct Claude API
+  - **OpenAI** (`openai`) — GPT vision models
+  - **OpenRouter** (`openrouter`) — unified API for many vision-capable models
+  - **Ollama** (`ollama`) — runs fully local, no API key required (e.g. llava)
+  - **MiniMax** (`minimax`) — OpenAI-compatible, default model `MiniMax-Text-01`
+- **Cost:** roughly $0.001/wine with GPT-4o-mini, $0.002 with Claude Haiku, free with Ollama
+
+### AI Sommelier Chat
+- Ask questions about your cellar ("which wines should I open tonight?", "which bottles are at their peak?")
+- **Full CRUD via chat:** add, edit, and delete wines directly from the conversation — including snapping a label photo, discussing it, and then telling the assistant to add it
+- Upload wine label photos and reference them in the conversation
+- Persistent chat history with named sessions
+- The assistant knows your full cellar including quantities, ratings, storage locations and drinking windows
+- Multilingual: chat context is translated into the user's configured language
 
 ### Vivino Integration
 - Search wines by name
 - View community ratings, region, price
-- Import wine data directly
-- Vivino ID management in edit modal
-- Test Vivino links directly
+- Import wine data directly into the cellar
+- Vivino ID management in the edit modal with clickable test links
+- **Regional fallback chain:** retries alternative Vivino endpoints so country-specific wines (e.g. Australian labels) show up even when the default endpoint returns empty
 
-### Visualization
-- **Interactive 3D Globe**: See your wine regions on a WebGL globe (powered by COBE)
-- **Statistics**: Donut charts by type, total bottles, total liters, collection value, average age
-- **Responsive UI**: Works seamlessly on desktop & mobile
-- **7 Languages**: German, English, French, Italian, Spanish, Portuguese, Dutch
+### Visualization & Insights
+- **Interactive 3D globe** — see your wine regions on a WebGL globe (COBE)
+- **Donut charts** by wine type with counts
+- **Stock history chart** — smooth area chart showing how your bottle count evolved over time
+- **Collection totals** — bottles, liters, value, average age
+- **Maturity graph** — AI-generated bell curve showing Youth → Maturity → Peak → Decline phases with a "Today" marker
+- **Taste profile** — horizontal bars for body, tannin, acidity, sweetness (1–5)
+- **Food pairings** — AI-generated dish suggestions per wine, localized to the UI language
+- **Activity timeline** — chronological log of every wine added, consumed, restocked, or removed
 
 ### Home Assistant Integration
-- HA Ingress support (embedded in sidebar)
+- HA Ingress support (embedded in the sidebar)
 - REST API at `/api/summary` for HA sensors
 - Local-first architecture
 - Data stored in `/share/wine-tracker/`
+
+### Auth & Privacy
+- Built-in multi-user authentication (Docker mode)
+- `admin` and `readonly` roles
+- Session encryption
+- `DEV_AUTH` environment variable for quick local development without Home Assistant
+- No telemetry, no tracking
 
 ## Project Structure
 
 ```
 ha-wine-tracker/
 ├── wine-tracker/          # Main application
-│   ├── app.py            # Flask app entry point
-│   ├── templates/        # HTML templates
-│   ├── static/           # CSS, JS, images
-│   └── tests/            # pytest test suite
-├── docs/                 # Landing page (GitHub Pages)
-│   ├── index.html        # Main landing page
-│   └── llm.txt           # This file
-├── docker/               # Docker standalone setup
+│   ├── app/               # Flask app, templates, static assets
+│   │   ├── app.py         # Entry point
+│   │   ├── templates/     # HTML templates
+│   │   └── static/        # CSS, JS, images, themes
+│   ├── tests/             # pytest test suite (250+ tests)
+│   ├── translations/      # i18n JSON files (7 languages)
+│   ├── config.yaml        # HA add-on schema
+│   └── DOCS.md            # HA add-on documentation
+├── docs/                  # Landing page (GitHub Pages)
+│   ├── index.html         # Main landing page
+│   └── llm.txt            # This file
+├── docker/                # Docker standalone setup
 │   └── docker-compose.yml
-├── CHANGELOG.md          # Version history
-├── CLAUDE.md             # Project guidelines (German)
-└── STYLE_GUIDE.md        # UI design system
-
+├── scripts/deploy.sh      # Automated release pipeline
+├── CHANGELOG.md           # Version history
+├── CLAUDE.md              # Project guidelines (German)
+└── STYLE_GUIDE.md         # UI design system
 ```
 
 ## Key URLs
@@ -86,9 +127,9 @@ ha-wine-tracker/
 
 ### Home Assistant Add-on
 1. Add repository: `https://github.com/xenofex7/ha-wine-tracker`
-2. Install "Wine Tracker" from add-on store
-3. Configure currency, language, AI provider (optional)
-4. Start → Access from HA sidebar
+2. Install "Wine Tracker" from the add-on store
+3. Configure currency, language, and AI provider (optional)
+4. Start → access from the HA sidebar
 
 ### Docker Standalone
 ```yaml
@@ -111,45 +152,89 @@ volumes:
   wine-data:
 ```
 
-Access at `http://localhost:5050`
+Access at `http://localhost:5050`.
 
 ## Configuration Options
 
 ### General
-- `currency`: CHF, EUR, USD, GBP, CAD, AUD
+- `currency`: CHF, EUR, USD, GBP, CAD, AUD, SEK, NOK, DKK, PLN, CZK, BRL
 - `language`: de, en, fr, it, es, pt, nl
 
 ### Authentication (Docker only)
-- `AUTH_ENABLED`: true/false
-- `USERS`: user1:password1,user2:password2,guest:pass:readonly
-- `SECRET_KEY`: Session encryption key
+- `AUTH_ENABLED`: `true` / `false`
+- `USERS`: `user1:password1,user2:password2,guest:pass:readonly`
+- `SECRET_KEY`: session encryption key
+- `DEV_AUTH`: dev shortcut in the format `user:pass` or `user:pass:role`
 
-### AI Providers (Optional)
-- `ai_provider`: none, anthropic, openai, openrouter, ollama
-- Provider-specific API keys and model names
-- Ollama runs locally without API key
+### AI Providers (optional)
+- `ai_provider`: `none`, `anthropic`, `openai`, `openrouter`, `ollama`, `minimax`
+- **Anthropic:** `anthropic_api_key`, `anthropic_model` (default `claude-opus-4-6`)
+- **OpenAI:** `openai_api_key`, `openai_model` (default `gpt-5.2`)
+- **OpenRouter:** `openrouter_api_key`, `openrouter_model` (default `anthropic/claude-opus-4.6`)
+- **Ollama:** `ollama_host`, `ollama_model` (default `llava`)
+- **MiniMax:** `minimax_api_key`, `minimax_model` (default `MiniMax-Text-01`)
+
+All configuration options can also be passed as environment variables in Docker mode (e.g. `ANTHROPIC_API_KEY`, `MINIMAX_MODEL`).
 
 ## Database Schema
 
-SQLite database with single `wines` table:
+SQLite database with three tables:
 
-**Core Fields:**
-- name, year, type, region, grape, quantity, rating, notes
-- image (label photo filename)
-- added (date)
+### `wines` table
+**Core fields:** `name`, `year`, `type`, `region`, `grape`, `quantity`, `rating`, `notes`, `image`, `added`.
 
-**Additional:**
-- purchased_at, price, location
-- drink_from, drink_until (drinking window)
-- vivino_id (link to Vivino data)
-- bottle_format (size in liters, default 0.75)
+**Additional fields:** `purchased_at`, `price`, `location`, `drink_from`, `drink_until`, `vivino_id`, `bottle_format` (liters, default 0.75).
+
+**Enrichment fields (JSON):** `maturity_data` (youth/maturity/peak/decline year ranges), `taste_profile` (body/tannin/acidity/sweetness 1–5), `food_pairings` (array of dish names).
+
+### `timeline` table
+Append-only activity log: `wine_id`, `action` (added/consumed/restocked/removed/chat), `quantity`, `timestamp`.
+
+### `chat_sessions` / `chat_messages` tables
+Persisted sommelier chat sessions with uploaded image references (cascade-deleted with their parent session).
+
+## HTTP Endpoints
+
+### Pages
+- `GET /` — main cellar view (cards/list/grid/table)
+- `GET /stats` — statistics page with globe, donut charts, stock history chart
+- `GET /timeline` — activity timeline
+- `GET /chat` — AI sommelier chat
+- `GET /login` / `GET /logout` — auth
+
+### Wine CRUD
+- `POST /add` — add wine (form or JSON)
+- `POST /edit/<id>` — update wine
+- `POST /duplicate/<id>` — duplicate wine (new vintage)
+- `POST /delete/<id>` — delete wine
+- `GET /api/wine/<id>` — single wine as JSON
+- `GET /api/summary` — aggregate stats for HA sensors
+
+### AI & Vivino
+- `POST /api/analyze-wine` — AI label recognition (returns all fields incl. maturity, taste, pairings)
+- `POST /api/reanalyze-wine` — re-run AI on an existing wine (image, text context, or both)
+- `GET /api/vivino-search?q=<query>` — Vivino wine search with regional fallback chain
+- `POST /api/vivino-image` — download a Vivino image into the local uploads folder
+
+### Chat
+- `GET /api/chat/sessions` — list chat sessions
+- `POST /api/chat/sessions` — create a new session
+- `GET /api/chat/sessions/<id>` — get session + messages
+- `DELETE /api/chat/sessions/<id>` — delete session (and its images)
+- `POST /api/chat` — send a message; supports image upload and full CRUD on wines via structured action blocks
+
+### Timeline
+- `GET /api/timeline` — chronological activity events (filterable)
+
+### Uploads
+- `GET /uploads/<filename>` — serve stored wine/chat images
 
 ## Development Guidelines
 
-See `CLAUDE.md` for full project guidelines (in German):
+See `CLAUDE.md` for full project guidelines (in German).
 
 ### Testing
-- **Every feature and bugfix must include tests**
+- **Every feature and bugfix must include tests** (250+ tests total)
 - Routes: `tests/test_routes.py`, `tests/test_api.py`
 - Helpers: `tests/test_helpers.py`
 - Database: `tests/test_database.py`
@@ -158,37 +243,27 @@ See `CLAUDE.md` for full project guidelines (in German):
 
 ### Style Guide
 - All UI decisions in `STYLE_GUIDE.md`
-- Interactive hover: `var(--accent2)` or `color-mix()`
-- Danger/error: hardcoded `#e74c3c` / `#c0392b`
-- Border-radius: Container 12px, Popover 10px, Button 8px, Tag 4px
-- Test in all 6 themes × Dark + Light
+- Interactive hover: `var(--accent2)` or `color-mix()` — never hard-coded hex
+- Danger/error: hard-coded `#e74c3c` / `#c0392b`
+- Border-radius: Container `var(--radius)`, Popover 10px, Button 8px, Item 6px, Tag 4px
+- Test new components in all 6 themes × Dark + Light
 
 ### Language
 - Code & commits: English
 - Changelogs: English
 - User communication: German
 
-## API Endpoints
-
-- `/` - Main app (wine cards)
-- `/add` - Add wine form
-- `/edit/<id>` - Edit wine modal
-- `/stats` - Statistics page with globe & charts
-- `/api/summary` - JSON stats for HA sensors
-- `/api/vivino/search` - Vivino search endpoint
-- `/api/analyze` - AI label recognition
-
 ## Supported Languages
 
-| Language | Code | Flag |
-|----------|------|------|
-| German | de | 🇩🇪 |
-| English | en | 🇬🇧 |
-| French | fr | 🇫🇷 |
-| Italian | it | 🇮🇹 |
-| Spanish | es | 🇪🇸 |
-| Portuguese | pt | 🇵🇹 |
-| Dutch | nl | 🇳🇱 |
+| Language   | Code | Flag |
+|------------|------|------|
+| German     | de   | 🇩🇪 |
+| English    | en   | 🇬🇧 |
+| French     | fr   | 🇫🇷 |
+| Italian    | it   | 🇮🇹 |
+| Spanish    | es   | 🇪🇸 |
+| Portuguese | pt   | 🇵🇹 |
+| Dutch      | nl   | 🇳🇱 |
 
 ## Wine Types
 
@@ -202,42 +277,42 @@ See `CLAUDE.md` for full project guidelines (in German):
 
 ## Bottle Formats
 
-| Name | Size |
-|------|------|
-| Piccolo | 0.1875l |
-| Demi | 0.375l |
-| Standard | 0.75l (default) |
-| Magnum | 1.5l |
-| Jeroboam | 3l |
-| Rehoboam | 4.5l |
-| Methuselah | 6l |
-| Salmanazar | 9l |
-| Balthazar | 12l |
-| Nebuchadnezzar | 15l |
+| Name           | Size    |
+|----------------|---------|
+| Piccolo        | 0.1875l |
+| Demi           | 0.375l  |
+| Standard       | 0.75l (default) |
+| Magnum         | 1.5l    |
+| Jeroboam       | 3l      |
+| Rehoboam       | 4.5l    |
+| Methuselah     | 6l      |
+| Salmanazar     | 9l      |
+| Balthazar      | 12l     |
+| Nebuchadnezzar | 15l     |
 
 ## Roadmap Highlights
 
-### Near Future
-- Export/Import (CSV, JSON)
-- Custom sorting (name, year, price, rating, etc.)
-- Display modes (card grid, compact list, table)
-
-### Analytics & Tracking
-- Consumption tracking (when opened)
-- Spending trends by month/region/type
-- Collection timeline chart
-- Maturity calendar
+### Up Next
+- Export / Import (CSV, JSON)
+- Spending trends by month / region / type
+- Maturity calendar (which wines become drinkable each year)
 
 ### Home Assistant
-- Drink window notifications
-- Extended REST API
+- Drink-window notifications
+- Extended REST API (single wine, collection export)
 - Native Lovelace dashboard card
 
 ### UI & Personalization
-- In-app settings page
-- Custom themes & colors
-- Keyboard shortcuts
-- Wishlist mode
+- Keyboard shortcuts (`/` search, `+` add, `Esc` close)
+- Wishlist mode (wines you want to buy)
+- Tags & custom categories
+- Bulk editing
+- Multiple cellars
+
+### Mobile & Sharing
+- PWA support with offline access
+- Barcode / QR scan → Vivino lookup
+- Shareable read-only collection links
 
 ## Architecture Highlights
 
@@ -248,46 +323,48 @@ See `CLAUDE.md` for full project guidelines (in German):
 - SQLite database in `/data` (Docker) or `/share/wine-tracker/` (HA)
 
 ### AI Integration (Optional)
-- AI providers are optional
-- Works without AI (manual entry + Vivino search)
-- Multiple provider support for flexibility
+- AI providers are optional — the app works fully without AI (manual entry + Vivino search)
+- 5 providers supported for flexibility
 - Free local option via Ollama
+- Auto-enrichment (maturity, taste, food pairings) on every AI-driven add
 
 ### Privacy & Security
-- User authentication (Docker mode)
-- Readonly user role available
+- User authentication with admin / readonly roles (Docker mode)
 - Session encryption
 - No telemetry or tracking
+- Vivino image downloads are SSRF-protected
 
 ## Common Use Cases
 
-1. **Add wine via AI**: Photo → AI analyzes → Fill fields → Save
-2. **Add wine via Vivino**: Search name → Select result → Import data
-3. **Manual entry**: Fill form manually with autocomplete suggestions
-4. **Quick quantity update**: +/− buttons on wine cards
-5. **Duplicate wine**: Clone existing wine (change only vintage)
-6. **View statistics**: See globe, charts, totals on stats page
-7. **Filter & search**: Type in search box, filter by wine type
-8. **Reload missing data**: Re-analyze incomplete wines via AI or Vivino
+1. **Add wine via AI** — photo → AI analyzes → full enrichment → save
+2. **Add wine via chat** — upload photo in the chat, discuss with the sommelier, tell it to add
+3. **Add wine via Vivino** — search name → select result → import data
+4. **Manual entry** — fill the form with autocomplete suggestions
+5. **Quick quantity update** — `+` / `−` buttons directly on wine cards
+6. **Duplicate wine** — clone existing wine, change only the vintage
+7. **View statistics** — globe, charts, totals, stock history
+8. **Switch view mode** — Cards, List, Grid, or sortable Table
+9. **Filter & search** — by type, year, grape, name, region or notes
+10. **Ask the sommelier** — "what should I open tonight?", "where is my Barolo stored?"
+11. **Reload missing data** — re-analyze incomplete wines via AI or Vivino
 
 ## Support & Community
 
-- **GitHub Issues**: Bug reports, feature requests
-- **HA Community Forum**: Discussion, help, showcase
+- **GitHub Issues**: bug reports, feature requests
+- **HA Community Forum**: discussion, help, showcase
 - **License**: MIT
 
 ## Version History
 
-Current version: **v1.5.0**
+Current version: **v1.9.0**
 
-See `CHANGELOG.md` for complete version history.
+See `CHANGELOG.md` for the complete version history.
 
-Latest features (v1.5.0):
-- Chat interface with AI sommelier
-- Persistent chat history with session management
-- Timeline page with activity log
-- Improved wine detail modals
-- Enhanced UI consistency
+Recent highlights:
+- **v1.9.0** — Chat-added wines get full maturity / taste / food pairings automatically. Vivino regional fallback for country-specific labels (e.g. Australian wines). Sommelier chat knows stock, ratings and locations again. Fixed quantity `+`/`−` buttons and MiniMax model name.
+- **v1.8.0** — Chat image upload, stock history area chart, search by year and grape, landing-page metadata.
+- **v1.7.0** — Four cellar view modes (Cards, List, Grid, Table), hamburger menu, DEV_AUTH shortcut.
+- **v1.6.0** — Activity timeline, maturity graph, taste profile, food pairings.
 
 ---
 
