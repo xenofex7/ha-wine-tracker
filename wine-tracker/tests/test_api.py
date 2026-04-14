@@ -257,6 +257,119 @@ class TestVivinoSearch:
         assert data["results"][0]["name"] == "TestWinery Reserve"
 
     @patch("requests.get")
+    def test_vivino_search_fallback_on_explore_redirect(self, mock_get, client):
+        """If the primary endpoint gets redirected to /explore (no data-
+        preloaded-state), the fallback chain must try the next endpoint."""
+        # First call: redirected to /explore — no JSON blob
+        primary_resp = MagicMock()
+        primary_resp.status_code = 200
+        primary_resp.url = "https://www.vivino.com/en/explore?search_term=Wynns"
+        primary_resp.text = "<html>different layout, no preloaded state</html>"
+        primary_resp.raise_for_status = MagicMock()
+
+        # Second call (the /it/search/wines fallback): returns a match
+        preloaded = {
+            "search_results": {
+                "matches": [{
+                    "vintage": {
+                        "year": 2020,
+                        "wine": {
+                            "id": 7777, "name": "Coonawarra Riesling",
+                            "type_id": 2, "winery": {"name": "Wynns"},
+                            "region": {"name": "Coonawarra", "country": {"name": "Australia"}},
+                            "grapes": [{"grape": {"name": "Riesling"}}],
+                        },
+                        "statistics": {"wine_ratings_average": 4.1},
+                        "image": {"location": "//images.vivino.com/wynns.png"},
+                    },
+                    "price": {"amount": 24.50},
+                }]
+            }
+        }
+        escaped = html.escape(json.dumps(preloaded))
+        fallback_resp = MagicMock()
+        fallback_resp.status_code = 200
+        fallback_resp.url = "https://www.vivino.com/it/search/wines?q=Wynns"
+        fallback_resp.text = f'<div data-preloaded-state="{escaped}"></div>'
+        fallback_resp.raise_for_status = MagicMock()
+
+        mock_get.side_effect = [primary_resp, fallback_resp]
+
+        resp = client.get("/api/vivino-search?q=Wynns+Coonawarra+Riesling")
+        assert resp.status_code == 200
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert len(data["results"]) == 1
+        assert data["results"][0]["name"] == "Wynns Coonawarra Riesling"
+        # Should have hit at least 2 URLs (primary + fallback)
+        assert mock_get.call_count >= 2
+
+    @patch("requests.get")
+    def test_vivino_search_fallback_on_empty_matches(self, mock_get, client):
+        """If the primary endpoint returns 0 matches but a later endpoint
+        has results, the fallback chain should surface the non-empty result."""
+        empty_preloaded = {"search_results": {"matches": []}}
+        empty_escaped = html.escape(json.dumps(empty_preloaded))
+        empty_resp = MagicMock()
+        empty_resp.status_code = 200
+        empty_resp.url = "https://www.vivino.com/search/wines?q=Obscure"
+        empty_resp.text = f'<div data-preloaded-state="{empty_escaped}"></div>'
+        empty_resp.raise_for_status = MagicMock()
+
+        found_preloaded = {
+            "search_results": {
+                "matches": [{
+                    "vintage": {
+                        "year": 2019,
+                        "wine": {
+                            "id": 8888, "name": "Found",
+                            "type_id": 1, "winery": {"name": "Obscure"},
+                            "region": {"name": "Somewhere", "country": {"name": "Somewhereland"}},
+                            "grapes": [],
+                        },
+                        "statistics": {"wine_ratings_average": 3.8},
+                        "image": {"location": "//images.vivino.com/f.png"},
+                    },
+                    "price": {"amount": 15.0},
+                }]
+            }
+        }
+        found_escaped = html.escape(json.dumps(found_preloaded))
+        found_resp = MagicMock()
+        found_resp.status_code = 200
+        found_resp.url = "https://www.vivino.com/it/search/wines?q=Obscure"
+        found_resp.text = f'<div data-preloaded-state="{found_escaped}"></div>'
+        found_resp.raise_for_status = MagicMock()
+
+        mock_get.side_effect = [empty_resp, found_resp]
+
+        resp = client.get("/api/vivino-search?q=Obscure+Winery")
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert len(data["results"]) == 1
+        assert data["results"][0]["name"] == "Obscure Found"
+
+    @patch("requests.get")
+    def test_vivino_search_all_endpoints_empty(self, mock_get, client):
+        """When every endpoint returns 0 matches, the response should be
+        an empty-but-successful result list (no error)."""
+        empty_preloaded = {"search_results": {"matches": []}}
+        escaped = html.escape(json.dumps(empty_preloaded))
+        empty_resp = MagicMock()
+        empty_resp.status_code = 200
+        empty_resp.url = "https://www.vivino.com/search/wines?q=Nothing"
+        empty_resp.text = f'<div data-preloaded-state="{escaped}"></div>'
+        empty_resp.raise_for_status = MagicMock()
+
+        mock_get.return_value = empty_resp
+
+        resp = client.get("/api/vivino-search?q=CompletelyNonexistent")
+        assert resp.status_code == 200
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert data["results"] == []
+
+    @patch("requests.get")
     def test_vivino_search_no_results(self, mock_get, client):
         """Should return empty results when no matches."""
         preloaded = {"search_results": {"matches": []}}

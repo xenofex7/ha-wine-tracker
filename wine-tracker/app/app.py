@@ -1682,6 +1682,20 @@ def _vivino_country_code(currency):
     return mapping.get(currency, ("US", "USD"))
 
 
+# Vivino search endpoint fallback chain. The default endpoint is fine for many
+# queries but for some queries and for some user geolocations (notably users
+# in Australia) Vivino redirects /search/wines to /<lang>/explore — an entirely
+# different client-rendered page that does not contain the data-preloaded-state
+# JSON we parse. The Italian and Spanish locale prefixes consistently render
+# the classic search page with results, so we use them as fallbacks when the
+# primary query misses. Ordered by empirical hit rate.
+VIVINO_SEARCH_URLS = (
+    "https://www.vivino.com/search/wines",
+    "https://www.vivino.com/it/search/wines",
+    "https://www.vivino.com/es/search/wines",
+)
+
+
 @app.route("/api/vivino-search")
 def vivino_search():
     """Search wines on Vivino by scraping their search page.
@@ -1699,32 +1713,63 @@ def vivino_search():
     if len(query) < 2:
         return jsonify({"ok": False, "error": "query_too_short"}), 400
 
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/131.0.0.0 Safari/537.36",
+        "Accept": "text/html",
+    }
+
+    # Try each endpoint in the fallback chain until one returns matches.
+    # Some queries and some user geolocations get redirected to the /explore
+    # page which uses a different client-side rendered layout — we detect
+    # that and fall through to the next endpoint.
+    data = None
+    last_error = None
     try:
-        resp = req.get(
-            "https://www.vivino.com/search/wines",
-            params={"q": query},
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                              "AppleWebKit/537.36 (KHTML, like Gecko) "
-                              "Chrome/131.0.0.0 Safari/537.36",
-                "Accept": "text/html",
-            },
-            timeout=10,
-            verify=_ssl_verify(),
-        )
-        resp.raise_for_status()
+        for url in VIVINO_SEARCH_URLS:
+            try:
+                resp = req.get(
+                    url,
+                    params={"q": query},
+                    headers=headers,
+                    timeout=10,
+                    verify=_ssl_verify(),
+                    allow_redirects=True,
+                )
+                resp.raise_for_status()
+            except req.exceptions.Timeout:
+                last_error = "timeout"
+                continue
+            except Exception as e:
+                last_error = str(e)
+                continue
 
-        # Extract the JSON blob from data-preloaded-state="..."
-        m = re.search(r'data-preloaded-state="([^"]+)"', resp.text)
-        if not m:
-            return jsonify({"ok": False, "error": "parse_error"}), 502
-        data = json.loads(htmlmod.unescape(m.group(1)))
+            # If we got bounced to /explore, the JSON blob we need isn't there
+            if "/explore" in resp.url:
+                continue
 
-    except req.exceptions.Timeout:
-        return jsonify({"ok": False, "error": "timeout"}), 504
+            m = re.search(r'data-preloaded-state="([^"]+)"', resp.text)
+            if not m:
+                continue
+            candidate = json.loads(htmlmod.unescape(m.group(1)))
+            matches = candidate.get("search_results", {}).get("matches", [])
+            if matches:
+                data = candidate
+                break
+            # First endpoint explicitly returned 0 matches — keep trying
+            # fallbacks in case another regional catalogue has the wine.
+            if data is None:
+                data = candidate  # remember as "empty but valid" fallback
+
     except Exception as e:
         app.logger.exception("Vivino search error: %s", e)
         return jsonify({"ok": False, "error": "api_error"}), 502
+
+    if data is None:
+        if last_error == "timeout":
+            return jsonify({"ok": False, "error": "timeout"}), 504
+        return jsonify({"ok": False, "error": "parse_error"}), 502
 
     results = []
     try:
