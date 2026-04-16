@@ -38,3 +38,9 @@ configuration:
   ollama_model:
     name: Modèle Ollama
     description: Nom du modèle vision pour Ollama (p.ex. llava, llava-llama3).
+  minimax_api_key:
+    name: Clé API MiniMax
+    description: Clé API depuis minimaxi.com. Requise pour le fournisseur "minimax".
+  minimax_model:
+    name: Modèle MiniMax
+    description: Nom du modèle pour MiniMax (p.ex. MiniMax-Text-01).

@@ -589,34 +589,10 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
 })();
 
 // ── Keyboard-Viewport Debug Overlay ─────────────────────────────────────────
-// Activate via: (a) ?kbdebug=1 in URL, (b) 5-tap on the brand logo in the
-// header within 2s (works in HA Companion App where URL editing isn't
-// possible), or (c) localStorage.kbdebug = '1'. Shows live viewport + input
-// metrics so we can see how the HA Ingress iframe reacts to the keyboard.
+// ALWAYS ON in this dev branch — shows live viewport + input metrics so we
+// can see how the HA Ingress iframe reacts to the on-screen keyboard.
+// Will be removed before the proper release.
 (function() {
-  var params = new URLSearchParams(window.location.search);
-  var enabled = params.get('kbdebug') === '1' ||
-                localStorage.getItem('kbdebug') === '1';
-
-  // 5-tap on the brand logo toggles localStorage.kbdebug and reloads
-  var logo = document.querySelector('header .nav-brand');
-  if (logo) {
-    var taps = 0, tapTimer = null;
-    logo.addEventListener('click', function(e) {
-      taps++;
-      if (tapTimer) clearTimeout(tapTimer);
-      tapTimer = setTimeout(function() { taps = 0; }, 2000);
-      if (taps >= 5) {
-        e.preventDefault();
-        var on = localStorage.getItem('kbdebug') !== '1';
-        localStorage.setItem('kbdebug', on ? '1' : '0');
-        alert('kb-debug ' + (on ? 'ENABLED' : 'DISABLED') + ' — reloading');
-        location.reload();
-      }
-    });
-  }
-
-  if (!enabled) return;
 
   var overlay = document.createElement('div');
   overlay.id = 'kbDebugOverlay';
