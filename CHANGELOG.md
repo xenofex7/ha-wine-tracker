@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1
+
+- **Fix mobile keyboard covering chat input** - on iOS, opening the on-screen keyboard in the full-page chat view pushed the text input behind the keyboard, making it impossible to type. The chat container now dynamically resizes using the Visual Viewport API.
+- **Close chat history sidebar on mobile when starting new session** - tapping the "+" button to start a new chat no longer leaves the history sidebar open on narrow screens, hiding the empty conversation behind it.
+
 ## 1.9.0
 
 - **Sommelier chat with full cellar CRUD** - the AI assistant can now add, edit, and delete wines directly from the conversation. Snap a label photo in the chat, discuss the wine, then tell the assistant to add it — it confirms before any action and writes timeline entries just like manual edits. Gated behind a new "Edit wines via chat" setting (off by default).
