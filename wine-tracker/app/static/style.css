@@ -1953,6 +1953,10 @@ body.chat-page .grid { display: none; }
 
 .chat-fullpage-input input:focus { border-color: var(--accent); }
 
+/* Native scroll-margin: when scrollIntoView({block:'start'}) is called on the
+   chat input, leave this much space above it. Native CSS, no pixel math in JS. */
+.chat-fullpage-input input { scroll-margin-top: 25vh; }
+
 /* ── Chat Image Upload ──────────────────────────────────────────────────────── */
 .chat-upload-btn {
   display: flex; align-items: center; justify-content: center;
