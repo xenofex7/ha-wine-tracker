@@ -588,25 +588,108 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
   sidebar.classList.toggle('open', _chatSidebarOpen);
 })();
 
-// ── Mobile keyboard viewport fix ────────────────────────────────────────────
+// ── Keyboard-Viewport Debug Overlay ─────────────────────────────────────────
+// Activate via: (a) ?kbdebug=1 in URL, (b) 5-tap on the brand logo in the
+// header within 2s (works in HA Companion App where URL editing isn't
+// possible), or (c) localStorage.kbdebug = '1'. Shows live viewport + input
+// metrics so we can see how the HA Ingress iframe reacts to the keyboard.
 (function() {
-  var fp = document.querySelector('.chat-fullpage');
-  if (!fp || !window.visualViewport) return;
-  function adjustForKeyboard() {
-    if (window.innerWidth > 600) { fp.style.height = ''; fp.style.bottom = ''; return; }
-    var vvh = window.visualViewport.height;
-    var top = fp.getBoundingClientRect().top + window.visualViewport.offsetTop;
-    fp.style.height = (vvh - top) + 'px';
-    fp.style.bottom = 'auto';
-    scrollChatBottom();
+  var params = new URLSearchParams(window.location.search);
+  var enabled = params.get('kbdebug') === '1' ||
+                localStorage.getItem('kbdebug') === '1';
+
+  // 5-tap on the brand logo toggles localStorage.kbdebug and reloads
+  var logo = document.querySelector('header .nav-brand');
+  if (logo) {
+    var taps = 0, tapTimer = null;
+    logo.addEventListener('click', function(e) {
+      taps++;
+      if (tapTimer) clearTimeout(tapTimer);
+      tapTimer = setTimeout(function() { taps = 0; }, 2000);
+      if (taps >= 5) {
+        e.preventDefault();
+        var on = localStorage.getItem('kbdebug') !== '1';
+        localStorage.setItem('kbdebug', on ? '1' : '0');
+        alert('kb-debug ' + (on ? 'ENABLED' : 'DISABLED') + ' — reloading');
+        location.reload();
+      }
+    });
   }
-  window.visualViewport.addEventListener('resize', adjustForKeyboard);
-  document.getElementById('chatInput').addEventListener('focus', function() {
-    setTimeout(adjustForKeyboard, 300);
+
+  if (!enabled) return;
+
+  var overlay = document.createElement('div');
+  overlay.id = 'kbDebugOverlay';
+  overlay.style.cssText = [
+    'position:fixed', 'top:8px', 'left:8px', 'z-index:99999',
+    'background:rgba(0,0,0,.88)', 'color:#0f0',
+    'font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace',
+    'padding:8px 10px', 'border-radius:6px',
+    'max-width:calc(100vw - 16px)', 'pointer-events:auto',
+    'white-space:pre', 'border:1px solid #0f0'
+  ].join(';');
+  overlay.textContent = 'kb-debug: init...';
+  overlay.addEventListener('click', function() {
+    overlay.style.opacity = overlay.style.opacity === '0.15' ? '1' : '0.15';
   });
-  document.getElementById('chatInput').addEventListener('blur', function() {
-    setTimeout(function() { fp.style.height = ''; fp.style.bottom = ''; }, 100);
-  });
+  document.body.appendChild(overlay);
+
+  var events = { resize: 0, vvResize: 0, vvScroll: 0, focus: 0, blur: 0 };
+  var lastEvent = 'none';
+
+  function snapshot() {
+    var input = document.getElementById('chatInput');
+    var inputRect = input ? input.getBoundingClientRect() : null;
+    var vv = window.visualViewport;
+    var inIframe = false;
+    try { inIframe = window.self !== window.top; } catch(e) { inIframe = true; }
+
+    var lines = [
+      'KB-DEBUG  (tap to fade)',
+      'lastEvent: ' + lastEvent,
+      'events:    r=' + events.resize + ' vv=' + events.vvResize +
+        ' vs=' + events.vvScroll + ' f=' + events.focus + ' b=' + events.blur,
+      '—',
+      'inIframe:    ' + inIframe,
+      'innerW/H:    ' + window.innerWidth + ' × ' + window.innerHeight,
+      'screen W/H:  ' + window.screen.width + ' × ' + window.screen.height,
+      'doc.H:       ' + document.documentElement.clientHeight +
+        ' / scroll=' + (document.scrollingElement ? document.scrollingElement.scrollTop : 0),
+      'body ovflow: ' + getComputedStyle(document.body).overflow,
+      '—',
+      'visualViewport:',
+      vv ? '  size:     ' + Math.round(vv.width) + ' × ' + Math.round(vv.height) : '  (unsupported)',
+      vv ? '  offset:   x=' + Math.round(vv.offsetLeft) + ' y=' + Math.round(vv.offsetTop) : '',
+      vv ? '  pageOff:  x=' + Math.round(vv.pageLeft) + ' y=' + Math.round(vv.pageTop) : '',
+      vv ? '  scale:    ' + (vv.scale || 1).toFixed(2) : '',
+      '—',
+      'input rect:',
+      inputRect ? '  top=' + Math.round(inputRect.top) + ' bottom=' + Math.round(inputRect.bottom) : '  (missing)',
+      inputRect ? '  height=' + Math.round(inputRect.height) + ' width=' + Math.round(inputRect.width) : '',
+      inputRect && vv ? '  visible:  ' + (inputRect.bottom <= vv.height + vv.offsetTop ? 'YES' : 'NO (under keyboard)') : '',
+      '—',
+      'inferred kb height: ' +
+        (vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) + 'px' : 'n/a')
+    ].filter(function(l){ return l !== ''; });
+    overlay.textContent = lines.join('\n');
+  }
+
+  function track(name) { return function() { events[name]++; lastEvent = name; snapshot(); }; }
+
+  window.addEventListener('resize', track('resize'));
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', track('vvResize'));
+    window.visualViewport.addEventListener('scroll', track('vvScroll'));
+  }
+  var inp = document.getElementById('chatInput');
+  if (inp) {
+    inp.addEventListener('focus', track('focus'));
+    inp.addEventListener('blur', track('blur'));
+  }
+  document.addEventListener('scroll', snapshot, true);
+
+  snapshot();
+  setInterval(snapshot, 500); // poll every 500ms as fallback in case iframe swallows events
 })();
 </script>
 </body>
