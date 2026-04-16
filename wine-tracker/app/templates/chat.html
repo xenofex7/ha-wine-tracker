@@ -588,6 +588,29 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
   sidebar.classList.toggle('open', _chatSidebarOpen);
 })();
 
+// ── Keyboard-safe focus handler ─────────────────────────────────────────────
+// On mobile (incl. HA Ingress iframe where visualViewport doesn't expose the
+// keyboard), the browser's built-in "scroll focused input into view" mechanic
+// is our only reliable tool. We explicitly call scrollIntoView on focus so it
+// fires even when the keyboard animation is delayed.
+(function() {
+  var input = document.getElementById('chatInput');
+  if (!input) return;
+  function bringIntoView() {
+    try {
+      input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    } catch (e) {
+      input.scrollIntoView(false);
+    }
+  }
+  input.addEventListener('focus', function() {
+    // iOS WKWebView needs the keyboard animation to finish before it will
+    // accept a scroll; 350ms covers the animation reliably.
+    setTimeout(bringIntoView, 350);
+    setTimeout(bringIntoView, 700); // second attempt in case the first was too early
+  });
+})();
+
 // ── Keyboard-Viewport Debug Overlay ─────────────────────────────────────────
 // ALWAYS ON in this dev branch — shows live viewport + input metrics so we
 // can see how the HA Ingress iframe reacts to the on-screen keyboard.
