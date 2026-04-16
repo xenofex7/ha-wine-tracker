@@ -58,7 +58,7 @@ class TestIndex:
         """Settings modal should contain About section with app version."""
         resp = client.get("/")
         html = resp.data.decode()
-        assert "v1.9.0" in html
+        assert "v1.9.1" in html
         assert "settings_about" in html or "Über" in html
 
     def test_view_modal_present(self, client):
