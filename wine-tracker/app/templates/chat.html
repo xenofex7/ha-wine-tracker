@@ -589,25 +589,39 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
 })();
 
 // ── Keyboard-safe focus handler ─────────────────────────────────────────────
-// On mobile (incl. HA Ingress iframe where visualViewport doesn't expose the
-// keyboard), the browser's built-in "scroll focused input into view" mechanic
-// is our only reliable tool. We explicitly call scrollIntoView on focus so it
-// fires even when the keyboard animation is delayed.
+// In the HA Ingress iframe visualViewport doesn't expose the keyboard, so the
+// iframe thinks its full 402x772 area is visible. scrollIntoView({block:'center'})
+// centres the input in the iframe's middle — which the keyboard covers in reality.
+// Solution: explicitly scroll so the input sits near the TOP of the iframe, where
+// the keyboard is guaranteed not to be.
 (function() {
   var input = document.getElementById('chatInput');
   if (!input) return;
-  function bringIntoView() {
+
+  function scrollInputToTop() {
+    var rect = input.getBoundingClientRect();
+    // Place the input 120px from the top of the iframe — above the keyboard,
+    // and leaving a bit of room for the line above (image preview etc.)
+    var target = (window.scrollY || document.scrollingElement.scrollTop || 0) + rect.top - 120;
+    if (target < 0) target = 0;
     try {
-      input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      window.scrollTo({ top: target, behavior: 'smooth' });
     } catch (e) {
-      input.scrollIntoView(false);
+      window.scrollTo(0, target);
     }
   }
+
   input.addEventListener('focus', function() {
-    // iOS WKWebView needs the keyboard animation to finish before it will
-    // accept a scroll; 350ms covers the animation reliably.
-    setTimeout(bringIntoView, 350);
-    setTimeout(bringIntoView, 700); // second attempt in case the first was too early
+    // iOS needs the keyboard animation (~300ms) to finish before scroll lands
+    setTimeout(scrollInputToTop, 350);
+    setTimeout(scrollInputToTop, 700); // retry in case the first attempt was too early
+  });
+
+  input.addEventListener('blur', function() {
+    setTimeout(function() {
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      catch (e) { window.scrollTo(0, 0); }
+    }, 100);
   });
 })();
 
