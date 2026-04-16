@@ -234,7 +234,7 @@ Persisted sommelier chat sessions with uploaded image references (cascade-delete
 See `CLAUDE.md` for full project guidelines (in German).
 
 ### Testing
-- **Every feature and bugfix must include tests** (250+ tests total)
+- **Every feature and bugfix must include tests** (255+ tests total)
 - Routes: `tests/test_routes.py`, `tests/test_api.py`
 - Helpers: `tests/test_helpers.py`
 - Database: `tests/test_database.py`
@@ -361,7 +361,8 @@ Current version: **v1.9.1**
 See `CHANGELOG.md` for the complete version history.
 
 Recent highlights:
-- **v1.9.1** — Chat-added wines get full maturity / taste / food pairings automatically. Vivino regional fallback for country-specific labels (e.g. Australian wines). Sommelier chat knows stock, ratings and locations again. Fixed quantity `+`/`−` buttons and MiniMax model name.
+- **v1.9.1** — Fixed mobile keyboard covering chat input on iOS (Visual Viewport API). Chat history sidebar now closes on mobile when starting a new session.
+- **v1.9.0** — Full cellar CRUD via sommelier chat, MiniMax as fifth AI provider, auto-enrichment on AI-added wines, Vivino regional fallback, multilingual cellar context.
 - **v1.8.0** — Chat image upload, stock history area chart, search by year and grape, landing-page metadata.
 - **v1.7.0** — Four cellar view modes (Cards, List, Grid, Table), hamburger menu, DEV_AUTH shortcut.
 - **v1.6.0** — Activity timeline, maturity graph, taste profile, food pairings.
