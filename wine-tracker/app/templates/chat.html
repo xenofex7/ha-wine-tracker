@@ -587,6 +587,27 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
   var sidebar = document.getElementById('chatSidebar');
   sidebar.classList.toggle('open', _chatSidebarOpen);
 })();
+
+// ── Mobile keyboard viewport fix ────────────────────────────────────────────
+(function() {
+  var fp = document.querySelector('.chat-fullpage');
+  if (!fp || !window.visualViewport) return;
+  function adjustForKeyboard() {
+    if (window.innerWidth > 600) { fp.style.height = ''; fp.style.bottom = ''; return; }
+    var vvh = window.visualViewport.height;
+    var top = fp.getBoundingClientRect().top + window.visualViewport.offsetTop;
+    fp.style.height = (vvh - top) + 'px';
+    fp.style.bottom = 'auto';
+    scrollChatBottom();
+  }
+  window.visualViewport.addEventListener('resize', adjustForKeyboard);
+  document.getElementById('chatInput').addEventListener('focus', function() {
+    setTimeout(adjustForKeyboard, 300);
+  });
+  document.getElementById('chatInput').addEventListener('blur', function() {
+    setTimeout(function() { fp.style.height = ''; fp.style.bottom = ''; }, 100);
+  });
+})();
 </script>
 </body>
 </html>
