@@ -598,12 +598,17 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
   var input = document.getElementById('chatInput');
   if (!input) return;
 
+  var scrollBeforeFocus = 0;
+
   function scrollIn() {
     try { input.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
     catch (e) { input.scrollIntoView(true); }
   }
 
   input.addEventListener('focus', function() {
+    // Remember the scroll position so blur can restore exactly this state
+    // (not snap to document top).
+    scrollBeforeFocus = window.scrollY || window.pageYOffset || 0;
     // iOS keyboard animation takes ~300ms; call twice so one attempt lands
     setTimeout(scrollIn, 350);
     setTimeout(scrollIn, 700);
@@ -611,8 +616,8 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
 
   input.addEventListener('blur', function() {
     setTimeout(function() {
-      try { window.scrollTo({ top: 0, behavior: 'smooth' }); }
-      catch (e) { window.scrollTo(0, 0); }
+      try { window.scrollTo({ top: scrollBeforeFocus, behavior: 'smooth' }); }
+      catch (e) { window.scrollTo(0, scrollBeforeFocus); }
     }, 100);
   });
 })();
