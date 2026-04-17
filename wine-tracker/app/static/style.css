@@ -1908,7 +1908,9 @@ body.chat-page .grid { display: none; }
     inset: auto;
     max-width: none;
     margin: 0;
-    min-height: calc(100dvh - 56px - 56px); /* viewport - header - tab bar */
+    /* viewport − header − tab bar (56px + safe-area home indicator) − visual gap */
+    min-height: calc(100dvh - 56px - 56px - env(safe-area-inset-bottom, 0px) - 12px);
+    padding-bottom: 12px;
   }
   body.chat-page .bottom-tab-bar {
     /* Keep fixed at bottom of visible viewport; keyboard will cover it when
