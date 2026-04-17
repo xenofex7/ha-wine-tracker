@@ -2,7 +2,7 @@
 <html lang="{{ lang }}">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7/css/materialdesignicons.min.css">
 <link rel="stylesheet" href="{{ ingress }}/static/style.css">
@@ -586,40 +586,6 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
   // Initialize sidebar visibility
   var sidebar = document.getElementById('chatSidebar');
   sidebar.classList.toggle('open', _chatSidebarOpen);
-})();
-
-// ── Keyboard-safe focus handler ─────────────────────────────────────────────
-// In the HA Ingress iframe visualViewport doesn't expose the keyboard, so iOS
-// thinks the input is already "visible" and won't auto-scroll. We explicitly
-// trigger the browser's native scrollIntoView — the offset from the top is
-// defined in CSS via `scroll-margin-top` on the input, so there are no hard-
-// coded pixel values in JS.
-(function() {
-  var input = document.getElementById('chatInput');
-  if (!input) return;
-
-  var scrollBeforeFocus = 0;
-
-  function scrollIn() {
-    try { input.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
-    catch (e) { input.scrollIntoView(true); }
-  }
-
-  input.addEventListener('focus', function() {
-    // Remember the scroll position so blur can restore exactly this state
-    // (not snap to document top).
-    scrollBeforeFocus = window.scrollY || window.pageYOffset || 0;
-    // iOS keyboard animation takes ~300ms; call twice so one attempt lands
-    setTimeout(scrollIn, 350);
-    setTimeout(scrollIn, 700);
-  });
-
-  input.addEventListener('blur', function() {
-    setTimeout(function() {
-      try { window.scrollTo({ top: scrollBeforeFocus, behavior: 'smooth' }); }
-      catch (e) { window.scrollTo(0, scrollBeforeFocus); }
-    }, 100);
-  });
 })();
 
 // ── Keyboard-Viewport Debug Overlay ─────────────────────────────────────────

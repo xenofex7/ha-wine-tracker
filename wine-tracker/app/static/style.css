@@ -1886,35 +1886,15 @@ body.chat-page .grid { display: none; }
   margin: 0 auto;
 }
 
-/* Mobile: universal keyboard-safe layout.
-   The HA Ingress iframe doesn't expose keyboard events to us (visualViewport
-   stays at full iframe size even when the on-screen keyboard is open), so we
-   can't resize our content reactively. Instead we make the document naturally
-   scrollable with extra bottom padding, so the browser's built-in "scroll the
-   focused input into view" mechanism has room to work. Works in iOS Safari,
-   Android Chrome, HA Companion App, and WKWebView alike. */
+/* Mobile: let the browser's interactive-widget=resizes-content viewport meta
+   do the work. When the on-screen keyboard opens, the layout viewport shrinks,
+   .chat-fullpage (position: fixed between header and tab bar) shrinks with it,
+   and the input naturally ends up just above the keyboard. No JS scroll
+   hacks, no padding slack. */
 @media (max-width: 600px) {
-  body.chat-page {
-    overflow: auto !important;
-    -webkit-overflow-scrolling: touch;
-    height: auto !important;
-    min-height: 100dvh;
-    /* 50vh of scroll room below the content lets iOS auto-scroll the focused
-       input above the keyboard. Nothing visually rendered here — just slack. */
-    padding-bottom: 50vh;
-  }
-  body.chat-page .chat-fullpage {
-    position: static;
-    inset: auto;
-    max-width: none;
-    margin: 0;
-    /* viewport − header − tab bar (56px + safe-area home indicator).
-       Visual breathing room comes from .chat-fullpage-input's own padding. */
-    min-height: calc(100dvh - 56px - 56px - env(safe-area-inset-bottom, 0px));
-  }
   body.chat-page .bottom-tab-bar {
-    /* Keep fixed at bottom of visible viewport; keyboard will cover it when
-       open, that's fine — the input is what must stay visible, not the tabs. */
+    /* Keyboard covers the tab bar when open — that's fine, the input is the
+       thing that must stay visible. */
     position: fixed;
     bottom: 0;
   }
@@ -1954,10 +1934,6 @@ body.chat-page .grid { display: none; }
 }
 
 .chat-fullpage-input input:focus { border-color: var(--accent); }
-
-/* Native scroll-margin: when scrollIntoView({block:'start'}) is called on the
-   chat input, leave this much space above it. Native CSS, no pixel math in JS. */
-.chat-fullpage-input input { scroll-margin-top: 25vh; }
 
 /* ── Chat Image Upload ──────────────────────────────────────────────────────── */
 .chat-upload-btn {
