@@ -1874,23 +1874,25 @@ body.no-scroll { overflow: hidden; }
 body.chat-page { overflow: hidden; }
 body.chat-page .grid { display: none; }
 
+/* --kb-inset: JS-controlled keyboard compensation. The HA Ingress iframe does
+   not propagate keyboard events (neither visualViewport nor window resize),
+   so we can't detect the keyboard at runtime. Instead we set this variable to
+   an estimated keyboard height on input focus and back to 0 on blur. */
+:root { --kb-inset: 0px; }
+
 .chat-fullpage {
   position: fixed;
   top: 56px;
-  bottom: calc(56px + env(safe-area-inset-bottom, 20px));
+  bottom: calc(56px + env(safe-area-inset-bottom, 20px) + var(--kb-inset));
   left: 0;
   right: 0;
   display: flex;
   flex-direction: column;
   max-width: 800px;
   margin: 0 auto;
+  transition: bottom .25s ease;
 }
 
-/* Mobile: let the browser's interactive-widget=resizes-content viewport meta
-   do the work. When the on-screen keyboard opens, the layout viewport shrinks,
-   .chat-fullpage (position: fixed between header and tab bar) shrinks with it,
-   and the input naturally ends up just above the keyboard. No JS scroll
-   hacks, no padding slack. */
 @media (max-width: 600px) {
   body.chat-page .bottom-tab-bar {
     /* Keyboard covers the tab bar when open — that's fine, the input is the

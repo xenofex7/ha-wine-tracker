@@ -588,6 +588,26 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
   sidebar.classList.toggle('open', _chatSidebarOpen);
 })();
 
+// ── Keyboard compensation (CSS --kb-inset) ──────────────────────────────────
+// The HA Ingress iframe does not propagate keyboard events, so we can't
+// measure the real on-screen keyboard height. We set --kb-inset to a rough
+// iOS estimate (keyboard + suggestion bar) on focus and reset on blur. The
+// CSS transition on .chat-fullpage makes the motion smooth.
+(function() {
+  var input = document.getElementById('chatInput');
+  if (!input) return;
+  // Tune this if the input sits too high (empty space) or too low (still under
+  // keyboard). iOS keyboard alone ≈ 291px, + suggestion bar ≈ 335px.
+  var KB_INSET_PX = 320;
+
+  input.addEventListener('focus', function() {
+    document.documentElement.style.setProperty('--kb-inset', KB_INSET_PX + 'px');
+  });
+  input.addEventListener('blur', function() {
+    document.documentElement.style.setProperty('--kb-inset', '0px');
+  });
+})();
+
 // ── Keyboard-Viewport Debug Overlay ─────────────────────────────────────────
 // ALWAYS ON in this dev branch — shows live viewport + input metrics so we
 // can see how the HA Ingress iframe reacts to the on-screen keyboard.
