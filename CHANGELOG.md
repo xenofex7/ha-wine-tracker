@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.2
+
+- **Fix Vivino search** - Vivino redirected all search pages to a client-rendered explore page, breaking wine lookups entirely. The search now calls Vivino's internal JSON API directly, restoring reliable results across all wine regions.
+- **Smarter search fallback for obscure wines** - if a full search term returns no results, the search automatically retries with progressively shorter terms, so regional and country-specific labels (e.g. Australian wines) still surface.
+- **Fix stats crash with no region data** - opening the statistics page when no wines had a region set caused a ZeroDivisionError; the page now loads cleanly in that case.
+- **Wider Vivino search modal** - the search result popup is now 600 px wide and shows double-size wine images, making it easier to spot the right bottle at a glance.
+
 ## 1.9.1
 
 - **Fix mobile keyboard covering chat input** - on iOS, opening the on-screen keyboard in the full-page chat view pushed the text input behind the keyboard, making it impossible to type. The chat container now dynamically resizes using the Visual Viewport API.
