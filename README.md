@@ -80,6 +80,7 @@ A sleek, modern wine cellar tracker. Run it as a **Home Assistant add-on** or as
 - **HA Ingress** - embedded directly in the Home Assistant sidebar
 - **REST API** at `/api/summary` for HA sensors
 - **DEV_AUTH mode** - `DEV_AUTH` env var for quick local development without Home Assistant
+- **Backup & restore** - export the whole cellar as a ZIP (JSON + CSV + images) and import it back with duplicate preview
 
 ## Supported Languages
 
@@ -339,7 +340,6 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 > Features are listed roughly by priority - not all will ship, and order may change.
 
 ### 🔜 Up Next
-- **Export / Import** - CSV & JSON export of your full collection; import to restore or migrate
 - **Spending trends** - visualize spending by month, region, or wine type
 - **Maturity calendar** - overview of which wines become drinkable each year
 
@@ -356,6 +356,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 - **Tags & custom categories** - label wines as "gift", "special occasion", "everyday", etc.
 - **Bulk editing** - select multiple wines and change location, type, or category at once
 - **Multiple cellars** - manage separate collections (home, vacation house, office)
+- **Chat history in export** - optional checkbox to include chat sessions, messages and chat images in the backup ZIP
 
 ### 📱 Mobile & Sharing
 - **PWA support** - install on your phone's home screen with offline access

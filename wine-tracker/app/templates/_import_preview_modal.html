@@ -1,0 +1,85 @@
+{# Import preview modal – shown after /import/preview returns #}
+<div class="modal-overlay" id="importPreviewModal">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-header">
+      <span>{{ t.import_preview_title }}</span>
+      <button class="modal-close" onclick="closeModal('importPreviewModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Summary counters -->
+      <div id="importSummary" style="display:flex; gap:.6rem; flex-wrap:wrap; margin-bottom:.9rem;">
+        <div class="import-chip import-chip-new">
+          <span id="importCountNew">0</span> {{ t.import_summary_new }}
+        </div>
+        <div class="import-chip import-chip-dup">
+          <span id="importCountDup">0</span> {{ t.import_summary_duplicates }}
+        </div>
+        <div class="import-chip">
+          <span id="importCountTotal">0</span> {{ t.import_summary_total }}
+        </div>
+      </div>
+
+      <!-- Collapsible lists -->
+      <details id="importNewSection" class="import-section">
+        <summary>{{ t.import_section_new }} (<span id="importNewCountInline">0</span>)</summary>
+        <ul class="import-list" id="importNewList"></ul>
+      </details>
+
+      <details id="importDupSection" class="import-section" open>
+        <summary>{{ t.import_section_duplicates }} (<span id="importDupCountInline">0</span>)</summary>
+        <ul class="import-list" id="importDupList"></ul>
+      </details>
+
+      <!-- Duplicate strategy -->
+      <div id="importStrategyBlock" style="margin-top:.9rem;">
+        <div style="font-weight:600; margin-bottom:.4rem;">{{ t.import_strategy_label }}</div>
+        <label style="display:flex; align-items:center; gap:.5rem; padding:.3rem 0;">
+          <input type="radio" name="importStrategy" value="skip" checked>
+          <span>{{ t.import_strategy_skip }}</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:.5rem; padding:.3rem 0;">
+          <input type="radio" name="importStrategy" value="overwrite">
+          <span>{{ t.import_strategy_overwrite }}</span>
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-footer import-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('importPreviewModal')">{{ t.btn_cancel }}</button>
+        <button type="button" class="btn-submit" id="importConfirmBtn" onclick="confirmImport()">{{ t.import_btn_confirm }}</button>
+      </div>
+
+      <!-- Error slot -->
+      <div id="importError" style="display:none; margin-top:.9rem; padding:.6rem .8rem; background:#fdecea; color:#c0392b; border-radius:8px; font-size:.85rem;"></div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+.import-chip {
+  display:inline-flex; align-items:center; gap:.35rem;
+  padding:.35rem .7rem; border-radius:999px;
+  background: var(--bg-soft, #f3f3f3); color: var(--text, #222);
+  font-size:.8rem; font-weight:600;
+}
+.import-chip-new { background: color-mix(in srgb, var(--accent2, #4caf50) 18%, transparent); }
+.import-chip-dup { background: color-mix(in srgb, #f39c12 18%, transparent); }
+.import-section { margin: .4rem 0; border:1px solid var(--border, #ddd); border-radius:8px; padding:.5rem .8rem; }
+.import-section summary { cursor:pointer; font-weight:600; user-select:none; }
+.import-list {
+  list-style:none; padding:0; margin:.5rem 0 0 0;
+  max-height: 220px; overflow-y:auto;
+  font-size:.85rem;
+}
+.import-list li {
+  padding:.25rem .1rem;
+  border-bottom:1px solid var(--border, #eee);
+}
+.import-list li:last-child { border-bottom:none; }
+
+/* Match cancel button height with submit so the row lines up. */
+.import-actions .btn-cancel { height: 42px; padding: 0 1rem; flex: 1; }
+.import-actions .btn-submit { margin-top: 0; }
+</style>
