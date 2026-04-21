@@ -164,7 +164,11 @@ function handleImportFile(input) {
   _clearImportError();
   openModal('importPreviewModal');
 
-  fetch(_ingressPrefix() + '/import/preview', { method: 'POST', body: fd })
+  fetch(_ingressPrefix() + '/import/preview', {
+      method: 'POST',
+      body: fd,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
     .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, body: j }; }); })
     .then(function(res) {
       if (!res.ok || !res.body.ok) {
@@ -224,7 +228,10 @@ function confirmImport() {
 
   fetch(_ingressPrefix() + '/import/commit', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
     body: JSON.stringify({ token: _importToken, strategy: strategy }),
   })
     .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, body: j }; }); })
