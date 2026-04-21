@@ -6,9 +6,10 @@ import sqlite3
 import uuid
 from collections import defaultdict
 from datetime import date, datetime
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, g, session
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, g, session, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from translations import TRANSLATIONS
+from export_import import build_export_zip, export_filename
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
@@ -1278,6 +1279,24 @@ def stats_page():
         wines_by_region=wines_by_region,
         type_translations=type_translations,
         current_year=current_year,
+    )
+
+
+@app.route("/export")
+def export_data():
+    """Download a full backup (ZIP with JSON + CSV + images).
+
+    Readonly users may export — it only reads data.
+    """
+    zip_bytes = build_export_zip(get_db(), UPLOAD_DIR, app_version=APP_VERSION)
+    fname = export_filename()
+    return Response(
+        zip_bytes,
+        mimetype="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{fname}"',
+            "Content-Length": str(len(zip_bytes)),
+        },
     )
 
 
