@@ -199,6 +199,58 @@ class TestReanalyzeWine:
 
 # ── GET /api/vivino-search ────────────────────────────────────────────────────
 
+def _mock_vivino_session(MockSession, *, api_response=None, raise_error=None):
+    """Set up a mock requests.Session for vivino_search tests.
+
+    The first session.get() call is the homepage warm-up (ignored by the route).
+    The second call is the actual API request.
+    api_response: dict that session.get().json() should return
+    raise_error: exception that session.get().raise_for_status() should raise
+    """
+    mock_session = MagicMock()
+    MockSession.return_value = mock_session
+
+    warmup_resp = MagicMock()
+    warmup_resp.status_code = 200
+
+    api_resp = MagicMock()
+    api_resp.status_code = 200
+    if raise_error:
+        api_resp.raise_for_status.side_effect = raise_error
+    else:
+        api_resp.raise_for_status = MagicMock()
+        api_resp.json.return_value = api_response or {"explore_vintage": {"matches": []}}
+
+    mock_session.get.side_effect = [warmup_resp, api_resp]
+    return mock_session
+
+
+def _explore_response(matches):
+    """Wrap a list of match dicts in the explore_vintage envelope."""
+    return {"explore_vintage": {"matches": matches}}
+
+
+def _explore_match(name="TestWinery", wine_name="Reserve", year=2020,
+                   type_id=1, region="Bordeaux", country="France",
+                   grapes=None, rating=4.2, price=29.99, wine_id=12345):
+    return {
+        "vintage": {
+            "year": year,
+            "wine": {
+                "id": wine_id,
+                "name": wine_name,
+                "type_id": type_id,
+                "winery": {"name": name},
+                "region": {"name": region, "country": {"name": country}},
+                "grapes": [{"name": g} for g in (grapes or [])],
+            },
+            "statistics": {"wine_ratings_average": rating},
+            "image": {"location": "//images.vivino.com/test.png"},
+        },
+        "price": {"amount": price},
+    }
+
+
 class TestVivinoSearch:
     def test_empty_query(self, client):
         resp = client.get("/api/vivino-search?q=")
@@ -211,43 +263,12 @@ class TestVivinoSearch:
         assert resp.status_code == 400
         assert data.get("error") == "query_too_short"
 
-    @patch("requests.get")
-    def test_vivino_search_success(self, mock_get, client):
-        """Should parse Vivino search results from data-preloaded-state."""
-        # Build the JSON that Vivino embeds in data-preloaded-state
-        preloaded = {
-            "search_results": {
-                "matches": [
-                    {
-                        "vintage": {
-                            "year": 2020,
-                            "wine": {
-                                "id": 12345,
-                                "name": "Reserve",
-                                "type_id": 1,
-                                "winery": {"name": "TestWinery"},
-                                "region": {
-                                    "name": "Bordeaux",
-                                    "country": {"name": "France"},
-                                },
-                                "grapes": [
-                                    {"grape": {"name": "Merlot"}}
-                                ],
-                            },
-                            "statistics": {"wine_ratings_average": 4.2},
-                            "image": {"location": "//images.vivino.com/test.png"},
-                        },
-                        "price": {"amount": 29.99},
-                    }
-                ]
-            }
-        }
-        escaped = html.escape(json.dumps(preloaded))
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.text = f'<div id="search-page" data-preloaded-state="{escaped}"></div>'
-        mock_response.raise_for_status = MagicMock()
-        mock_get.return_value = mock_response
+    @patch("requests.Session")
+    def test_vivino_search_success(self, MockSession, client):
+        """Should return parsed results from the explore JSON API."""
+        _mock_vivino_session(MockSession, api_response=_explore_response([
+            _explore_match("TestWinery", "Reserve", grapes=["Merlot"])
+        ]))
 
         resp = client.get("/api/vivino-search?q=TestWinery+Reserve")
         assert resp.status_code == 200
@@ -255,136 +276,95 @@ class TestVivinoSearch:
         assert data["ok"] is True
         assert len(data["results"]) == 1
         assert data["results"][0]["name"] == "TestWinery Reserve"
+        assert data["results"][0]["grape"] == "Merlot"
 
-    @patch("requests.get")
-    def test_vivino_search_fallback_on_explore_redirect(self, mock_get, client):
-        """If the primary endpoint gets redirected to /explore (no data-
-        preloaded-state), the fallback chain must try the next endpoint."""
-        # First call: redirected to /explore — no JSON blob
-        primary_resp = MagicMock()
-        primary_resp.status_code = 200
-        primary_resp.url = "https://www.vivino.com/en/explore?search_term=Wynns"
-        primary_resp.text = "<html>different layout, no preloaded state</html>"
-        primary_resp.raise_for_status = MagicMock()
-
-        # Second call (the /it/search/wines fallback): returns a match
-        preloaded = {
-            "search_results": {
-                "matches": [{
-                    "vintage": {
-                        "year": 2020,
-                        "wine": {
-                            "id": 7777, "name": "Coonawarra Riesling",
-                            "type_id": 2, "winery": {"name": "Wynns"},
-                            "region": {"name": "Coonawarra", "country": {"name": "Australia"}},
-                            "grapes": [{"grape": {"name": "Riesling"}}],
-                        },
-                        "statistics": {"wine_ratings_average": 4.1},
-                        "image": {"location": "//images.vivino.com/wynns.png"},
-                    },
-                    "price": {"amount": 24.50},
-                }]
-            }
-        }
-        escaped = html.escape(json.dumps(preloaded))
-        fallback_resp = MagicMock()
-        fallback_resp.status_code = 200
-        fallback_resp.url = "https://www.vivino.com/it/search/wines?q=Wynns"
-        fallback_resp.text = f'<div data-preloaded-state="{escaped}"></div>'
-        fallback_resp.raise_for_status = MagicMock()
-
-        mock_get.side_effect = [primary_resp, fallback_resp]
-
-        resp = client.get("/api/vivino-search?q=Wynns+Coonawarra+Riesling")
-        assert resp.status_code == 200
-        data = json.loads(resp.data)
-        assert data["ok"] is True
-        assert len(data["results"]) == 1
-        assert data["results"][0]["name"] == "Wynns Coonawarra Riesling"
-        # Should have hit at least 2 URLs (primary + fallback)
-        assert mock_get.call_count >= 2
-
-    @patch("requests.get")
-    def test_vivino_search_fallback_on_empty_matches(self, mock_get, client):
-        """If the primary endpoint returns 0 matches but a later endpoint
-        has results, the fallback chain should surface the non-empty result."""
-        empty_preloaded = {"search_results": {"matches": []}}
-        empty_escaped = html.escape(json.dumps(empty_preloaded))
-        empty_resp = MagicMock()
-        empty_resp.status_code = 200
-        empty_resp.url = "https://www.vivino.com/search/wines?q=Obscure"
-        empty_resp.text = f'<div data-preloaded-state="{empty_escaped}"></div>'
-        empty_resp.raise_for_status = MagicMock()
-
-        found_preloaded = {
-            "search_results": {
-                "matches": [{
-                    "vintage": {
-                        "year": 2019,
-                        "wine": {
-                            "id": 8888, "name": "Found",
-                            "type_id": 1, "winery": {"name": "Obscure"},
-                            "region": {"name": "Somewhere", "country": {"name": "Somewhereland"}},
-                            "grapes": [],
-                        },
-                        "statistics": {"wine_ratings_average": 3.8},
-                        "image": {"location": "//images.vivino.com/f.png"},
-                    },
-                    "price": {"amount": 15.0},
-                }]
-            }
-        }
-        found_escaped = html.escape(json.dumps(found_preloaded))
-        found_resp = MagicMock()
-        found_resp.status_code = 200
-        found_resp.url = "https://www.vivino.com/it/search/wines?q=Obscure"
-        found_resp.text = f'<div data-preloaded-state="{found_escaped}"></div>'
-        found_resp.raise_for_status = MagicMock()
-
-        mock_get.side_effect = [empty_resp, found_resp]
-
-        resp = client.get("/api/vivino-search?q=Obscure+Winery")
-        data = json.loads(resp.data)
-        assert data["ok"] is True
-        assert len(data["results"]) == 1
-        assert data["results"][0]["name"] == "Obscure Found"
-
-    @patch("requests.get")
-    def test_vivino_search_all_endpoints_empty(self, mock_get, client):
-        """When every endpoint returns 0 matches, the response should be
-        an empty-but-successful result list (no error)."""
-        empty_preloaded = {"search_results": {"matches": []}}
-        escaped = html.escape(json.dumps(empty_preloaded))
-        empty_resp = MagicMock()
-        empty_resp.status_code = 200
-        empty_resp.url = "https://www.vivino.com/search/wines?q=Nothing"
-        empty_resp.text = f'<div data-preloaded-state="{escaped}"></div>'
-        empty_resp.raise_for_status = MagicMock()
-
-        mock_get.return_value = empty_resp
-
-        resp = client.get("/api/vivino-search?q=CompletelyNonexistent")
-        assert resp.status_code == 200
-        data = json.loads(resp.data)
-        assert data["ok"] is True
-        assert data["results"] == []
-
-    @patch("requests.get")
-    def test_vivino_search_no_results(self, mock_get, client):
-        """Should return empty results when no matches."""
-        preloaded = {"search_results": {"matches": []}}
-        escaped = html.escape(json.dumps(preloaded))
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.text = f'<div data-preloaded-state="{escaped}"></div>'
-        mock_response.raise_for_status = MagicMock()
-        mock_get.return_value = mock_response
+    @patch("requests.Session")
+    def test_vivino_search_no_results(self, MockSession, client):
+        """Should return empty result list when API returns no matches."""
+        _mock_vivino_session(MockSession, api_response=_explore_response([]))
 
         resp = client.get("/api/vivino-search?q=NonexistentWine12345")
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert data["ok"] is True
         assert data["results"] == []
+
+    @patch("requests.Session")
+    def test_vivino_search_multiple_results(self, MockSession, client):
+        """Should return all matches from the API response."""
+        _mock_vivino_session(MockSession, api_response=_explore_response([
+            _explore_match("Winery A", "Blanc", year=2021, wine_id=1),
+            _explore_match("Winery B", "Rouge", year=2019, wine_id=2),
+        ]))
+
+        resp = client.get("/api/vivino-search?q=test")
+        assert resp.status_code == 200
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert len(data["results"]) == 2
+
+    @patch("requests.Session")
+    def test_vivino_search_blocked(self, MockSession, client):
+        """When the API returns 403, response should be 503 with error=blocked."""
+        blocked_resp = MagicMock()
+        blocked_resp.status_code = 403
+        http_err = requests.exceptions.HTTPError(response=blocked_resp)
+        _mock_vivino_session(MockSession, raise_error=http_err)
+
+        resp = client.get("/api/vivino-search?q=merlot")
+        assert resp.status_code == 503
+        data = json.loads(resp.data)
+        assert data["ok"] is False
+        assert data["error"] == "blocked"
+
+    @patch("requests.Session")
+    def test_vivino_search_word_reduction_fallback(self, MockSession, client):
+        """If the full query returns 0 matches, the route must retry with
+        progressively shorter search terms until it finds results."""
+        mock_session = MagicMock()
+        MockSession.return_value = mock_session
+
+        warmup = MagicMock()
+        warmup.status_code = 200
+
+        empty = MagicMock()
+        empty.status_code = 200
+        empty.raise_for_status = MagicMock()
+        empty.json.return_value = _explore_response([])
+
+        found = MagicMock()
+        found.status_code = 200
+        found.raise_for_status = MagicMock()
+        found.json.return_value = _explore_response([
+            _explore_match("Wynns", "John Riddoch Cabernet Sauvignon", year=2016)
+        ])
+
+        # warm-up, full query (0 results), shortened query (1 result)
+        mock_session.get.side_effect = [warmup, empty, found]
+
+        resp = client.get("/api/vivino-search?q=Wynns+Coonawarra+Riesling")
+        assert resp.status_code == 200
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert len(data["results"]) == 1
+        assert "Wynns" in data["results"][0]["name"]
+        assert mock_session.get.call_count == 3  # warm-up + full + shortened
+
+    @patch("requests.Session")
+    def test_vivino_search_timeout(self, MockSession, client):
+        """Should return 504 when the API request times out."""
+        mock_session = MagicMock()
+        MockSession.return_value = mock_session
+        warmup = MagicMock()
+        mock_session.get.side_effect = [
+            warmup,
+            requests.exceptions.Timeout(),
+        ]
+
+        resp = client.get("/api/vivino-search?q=merlot")
+        assert resp.status_code == 504
+        data = json.loads(resp.data)
+        assert data["error"] == "timeout"
 
 
 # ── POST /api/vivino-image ────────────────────────────────────────────────────

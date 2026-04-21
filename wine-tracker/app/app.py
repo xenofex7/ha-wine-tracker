@@ -1682,126 +1682,130 @@ def _vivino_country_code(currency):
     return mapping.get(currency, ("US", "USD"))
 
 
-# Vivino search endpoint fallback chain. The default endpoint is fine for many
-# queries but for some queries and for some user geolocations (notably users
-# in Australia) Vivino redirects /search/wines to /<lang>/explore — an entirely
-# different client-rendered page that does not contain the data-preloaded-state
-# JSON we parse. The Italian and Spanish locale prefixes consistently render
-# the classic search page with results, so we use them as fallbacks when the
-# primary query misses. Ordered by empirical hit rate.
-VIVINO_SEARCH_URLS = (
-    "https://www.vivino.com/search/wines",
-    "https://www.vivino.com/it/search/wines",
-    "https://www.vivino.com/es/search/wines",
-)
+# Vivino's /search/wines pages are now fully redirected to the client-rendered
+# /explore page for all locales — server-side HTML scraping no longer works.
+# Instead we call the same JSON endpoint that the explore page itself uses.
+# min_rating=1 satisfies the "at least one filter" requirement of the API.
+_VIVINO_EXPLORE_URL = "https://www.vivino.com/api/explore/explore"
+
+# Browser headers for the warm-up request so Cloudflare issues session cookies.
+_VIVINO_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/131.0.0.0 Safari/537.36"
+    ),
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Referer": "https://www.vivino.com/",
+}
 
 
 @app.route("/api/vivino-search")
 def vivino_search():
-    """Search wines on Vivino by scraping their search page.
+    """Search wines on Vivino via their internal explore JSON API.
 
-    The Vivino explore API no longer supports free-text search (returns 400
-    "At least one filter should be set").  The web search page, however,
-    embeds its results as JSON inside a ``data-preloaded-state`` attribute
-    on the ``#search-page`` div — we parse that instead.
+    Vivino's /search/wines pages are now always redirected to the
+    client-rendered /explore page, so HTML scraping no longer works.
+    The explore page itself fetches results from /api/explore/explore —
+    we call that endpoint directly.  A session warm-up visit to the
+    Vivino homepage seeds the session cookies so the API accepts the
+    request without a 403.
     """
-    import html as htmlmod
-    import re
     import requests as req
 
     query = request.args.get("q", "").strip()
     if len(query) < 2:
         return jsonify({"ok": False, "error": "query_too_short"}), 400
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                      "AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/131.0.0.0 Safari/537.36",
-        "Accept": "text/html",
-    }
+    ssl_verify = _ssl_verify()
+    session = req.Session()
+    session.headers.update(_VIVINO_HEADERS)
 
-    # Try each endpoint in the fallback chain until one returns matches.
-    # Some queries and some user geolocations get redirected to the /explore
-    # page which uses a different client-side rendered layout — we detect
-    # that and fall through to the next endpoint.
-    data = None
-    last_error = None
+    # Seed session cookies so the API endpoint accepts the request.
     try:
-        for url in VIVINO_SEARCH_URLS:
-            try:
-                resp = req.get(
-                    url,
-                    params={"q": query},
-                    headers=headers,
-                    timeout=10,
-                    verify=_ssl_verify(),
-                    allow_redirects=True,
-                )
-                resp.raise_for_status()
-            except req.exceptions.Timeout:
-                last_error = "timeout"
-                continue
-            except Exception as e:
-                last_error = str(e)
-                continue
+        session.get("https://www.vivino.com/", timeout=8, verify=ssl_verify)
+    except Exception:
+        pass
 
-            # If we got bounced to /explore, the JSON blob we need isn't there
-            if "/explore" in resp.url:
-                continue
-
-            m = re.search(r'data-preloaded-state="([^"]+)"', resp.text)
-            if not m:
-                continue
-            candidate = json.loads(htmlmod.unescape(m.group(1)))
-            matches = candidate.get("search_results", {}).get("matches", [])
-            if matches:
-                data = candidate
-                break
-            # First endpoint explicitly returned 0 matches — keep trying
-            # fallbacks in case another regional catalogue has the wine.
-            if data is None:
-                data = candidate  # remember as "empty but valid" fallback
-
+    try:
+        resp = session.get(
+            _VIVINO_EXPLORE_URL,
+            params={"language": "en", "min_rating": 1, "search_term": query},
+            headers={"Accept": "application/json"},
+            timeout=10,
+            verify=ssl_verify,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except req.exceptions.Timeout:
+        return jsonify({"ok": False, "error": "timeout"}), 504
+    except req.exceptions.HTTPError as e:
+        if e.response is not None and e.response.status_code == 403:
+            return jsonify({"ok": False, "error": "blocked"}), 503
+        app.logger.exception("Vivino search error: %s", e)
+        return jsonify({"ok": False, "error": "api_error"}), 502
     except Exception as e:
         app.logger.exception("Vivino search error: %s", e)
         return jsonify({"ok": False, "error": "api_error"}), 502
 
-    if data is None:
-        if last_error == "timeout":
-            return jsonify({"ok": False, "error": "timeout"}), 504
-        return jsonify({"ok": False, "error": "parse_error"}), 502
+    # If the exact query returned nothing, retry with progressively shorter
+    # search terms (drop one word at a time from the right).  This helps with
+    # regional or obscure wines that appear under a subset of their full name,
+    # e.g. "Wynns Coonawarra Riesling" → "Wynns Coonawarra" → "Wynns".
+    matches_raw = data.get("explore_vintage", {}).get("matches", [])
+    if not matches_raw:
+        words = query.split()
+        for drop in range(1, len(words)):
+            shorter = " ".join(words[:-drop])
+            if len(shorter) < 2:
+                break
+            try:
+                r2 = session.get(
+                    _VIVINO_EXPLORE_URL,
+                    params={"language": "en", "min_rating": 1, "search_term": shorter},
+                    headers={"Accept": "application/json"},
+                    timeout=10,
+                    verify=ssl_verify,
+                )
+                r2.raise_for_status()
+                fb = r2.json().get("explore_vintage", {}).get("matches", [])
+                if fb:
+                    matches_raw = fb
+                    break
+            except Exception:
+                break
 
     results = []
     try:
-        for match in data.get("search_results", {}).get("matches", []):
+        for match in matches_raw:
             vintage = match.get("vintage", {})
             wine = vintage.get("wine", {}) or {}
             winery = wine.get("winery", {}) or {}
             region = wine.get("region", {}) or {}
             country_obj = region.get("country", {}) or {}
 
-            # Grape varieties
+            # Grape varieties — explore API uses {name:...} directly
             grapes = []
             for g_item in wine.get("grapes", []) or []:
-                grape_obj = g_item.get("grape", {}) or {}
-                if grape_obj.get("name"):
-                    grapes.append(grape_obj["name"])
+                name = g_item.get("name") or g_item.get("grape", {}).get("name", "")
+                if name:
+                    grapes.append(name)
 
-            # Price
             price_obj = match.get("price", {}) or {}
             price_val = price_obj.get("amount")
 
-            # Wine type
             wine_type_id = wine.get("type_id")
             wine_type = VIVINO_WINE_TYPES.get(wine_type_id, "Anderes") if wine_type_id else ""
 
-            # Region string
             region_name = region.get("name", "")
             country_name = country_obj.get("name", "")
-            region_str = f"{region_name}, {country_name}" if region_name and country_name else region_name or country_name
+            region_str = (
+                f"{region_name}, {country_name}" if region_name and country_name
+                else region_name or country_name
+            )
 
-            # Image
-            image_url = vintage.get("image", {}).get("location", "") if vintage.get("image") else ""
+            image_loc = vintage.get("image", {}).get("location", "") if vintage.get("image") else ""
 
             results.append({
                 "vivino_id": wine.get("id"),
@@ -1812,7 +1816,7 @@ def vivino_search():
                 "grape": ", ".join(grapes),
                 "rating": round(vintage.get("statistics", {}).get("wine_ratings_average", 0), 1) or None,
                 "price": round(price_val, 2) if price_val else None,
-                "image_url": image_url,
+                "image_url": image_loc,
             })
     except Exception as e:
         app.logger.exception("Vivino parse error: %s", e)

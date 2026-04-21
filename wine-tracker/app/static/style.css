@@ -1011,15 +1011,15 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
   font-size: .95rem; box-sizing: border-box;
 }
 .vivino-search-input:focus { border-color: var(--accent); outline: none; }
-.vivino-results { margin-top: 1rem; max-height: 340px; overflow-y: auto; }
+.vivino-results { margin-top: 1rem; max-height: 480px; overflow-y: auto; }
 .vivino-result-item {
-  display: flex; gap: .75rem; padding: .65rem .5rem;
+  display: flex; gap: 1rem; padding: .75rem .5rem;
   border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s;
   border-radius: 6px; align-items: center;
 }
 .vivino-result-item:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .vivino-result-img {
-  width: 40px; height: 56px; object-fit: contain; border-radius: 4px;
+  width: 80px; height: 112px; object-fit: contain; border-radius: 4px;
   flex-shrink: 0; background: rgba(255,255,255,.05);
 }
 .vivino-result-info { flex: 1; min-width: 0; }
@@ -1106,7 +1106,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .theme-seg-btn .mdi { font-size: 1rem; }
 
 /* ── Wine Modal: narrow by default, wide only when form is shown ───────────── */
-#wineModal .modal { max-width: 380px; transition: max-width .25s ease; }
+#wineModal .modal { max-width: 600px; transition: max-width .25s ease; }
 #wineModal.form-active .modal { max-width: 480px; }
 @media (min-width: 700px) {
   #wineModal.form-active .modal { max-width: 900px; }

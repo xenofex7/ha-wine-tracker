@@ -161,8 +161,8 @@
     <h2><i class="mdi mdi-earth"></i> {{ t.stat_top_regions }}</h2>
     <div class="stat-body">
       <div class="bar-list">
-        {% set region_total = top_regions|sum(attribute='qty') %}
-        {% set max_region = top_regions[0]['qty'] if top_regions else 1 %}
+        {% set region_total = top_regions|sum(attribute='qty') or 1 %}
+        {% set max_region = (top_regions[0]['qty'] if top_regions else 1) or 1 %}
         {% for item in top_regions %}
         <div class="bar-item chart-hover" data-chart="region" data-key="{{ item['region'] }}">
           <div class="bar-label" title="{{ item['region'] }}">{{ item['region'] }}</div>
