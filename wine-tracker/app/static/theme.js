@@ -129,13 +129,118 @@ function toggleChatEditWines(enabled) {
   localStorage.setItem('chatEditWines', enabled ? '1' : '0');
 }
 
-// ── Data: Import handler (stub — preview modal comes in a later commit) ──────
+// ── Data: Import ──────────────────────────────────────────────────────────────
+// Remember the token returned by /import/preview so confirmImport() can commit.
+var _importToken = null;
+
+function _ingressPrefix() {
+  // Best-effort: reuse any ingress path already baked into links on the page.
+  var anchor = document.querySelector('a[href*="/export"]');
+  if (anchor) return anchor.getAttribute('href').replace(/\/export$/, '');
+  return '';
+}
+
+function _showImportError(msg) {
+  var el = document.getElementById('importError');
+  if (!el) { alert(msg); return; }
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function _clearImportError() {
+  var el = document.getElementById('importError');
+  if (el) { el.textContent = ''; el.style.display = 'none'; }
+}
+
 function handleImportFile(input) {
   var file = input && input.files && input.files[0];
   if (!file) return;
-  // TODO: POST to /import/preview and open duplicate-preview modal.
-  alert('Import wird im nächsten Schritt verdrahtet.\n\nAusgewählt: ' + file.name);
-  input.value = '';
+
+  var fd = new FormData();
+  fd.append('file', file);
+
+  // Close settings, prepare preview modal.
+  if (typeof closeModal === 'function') closeModal('settingsModal');
+  _clearImportError();
+  openModal('importPreviewModal');
+
+  fetch(_ingressPrefix() + '/import/preview', { method: 'POST', body: fd })
+    .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, body: j }; }); })
+    .then(function(res) {
+      if (!res.ok || !res.body.ok) {
+        _showImportError(res.body.error || 'Import fehlgeschlagen');
+        return;
+      }
+      _importToken = res.body.token;
+      _renderImportPreview(res.body);
+    })
+    .catch(function(err) {
+      _showImportError(String(err));
+    })
+    .finally(function() { input.value = ''; });
+}
+
+function _renderImportPreview(data) {
+  var c = data.counts || {};
+  document.getElementById('importCountNew').textContent = c.new || 0;
+  document.getElementById('importCountDup').textContent = c.duplicates || 0;
+  document.getElementById('importCountTotal').textContent = c.total || 0;
+  document.getElementById('importNewCountInline').textContent = c.new || 0;
+  document.getElementById('importDupCountInline').textContent = c.duplicates || 0;
+
+  var newList = document.getElementById('importNewList');
+  newList.innerHTML = '';
+  (data.new || []).forEach(function(item) {
+    var li = document.createElement('li');
+    li.textContent = item.label;
+    newList.appendChild(li);
+  });
+
+  var dupList = document.getElementById('importDupList');
+  dupList.innerHTML = '';
+  (data.duplicates || []).forEach(function(item) {
+    var li = document.createElement('li');
+    li.textContent = item.label;
+    dupList.appendChild(li);
+  });
+
+  // If no duplicates, hide strategy block (nothing to choose).
+  var hasDups = (c.duplicates || 0) > 0;
+  var block = document.getElementById('importStrategyBlock');
+  if (block) block.style.display = hasDups ? '' : 'none';
+}
+
+function confirmImport() {
+  if (!_importToken) {
+    _showImportError('Kein Import vorbereitet');
+    return;
+  }
+  var strategyEl = document.querySelector('input[name="importStrategy"]:checked');
+  var strategy = strategyEl ? strategyEl.value : 'skip';
+
+  var btn = document.getElementById('importConfirmBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  _clearImportError();
+
+  fetch(_ingressPrefix() + '/import/commit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: _importToken, strategy: strategy }),
+  })
+    .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, body: j }; }); })
+    .then(function(res) {
+      if (!res.ok || !res.body.ok) {
+        _showImportError(res.body.error || 'Import fehlgeschlagen');
+        return;
+      }
+      // Success — reload so the new wines appear.
+      closeModal('importPreviewModal');
+      location.reload();
+    })
+    .catch(function(err) { _showImportError(String(err)); })
+    .finally(function() {
+      if (btn) { btn.disabled = false; btn.textContent = btn.getAttribute('data-label') || 'Import'; }
+    });
 }
 
 // Apply theme name on load (mode is handled by inline script + OS listener)
