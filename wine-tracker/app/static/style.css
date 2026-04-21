@@ -1072,23 +1072,15 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
   margin-top: auto;
 }
 
-/* Data section (Export / Import) – vertical block layout */
-.data-action {
-  display: flex; flex-direction: column; gap: .5rem;
-  padding: .8rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-soft, transparent);
+/* Data section (Export / Import) — inherits settings-row layout, adds hint
+   below the label and aligns label to the top so long text wraps naturally. */
+.data-row { align-items: flex-start; }
+.data-row .settings-row-label { color: var(--text); font-weight: 500; }
+.data-row-hint {
+  font-size: .75rem; color: var(--muted); font-weight: 400;
+  margin-top: .25rem; line-height: 1.35;
 }
-.data-action-head {
-  display: flex; align-items: center; gap: .45rem;
-  font-weight: 600;
-}
-.data-action-head .mdi { color: var(--accent2, var(--accent)); }
-.data-action-title { font-size: .95rem; }
-.data-action-hint {
-  font-size: .8rem; color: var(--muted); line-height: 1.35;
-}
+
 /* Uniform button width for Export / Import / Logout actions.
    Width is driven by the longest label (usually "Sicherung herunterladen"). */
 .data-action-btn,

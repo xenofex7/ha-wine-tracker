@@ -131,28 +131,30 @@
       <div class="settings-section">
         <div class="settings-section-title">{{ t.settings_data }}</div>
 
-        <div class="data-action">
-          <div class="data-action-head">
-            <i class="mdi mdi-download"></i>
-            <span class="data-action-title">{{ t.data_export }}</span>
+        <div class="settings-row data-row">
+          <div class="settings-row-label">
+            {{ t.data_export }}
+            <div class="data-row-hint">{{ t.data_export_hint }}</div>
           </div>
-          <div class="data-action-hint">{{ t.data_export_hint }}</div>
-          <a href="{{ ingress }}/export" class="btn-cancel data-action-btn">
-            <i class="mdi mdi-download"></i> {{ t.btn_export_download }}
-          </a>
+          <div class="settings-row-control">
+            <a href="{{ ingress }}/export" class="btn-cancel data-action-btn">
+              <i class="mdi mdi-download"></i> {{ t.btn_export_download }}
+            </a>
+          </div>
         </div>
 
         {% if not auth_readonly %}
-        <div class="data-action">
-          <div class="data-action-head">
-            <i class="mdi mdi-upload"></i>
-            <span class="data-action-title">{{ t.data_import }}</span>
+        <div class="settings-row data-row">
+          <div class="settings-row-label">
+            {{ t.data_import }}
+            <div class="data-row-hint">{{ t.data_import_hint }}</div>
           </div>
-          <div class="data-action-hint">{{ t.data_import_hint }}</div>
-          <label class="btn-cancel data-action-btn" style="cursor:pointer; margin:0;">
-            <i class="mdi mdi-upload"></i> <span>{{ t.btn_import_choose }}</span>
-            <input type="file" id="importFileInput" accept=".zip,.csv" style="display:none;" onchange="handleImportFile(this)">
-          </label>
+          <div class="settings-row-control">
+            <label class="btn-cancel data-action-btn" style="cursor:pointer; margin:0;">
+              <i class="mdi mdi-upload"></i> <span>{{ t.btn_import_choose }}</span>
+              <input type="file" id="importFileInput" accept=".zip,.csv" style="display:none;" onchange="handleImportFile(this)">
+            </label>
+          </div>
         </div>
         {% endif %}
       </div>
