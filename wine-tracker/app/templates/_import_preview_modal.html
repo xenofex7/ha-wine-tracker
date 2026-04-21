@@ -45,9 +45,9 @@
       </div>
 
       <!-- Actions -->
-      <div style="display:flex; gap:.6rem; margin-top:1rem;">
-        <button type="button" class="btn-cancel" onclick="closeModal('importPreviewModal')" style="flex:1;">{{ t.btn_cancel }}</button>
-        <button type="button" class="btn-submit" id="importConfirmBtn" onclick="confirmImport()" style="flex:1;">{{ t.import_btn_confirm }}</button>
+      <div class="form-footer import-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('importPreviewModal')">{{ t.btn_cancel }}</button>
+        <button type="button" class="btn-submit" id="importConfirmBtn" onclick="confirmImport()">{{ t.import_btn_confirm }}</button>
       </div>
 
       <!-- Error slot -->
@@ -78,4 +78,8 @@
   border-bottom:1px solid var(--border, #eee);
 }
 .import-list li:last-child { border-bottom:none; }
+
+/* Match cancel button height with submit so the row lines up. */
+.import-actions .btn-cancel { height: 42px; padding: 0 1rem; flex: 1; }
+.import-actions .btn-submit { margin-top: 0; }
 </style>
