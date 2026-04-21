@@ -67,7 +67,7 @@ Wine Tracker helps wine enthusiasts manage their personal wine collection with A
 - View community ratings, region, price
 - Import wine data directly into the cellar
 - Vivino ID management in the edit modal with clickable test links
-- **Regional fallback chain:** retries alternative Vivino endpoints so country-specific wines (e.g. Australian labels) show up even when the default endpoint returns empty
+- **JSON API search:** calls Vivino's internal explore JSON API directly (bypassing client-rendered HTML pages); retries with progressively shorter search terms when no results are found, so regional and country-specific wines (e.g. Australian labels) still surface
 
 ### Visualization & Insights
 - **Interactive 3D globe** — see your wine regions on a WebGL globe (COBE)
@@ -213,7 +213,7 @@ Persisted sommelier chat sessions with uploaded image references (cascade-delete
 ### AI & Vivino
 - `POST /api/analyze-wine` — AI label recognition (returns all fields incl. maturity, taste, pairings)
 - `POST /api/reanalyze-wine` — re-run AI on an existing wine (image, text context, or both)
-- `GET /api/vivino-search?q=<query>` — Vivino wine search with regional fallback chain
+- `GET /api/vivino-search?q=<query>` — Vivino wine search via internal JSON API with term-reduction fallback
 - `POST /api/vivino-image` — download a Vivino image into the local uploads folder
 
 ### Chat
@@ -361,7 +361,8 @@ Current version: **v1.9.2**
 See `CHANGELOG.md` for the complete version history.
 
 Recent highlights:
-- **v1.9.2** — Fixed mobile keyboard covering chat input on iOS (Visual Viewport API). Chat history sidebar now closes on mobile when starting a new session.
+- **v1.9.2** — Vivino search rewritten to use the internal JSON API (was broken by Vivino's switch to client-side rendering); smarter term-reduction fallback for regional wines; fixed stats crash with no region data; wider search modal.
+- **v1.9.1** — Fixed mobile keyboard covering chat input on iOS (Visual Viewport API). Chat history sidebar now closes on mobile when starting a new session.
 - **v1.9.0** — Full cellar CRUD via sommelier chat, MiniMax as fifth AI provider, auto-enrichment on AI-added wines, Vivino regional fallback, multilingual cellar context.
 - **v1.8.0** — Chat image upload, stock history area chart, search by year and grape, landing-page metadata.
 - **v1.7.0** — Four cellar view modes (Cards, List, Grid, Table), hamburger menu, DEV_AUTH shortcut.
