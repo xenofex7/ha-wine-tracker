@@ -356,12 +356,12 @@ See `CLAUDE.md` for full project guidelines (in German).
 
 ## Version History
 
-Current version: **v1.9.1**
+Current version: **v1.9.2**
 
 See `CHANGELOG.md` for the complete version history.
 
 Recent highlights:
-- **v1.9.1** — Fixed mobile keyboard covering chat input on iOS (Visual Viewport API). Chat history sidebar now closes on mobile when starting a new session.
+- **v1.9.2** — Fixed mobile keyboard covering chat input on iOS (Visual Viewport API). Chat history sidebar now closes on mobile when starting a new session.
 - **v1.9.0** — Full cellar CRUD via sommelier chat, MiniMax as fifth AI provider, auto-enrichment on AI-added wines, Vivino regional fallback, multilingual cellar context.
 - **v1.8.0** — Chat image upload, stock history area chart, search by year and grape, landing-page metadata.
 - **v1.7.0** — Four cellar view modes (Cards, List, Grid, Table), hamburger menu, DEV_AUTH shortcut.

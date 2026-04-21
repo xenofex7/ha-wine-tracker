@@ -35,7 +35,7 @@ Vivino to import wines with ratings and pricing.
 Data is stored locally under `/share/wine-tracker/` and preserved across
 updates and restarts.
 
-[version-badge]: https://img.shields.io/badge/version-v1.9.1-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v1.9.2-blue.svg
 [stage-badge]: https://img.shields.io/badge/project%20stage-stable-brightgreen.svg
 [maintained-badge]: https://img.shields.io/badge/maintained-yes-brightgreen.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-green.svg
