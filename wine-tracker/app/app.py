@@ -9,7 +9,10 @@ from datetime import date, datetime
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, g, session, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from translations import TRANSLATIONS
-from export_import import build_export_zip, export_filename
+from export_import import (
+    build_export_zip, export_filename,
+    parse_import_file, match_wines, apply_import, ImportError as WineImportError,
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
@@ -142,9 +145,11 @@ DATA_DIR = os.environ.get("DATA_DIR",
     "/share/wine-tracker" if os.path.isdir("/share")
     else os.path.join(os.path.dirname(__file__), "data"))
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+IMPORT_TMP_DIR = os.path.join(DATA_DIR, "import_tmp")
 DB_PATH = os.path.join(DATA_DIR, "wine.db")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(IMPORT_TMP_DIR, exist_ok=True)
 
 ALLOWED_EXT = {"jpg", "jpeg", "png", "webp", "gif"}
 WINE_TYPES = ["Rotwein", "Weisswein", "Rosé", "Schaumwein", "Dessertwein", "Likörwein", "Anderes"]
@@ -1298,6 +1303,127 @@ def export_data():
             "Content-Length": str(len(zip_bytes)),
         },
     )
+
+
+def _cleanup_import_tmp(max_age_seconds=3600):
+    """Delete stale import temp files (older than 1h by default)."""
+    now = datetime.now().timestamp()
+    try:
+        for entry in os.listdir(IMPORT_TMP_DIR):
+            path = os.path.join(IMPORT_TMP_DIR, entry)
+            try:
+                if os.path.isfile(path) and now - os.path.getmtime(path) > max_age_seconds:
+                    os.remove(path)
+            except OSError:
+                pass
+    except FileNotFoundError:
+        pass
+
+
+@app.route("/import/preview", methods=["POST"])
+def import_preview():
+    """Parse uploaded archive/CSV, return matches + a token for commit."""
+    if AUTH_ENABLED and session.get("role") == "readonly":
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    f = request.files.get("file")
+    if not f:
+        return jsonify({"ok": False, "error": "Keine Datei hochgeladen"}), 400
+
+    raw = f.read()
+    if not raw:
+        return jsonify({"ok": False, "error": "Datei ist leer"}), 400
+
+    try:
+        parsed = parse_import_file(raw, filename=f.filename or "")
+    except WineImportError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+
+    matches = match_wines(parsed["wines"], get_db())
+
+    _cleanup_import_tmp()
+    token = secrets.token_urlsafe(16)
+    ext = "zip" if parsed["source"] == "zip" else "csv"
+    token_path = os.path.join(IMPORT_TMP_DIR, f"{token}.{ext}")
+    with open(token_path, "wb") as out:
+        out.write(raw)
+
+    # Build preview: split into new vs. duplicates with a compact label
+    new_items = []
+    duplicates = []
+    for w, m in zip(parsed["wines"], matches):
+        label = w.get("name") or "?"
+        if w.get("year"):
+            label += f" ({w['year']})"
+        if m["matched"]:
+            duplicates.append({
+                "label": label,
+                "existing_id": m["existing_id"],
+                "existing_name": m["existing"]["name"] if m["existing"] else None,
+            })
+        else:
+            new_items.append({"label": label})
+
+    return jsonify({
+        "ok": True,
+        "token": token,
+        "source": parsed["source"],
+        "schema_version": parsed["schema_version"],
+        "counts": {
+            "total": len(parsed["wines"]),
+            "new": len(new_items),
+            "duplicates": len(duplicates),
+            "images": len(parsed.get("images") or {}),
+        },
+        "new": new_items[:500],  # cap for payload size
+        "duplicates": duplicates[:500],
+    })
+
+
+@app.route("/import/commit", methods=["POST"])
+def import_commit():
+    """Apply a previously previewed import given its token + strategy."""
+    if AUTH_ENABLED and session.get("role") == "readonly":
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    payload = request.get_json(silent=True) or {}
+    token = (payload.get("token") or "").strip()
+    strategy = (payload.get("strategy") or "skip").strip()
+
+    # Token must be a bare identifier — no path traversal.
+    if not token or "/" in token or "\\" in token or ".." in token:
+        return jsonify({"ok": False, "error": "Ungültiger Token"}), 400
+    if strategy not in ("skip", "overwrite"):
+        return jsonify({"ok": False, "error": "Ungültige Strategie"}), 400
+
+    path = None
+    for ext in ("zip", "csv"):
+        candidate = os.path.join(IMPORT_TMP_DIR, f"{token}.{ext}")
+        if os.path.isfile(candidate):
+            path = candidate
+            break
+    if not path:
+        return jsonify({"ok": False, "error": "Import-Datei abgelaufen — bitte erneut hochladen"}), 404
+
+    with open(path, "rb") as fh:
+        raw = fh.read()
+
+    try:
+        parsed = parse_import_file(raw, filename=os.path.basename(path))
+    except WineImportError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+
+    db = get_db()
+    matches = match_wines(parsed["wines"], db)
+    result = apply_import(parsed, matches, db, UPLOAD_DIR, strategy=strategy)
+
+    # Clean up the token file now that we're done
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+    return jsonify({"ok": True, **result})
 
 
 @app.route("/uploads/<filename>")
