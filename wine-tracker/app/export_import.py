@@ -215,14 +215,17 @@ def _normalize_wine(w: dict) -> dict:
     """Coerce types so a wine dict is ready to insert into SQLite."""
     out = {k: w.get(k) for k in WINE_COLUMNS if k != "id"}
     out["year"] = _coerce_int(out.get("year"))
-    out["quantity"] = _coerce_int(out.get("quantity")) or 1
-    out["rating"] = _coerce_int(out.get("rating")) or 0
+    # Preserve 0 explicitly — only fall back when the value is truly missing.
+    qty = _coerce_int(out.get("quantity"))
+    out["quantity"] = qty if qty is not None else 1
+    rating = _coerce_int(out.get("rating"))
+    out["rating"] = rating if rating is not None else 0
     out["price"] = _coerce_float(out.get("price"))
     out["drink_from"] = _coerce_int(out.get("drink_from"))
     out["drink_until"] = _coerce_int(out.get("drink_until"))
     out["vivino_id"] = _coerce_int(out.get("vivino_id"))
     bf = _coerce_float(out.get("bottle_format"))
-    out["bottle_format"] = bf if bf else 0.75
+    out["bottle_format"] = bf if bf is not None else 0.75
     # Required column
     out["name"] = (out.get("name") or "").strip()
     return out

@@ -191,6 +191,40 @@ class TestImportParsing:
         with pytest.raises(ImportError):
             parse_import_file(b"year,grape\n2020,Merlot\n", filename="bad.csv")
 
+    def test_quantity_zero_preserved(self):
+        """Regression: quantity=0 must not be rewritten to 1 on import."""
+        from export_import import parse_import_file
+        csv_bytes = b"name,year,quantity,rating\nEmpty Bottle,2018,0,0\n"
+        parsed = parse_import_file(csv_bytes, filename="zero.csv")
+        assert parsed["wines"][0]["quantity"] == 0
+        assert parsed["wines"][0]["rating"] == 0
+
+    def test_roundtrip_preserves_zero_quantity(self, client, db, sample_wine):
+        """Exporting and re-importing a zero-qty wine keeps it at zero."""
+        wine_id = sample_wine["wine"]["id"]
+        db.execute("UPDATE wines SET quantity=0 WHERE id=?", (wine_id,))
+        db.commit()
+
+        zip_bytes = client.get("/export").data
+        db.execute("DELETE FROM wines")
+        db.execute("DELETE FROM timeline")
+        db.commit()
+
+        preview = client.post(
+            "/import/preview",
+            data={"file": (io.BytesIO(zip_bytes), "b.zip")},
+            content_type="multipart/form-data",
+        )
+        token = json.loads(preview.data)["token"]
+        client.post(
+            "/import/commit",
+            data=json.dumps({"token": token, "strategy": "skip"}),
+            content_type="application/json",
+        )
+
+        row = db.execute("SELECT quantity FROM wines").fetchone()
+        assert row["quantity"] == 0
+
 
 # ── Import: duplicate matching ────────────────────────────────────────────────
 
