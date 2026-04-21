@@ -127,6 +127,34 @@
       </div>
       {% endif %}
 
+      <!-- Data: Export / Import -->
+      <div class="settings-section">
+        <div class="settings-section-title">{{ t.settings_data }}</div>
+
+        <div class="settings-row" style="align-items: flex-start;">
+          <div class="settings-row-label" style="padding-top: .45rem;">{{ t.data_export }}</div>
+          <div class="settings-row-control" style="flex-direction: column; align-items: stretch; gap: .4rem;">
+            <div style="font-size: .8rem; color: var(--muted);">{{ t.data_export_hint }}</div>
+            <a href="{{ ingress }}/export" class="btn-cancel" style="text-decoration: none; text-align: center; padding: .55rem 1rem;">
+              <i class="mdi mdi-download"></i> {{ t.btn_export_download }}
+            </a>
+          </div>
+        </div>
+
+        {% if not auth_readonly %}
+        <div class="settings-row" style="align-items: flex-start;">
+          <div class="settings-row-label" style="padding-top: .45rem;">{{ t.data_import }}</div>
+          <div class="settings-row-control" style="flex-direction: column; align-items: stretch; gap: .4rem;">
+            <div style="font-size: .8rem; color: var(--muted);">{{ t.data_import_hint }}</div>
+            <label class="btn-cancel" style="text-align: center; padding: .55rem 1rem; cursor: pointer; margin: 0;">
+              <i class="mdi mdi-upload"></i> <span>{{ t.btn_import_choose }}</span>
+              <input type="file" id="importFileInput" accept=".zip,.csv" style="display: none;" onchange="handleImportFile(this)">
+            </label>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
       <!-- About -->
       <div class="settings-section">
         <div class="settings-section-title">{{ t.settings_about }}</div>

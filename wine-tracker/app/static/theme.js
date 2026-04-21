@@ -129,6 +129,15 @@ function toggleChatEditWines(enabled) {
   localStorage.setItem('chatEditWines', enabled ? '1' : '0');
 }
 
+// ── Data: Import handler (stub — preview modal comes in a later commit) ──────
+function handleImportFile(input) {
+  var file = input && input.files && input.files[0];
+  if (!file) return;
+  // TODO: POST to /import/preview and open duplicate-preview modal.
+  alert('Import wird im nächsten Schritt verdrahtet.\n\nAusgewählt: ' + file.name);
+  input.value = '';
+}
+
 // Apply theme name on load (mode is handled by inline script + OS listener)
 (function() {
   var name = localStorage.getItem('wine-theme-name') || 'homeassistant';
