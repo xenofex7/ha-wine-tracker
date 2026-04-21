@@ -1071,6 +1071,41 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 #settingsModal .settings-section:last-child {
   margin-top: auto;
 }
+
+/* Data section (Export / Import) – vertical block layout */
+.data-action {
+  display: flex; flex-direction: column; gap: .5rem;
+  padding: .8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-soft, transparent);
+}
+.data-action-head {
+  display: flex; align-items: center; gap: .45rem;
+  font-weight: 600;
+}
+.data-action-head .mdi { color: var(--accent2, var(--accent)); }
+.data-action-title { font-size: .95rem; }
+.data-action-hint {
+  font-size: .8rem; color: var(--muted); line-height: 1.35;
+}
+/* Uniform button width for Export / Import / Logout actions.
+   Width is driven by the longest label (usually "Sicherung herunterladen"). */
+.data-action-btn,
+#settingsModal .settings-section a.btn-cancel[href*="logout"] {
+  text-decoration: none; text-align: center;
+  padding: .55rem 1rem;
+  align-self: flex-start;
+  flex: 0 0 auto;
+  width: 240px;
+  max-width: 100%;
+}
+@media (max-width: 500px) {
+  .data-action-btn,
+  #settingsModal .settings-section a.btn-cancel[href*="logout"] {
+    align-self: stretch; width: 100%;
+  }
+}
 /* About section links */
 .settings-link {
   font-size: .85rem;

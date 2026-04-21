@@ -131,26 +131,28 @@
       <div class="settings-section">
         <div class="settings-section-title">{{ t.settings_data }}</div>
 
-        <div class="settings-row" style="align-items: flex-start;">
-          <div class="settings-row-label" style="padding-top: .45rem;">{{ t.data_export }}</div>
-          <div class="settings-row-control" style="flex-direction: column; align-items: stretch; gap: .4rem;">
-            <div style="font-size: .8rem; color: var(--muted);">{{ t.data_export_hint }}</div>
-            <a href="{{ ingress }}/export" class="btn-cancel" style="text-decoration: none; text-align: center; padding: .55rem 1rem;">
-              <i class="mdi mdi-download"></i> {{ t.btn_export_download }}
-            </a>
+        <div class="data-action">
+          <div class="data-action-head">
+            <i class="mdi mdi-download"></i>
+            <span class="data-action-title">{{ t.data_export }}</span>
           </div>
+          <div class="data-action-hint">{{ t.data_export_hint }}</div>
+          <a href="{{ ingress }}/export" class="btn-cancel data-action-btn">
+            <i class="mdi mdi-download"></i> {{ t.btn_export_download }}
+          </a>
         </div>
 
         {% if not auth_readonly %}
-        <div class="settings-row" style="align-items: flex-start;">
-          <div class="settings-row-label" style="padding-top: .45rem;">{{ t.data_import }}</div>
-          <div class="settings-row-control" style="flex-direction: column; align-items: stretch; gap: .4rem;">
-            <div style="font-size: .8rem; color: var(--muted);">{{ t.data_import_hint }}</div>
-            <label class="btn-cancel" style="text-align: center; padding: .55rem 1rem; cursor: pointer; margin: 0;">
-              <i class="mdi mdi-upload"></i> <span>{{ t.btn_import_choose }}</span>
-              <input type="file" id="importFileInput" accept=".zip,.csv" style="display: none;" onchange="handleImportFile(this)">
-            </label>
+        <div class="data-action">
+          <div class="data-action-head">
+            <i class="mdi mdi-upload"></i>
+            <span class="data-action-title">{{ t.data_import }}</span>
           </div>
+          <div class="data-action-hint">{{ t.data_import_hint }}</div>
+          <label class="btn-cancel data-action-btn" style="cursor:pointer; margin:0;">
+            <i class="mdi mdi-upload"></i> <span>{{ t.btn_import_choose }}</span>
+            <input type="file" id="importFileInput" accept=".zip,.csv" style="display:none;" onchange="handleImportFile(this)">
+          </label>
         </div>
         {% endif %}
       </div>
@@ -203,7 +205,7 @@
         <div class="settings-row">
           <div class="settings-row-label"><i class="mdi mdi-account"></i> {{ auth_user }}</div>
           <div class="settings-row-control">
-            <a href="{{ ingress }}/logout" class="btn-cancel" style="text-decoration: none; text-align: center; flex: none; padding: .6rem 2.5rem;">{{ t.btn_logout }}</a>
+            <a href="{{ ingress }}/logout" class="btn-cancel">{{ t.btn_logout }}</a>
           </div>
         </div>
       </div>
