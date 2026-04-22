@@ -2271,7 +2271,8 @@ body.chat-page .grid { display: none; }
   border-radius: 6px;
 }
 .adv-filter-preset-name:hover { background: color-mix(in srgb, var(--accent2) 12%, transparent); }
-.adv-filter-preset-delete {
+.adv-filter-preset-delete,
+.adv-filter-preset-edit {
   background: transparent;
   border: none;
   color: var(--muted, #888);
@@ -2281,7 +2282,12 @@ body.chat-page .grid { display: none; }
   font-size: 1.05rem;
   line-height: 1;
 }
+.adv-filter-preset-edit:hover { color: var(--accent); background: color-mix(in srgb, var(--accent2) 12%, transparent); }
 .adv-filter-preset-delete:hover { color: #e74c3c; background: color-mix(in srgb, #e74c3c 10%, transparent); }
+.adv-filter-preset-row.editing {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
 
 /* Edit mode banner */
 .adv-filter-edit-banner {

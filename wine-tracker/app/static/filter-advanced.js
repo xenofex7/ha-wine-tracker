@@ -506,6 +506,7 @@
     var m = document.getElementById('advancedFilterModal');
     if (!m) return;
     m.classList.add('open');
+    updateEditBanner();
     render();
     loadPresets();
   }
@@ -513,6 +514,11 @@
   function closeModal() {
     var m = document.getElementById('advancedFilterModal');
     if (m) m.classList.remove('open');
+    // Closing the modal also exits edit mode, so reopening starts clean.
+    if (state.editingId) {
+      state.editingId = null;
+      state.editingName = '';
+    }
   }
 
   function apply() {
@@ -523,7 +529,10 @@
 
   function reset() {
     state.rules = {};
+    state.editingId = null;
+    state.editingName = '';
     save();
+    updateEditBanner();
     render();
     if (typeof window.applyFilters === 'function') window.applyFilters();
   }
@@ -561,11 +570,21 @@
   }
 
   function renderPresetRow(preset) {
-    var row = el('div', { class: 'adv-filter-preset-row', dataset: { id: preset.id } });
+    var isEditing = state.editingId === preset.id;
+    var row = el('div', {
+      class: 'adv-filter-preset-row' + (isEditing ? ' editing' : ''),
+      dataset: { id: preset.id },
+    });
     var nameBtn = el('button', {
       type: 'button', class: 'adv-filter-preset-name',
       text: preset.name,
       onclick: function () { loadAndApplyPreset(preset); },
+    });
+    var editBtn = el('button', {
+      type: 'button', class: 'adv-filter-preset-edit',
+      title: tr('filter_preset_edit'),
+      html: '<i class="mdi mdi-pencil-outline"></i>',
+      onclick: function (e) { e.stopPropagation(); enterEditMode(preset); },
     });
     var delBtn = el('button', {
       type: 'button', class: 'adv-filter-preset-delete',
@@ -574,8 +593,77 @@
       onclick: function (e) { e.stopPropagation(); confirmDeletePreset(preset); },
     });
     row.appendChild(nameBtn);
+    row.appendChild(editBtn);
     row.appendChild(delBtn);
     return row;
+  }
+
+  function enterEditMode(preset) {
+    state.editingId = preset.id;
+    state.editingName = preset.name;
+    state.rules = (preset.conditions && preset.conditions.rules) ? Object.assign({}, preset.conditions.rules) : {};
+    save();
+    updateEditBanner();
+    render();
+    renderPresetList();
+    if (typeof window.applyFilters === 'function') window.applyFilters();
+  }
+
+  function cancelEdit() {
+    state.editingId = null;
+    state.editingName = '';
+    updateEditBanner();
+    renderPresetList();
+    updateSaveButtons();
+  }
+
+  function updateEditBanner() {
+    var banner = document.getElementById('advFilterEditBanner');
+    var input = document.getElementById('advFilterEditName');
+    var saveBtn = document.getElementById('advFilterSaveBtn');
+    var saveAsNewBtn = document.getElementById('advFilterSaveAsNewBtn');
+    var saveLabel = document.getElementById('advFilterSaveLabel');
+    if (!banner) return;
+    if (state.editingId) {
+      banner.hidden = false;
+      if (input) {
+        input.value = state.editingName || '';
+        input.oninput = function (e) { state.editingName = e.target.value; };
+      }
+      if (saveBtn) saveBtn.hidden = false;
+      if (saveAsNewBtn) saveAsNewBtn.hidden = false;
+      if (saveLabel) saveLabel.textContent = tr('filter_preset_save_overwrite');
+      // Rewire save button to overwrite in edit mode
+      if (saveBtn) saveBtn.onclick = function () { overwriteEditingPreset(); };
+    } else {
+      banner.hidden = true;
+      if (saveAsNewBtn) saveAsNewBtn.hidden = true;
+      if (saveLabel) saveLabel.textContent = tr('filter_preset_save');
+      if (saveBtn) saveBtn.onclick = function () { openSaveDialog(); };
+    }
+  }
+
+  function overwriteEditingPreset() {
+    if (!state.editingId) return;
+    var name = (state.editingName || '').trim();
+    if (!name) { window.alert(tr('filter_preset_name_exists')); return; }
+    fetch(apiBase() + '/' + state.editingId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, conditions: { rules: state.rules } }),
+    }).then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+      .then(function (res) {
+        if (res.status === 409) {
+          window.alert(tr('filter_preset_name_exists'));
+          return;
+        }
+        if (res.data && res.data.ok) {
+          state.editingId = null;
+          state.editingName = '';
+          updateEditBanner();
+          loadPresets();
+        }
+      });
   }
 
   function loadAndApplyPreset(preset) {
@@ -590,7 +678,14 @@
     fetch(apiBase() + '/' + preset.id, { method: 'DELETE' })
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        if (data && data.ok) { loadPresets(); }
+        if (data && data.ok) {
+          if (state.editingId === preset.id) {
+            state.editingId = null;
+            state.editingName = '';
+            updateEditBanner();
+          }
+          loadPresets();
+        }
       });
   }
 
@@ -619,15 +714,30 @@
           window.alert(tr('filter_preset_name_exists'));
           return;
         }
-        if (res.data && res.data.ok) { loadPresets(); }
+        if (res.data && res.data.ok) {
+          // "Save as new" while editing leaves the original preset untouched
+          // and exits edit mode; a normal "save" from outside edit mode has
+          // no edit state to clear.
+          if (state.editingId) {
+            state.editingId = null;
+            state.editingName = '';
+            updateEditBanner();
+          }
+          loadPresets();
+        }
       });
   }
 
-  function cancelEdit() { /* commit 6 */ }
-
   function updateSaveButtons() {
     var saveBtn = document.getElementById('advFilterSaveBtn');
-    if (saveBtn) saveBtn.hidden = activeCount() === 0;
+    if (!saveBtn) return;
+    if (state.editingId) {
+      // Edit mode forces the button visible regardless of active count so the
+      // user can save a preset whose rules they've just cleared.
+      saveBtn.hidden = false;
+    } else {
+      saveBtn.hidden = activeCount() === 0;
+    }
   }
 
   // ── Init ──────────────────────────────────────────────────────────────
