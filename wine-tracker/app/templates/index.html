@@ -687,7 +687,22 @@ function ensureFilterTab(type) {
 
 function openModal(id) {
   document.getElementById(id).classList.add('open');
-  if (id === 'settingsModal') { updateThemeSegmented(); updateThemeDropdown(); initChatRecordingToggle(); }
+  if (id === 'settingsModal') {
+    updateThemeSegmented();
+    updateThemeDropdown();
+    initChatRecordingToggle();
+    initAdvancedFilterDefaultToggle();
+  }
+}
+
+function initAdvancedFilterDefaultToggle() {
+  var cb = document.getElementById('advancedFilterDefaultToggle');
+  if (cb) cb.checked = localStorage.getItem('wine-advanced-filter-default') === '1';
+}
+
+function setAdvancedFilterDefault(enabled) {
+  if (enabled) localStorage.setItem('wine-advanced-filter-default', '1');
+  else localStorage.removeItem('wine-advanced-filter-default');
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
