@@ -135,8 +135,8 @@ TRANSLATIONS = {
     "filter_placeholder_max": "bis",
     "filter_placeholder_days": "Tage",
     "settings_advanced_filter_default": "Erweiterten Filter als Standard",
-    "toggle_empty_hide": "\u2298 Leere ausblenden",
-    "toggle_empty_show": "\u25CE Leere anzeigen",
+    "toggle_empty_hide": "Leere ausblenden",
+    "toggle_empty_show": "Leere anzeigen",
     "btn_add_wine": "+ Wein hinzufügen",
 
     # Wine form
@@ -485,8 +485,8 @@ TRANSLATIONS = {
     "filter_placeholder_max": "to",
     "filter_placeholder_days": "days",
     "settings_advanced_filter_default": "Use advanced filter as default",
-    "toggle_empty_hide": "\u2298 Hide empty",
-    "toggle_empty_show": "\u25CE Show empty",
+    "toggle_empty_hide": "Hide empty",
+    "toggle_empty_show": "Show empty",
     "btn_add_wine": "+ Add wine",
 
     "modal_add_title": "Add wine",
@@ -826,8 +826,8 @@ TRANSLATIONS = {
     "filter_placeholder_max": "à",
     "filter_placeholder_days": "jours",
     "settings_advanced_filter_default": "Utiliser le filtre avancé par défaut",
-    "toggle_empty_hide": "\u2298 Masquer vides",
-    "toggle_empty_show": "\u25CE Afficher vides",
+    "toggle_empty_hide": "Masquer vides",
+    "toggle_empty_show": "Afficher vides",
     "btn_add_wine": "+ Ajouter un vin",
 
     "modal_add_title": "Ajouter un vin",
@@ -1167,8 +1167,8 @@ TRANSLATIONS = {
     "filter_placeholder_max": "a",
     "filter_placeholder_days": "giorni",
     "settings_advanced_filter_default": "Usa filtro avanzato come predefinito",
-    "toggle_empty_hide": "\u2298 Nascondi vuoti",
-    "toggle_empty_show": "\u25CE Mostra vuoti",
+    "toggle_empty_hide": "Nascondi vuoti",
+    "toggle_empty_show": "Mostra vuoti",
     "btn_add_wine": "+ Aggiungi vino",
 
     "modal_add_title": "Aggiungi vino",
@@ -1508,8 +1508,8 @@ TRANSLATIONS = {
     "filter_placeholder_max": "a",
     "filter_placeholder_days": "días",
     "settings_advanced_filter_default": "Usar filtro avanzado por defecto",
-    "toggle_empty_hide": "\u2298 Ocultar vacíos",
-    "toggle_empty_show": "\u25CE Mostrar vacíos",
+    "toggle_empty_hide": "Ocultar vacíos",
+    "toggle_empty_show": "Mostrar vacíos",
     "btn_add_wine": "+ Añadir vino",
 
     "modal_add_title": "Añadir vino",
@@ -1849,8 +1849,8 @@ TRANSLATIONS = {
     "filter_placeholder_max": "até",
     "filter_placeholder_days": "dias",
     "settings_advanced_filter_default": "Usar filtro avançado como padrão",
-    "toggle_empty_hide": "\u2298 Ocultar vazios",
-    "toggle_empty_show": "\u25CE Mostrar vazios",
+    "toggle_empty_hide": "Ocultar vazios",
+    "toggle_empty_show": "Mostrar vazios",
     "btn_add_wine": "+ Adicionar vinho",
 
     "modal_add_title": "Adicionar vinho",
@@ -2190,8 +2190,8 @@ TRANSLATIONS = {
     "filter_placeholder_max": "tot",
     "filter_placeholder_days": "dagen",
     "settings_advanced_filter_default": "Geavanceerd filter als standaard gebruiken",
-    "toggle_empty_hide": "\u2298 Lege verbergen",
-    "toggle_empty_show": "\u25CE Lege tonen",
+    "toggle_empty_hide": "Lege verbergen",
+    "toggle_empty_show": "Lege tonen",
     "btn_add_wine": "+ Wijn toevoegen",
 
     "modal_add_title": "Wijn toevoegen",

@@ -76,7 +76,7 @@
       </div>
       <hr class="filter-divider">
       <label class="filter-option toggle-empty-option" id="toggleEmptyBtn" onclick="toggleEmpty()">
-        {{ t.toggle_empty_show }}
+        <i class="mdi mdi-eye-outline"></i> <span class="toggle-empty-label">{{ t.toggle_empty_show }}</span>
       </label>
       <hr class="filter-divider">
       <button type="button" class="filter-option filter-option-advanced" onclick="openAdvancedFilter()">
@@ -625,7 +625,10 @@ function filterByDrinkWindow(val) {
 function toggleEmpty() {
   showEmpty = !showEmpty;
   var btn = document.getElementById('toggleEmptyBtn');
-  btn.textContent = showEmpty ? T.toggle_empty_hide : T.toggle_empty_show;
+  var icon = btn.querySelector('i.mdi');
+  var label = btn.querySelector('.toggle-empty-label');
+  if (icon) icon.className = 'mdi ' + (showEmpty ? 'mdi-eye-off-outline' : 'mdi-eye-outline');
+  if (label) label.textContent = showEmpty ? T.toggle_empty_hide : T.toggle_empty_show;
   applyFilters();
 }
 
