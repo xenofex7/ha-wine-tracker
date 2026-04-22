@@ -31,7 +31,13 @@ class TestExportRoute:
 
         zf = zipfile.ZipFile(io.BytesIO(resp.data))
         names = set(zf.namelist())
-        assert {"manifest.json", "wines.json", "wines.csv", "timeline.json"} <= names
+        assert {"README.md", "manifest.json", "wines.json", "wines.csv", "timeline.json"} <= names
+
+    def test_readme_is_in_zip(self, client):
+        resp = client.get("/export")
+        assert resp.status_code == 200
+        zf = zipfile.ZipFile(io.BytesIO(resp.data))
+        assert "README.md" in zf.namelist()
 
     def test_export_filename_has_date(self, client):
         resp = client.get("/export")
@@ -69,6 +75,41 @@ class TestExportRoute:
         lines = csv_text.strip().splitlines()
         assert lines[0].startswith("name,year,type,region,grape")
         assert any("Château Test" in line for line in lines[1:])
+
+
+# ── Export: README ───────────────────────────────────────────────────────────
+
+from export_import import _build_readme  # noqa: E402
+
+
+class TestReadme:
+    def _manifest(self, wine_count=3, timeline_count=7):
+        return {
+            "schema_version": 1,
+            "exported_at": "2026-04-22T12:00:00+00:00",
+            "app_version": "1.9.2",
+            "wine_count": wine_count,
+            "timeline_count": timeline_count,
+        }
+
+    def test_key_sections_present(self):
+        readme = _build_readme(self._manifest())
+        assert "wines.json" in readme
+        assert "timeline.json" in readme
+        assert "images/" in readme
+        assert "field reference" in readme
+        assert "How to re-import" in readme
+
+    def test_dynamic_counts_rendered(self):
+        readme = _build_readme(self._manifest(wine_count=42, timeline_count=99))
+        assert "42" in readme
+        assert "99" in readme
+        assert "Timeline entries:" in readme
+
+    def test_metadata_rendered(self):
+        readme = _build_readme(self._manifest())
+        assert "1.9.2" in readme
+        assert "2026-04-22T12:00:00+00:00" in readme
 
 
 # ── Export: image bundling ────────────────────────────────────────────────────

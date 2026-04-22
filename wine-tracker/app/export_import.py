@@ -79,6 +79,86 @@ def _row_to_dict(row) -> dict:
     return {col: row[col] if col in row.keys() else None for col in WINE_COLUMNS}
 
 
+def _build_readme(manifest: dict) -> str:
+    exported_at = manifest.get("exported_at", "unknown")
+    wine_count = manifest.get("wine_count", 0)
+    timeline_count = manifest.get("timeline_count", 0)
+    app_version = manifest.get("app_version", "unknown")
+    schema_version = manifest.get("schema_version", SCHEMA_VERSION)
+
+    return f"""\
+# Wine Tracker Export
+
+**Exported:** {exported_at}
+**App version:** {app_version}
+**Schema version:** {schema_version}
+**Wines:** {wine_count} | **Timeline entries:** {timeline_count}
+
+---
+
+## Files in this archive
+
+| File | Description |
+|------|-------------|
+| `README.md` | This file |
+| `manifest.json` | Export metadata (schema version, timestamp, counts) |
+| `wines.json` | **Authoritative** wine data — all {len(WINE_COLUMNS)} columns, used for re-import |
+| `wines.csv` | Human-readable subset ({len(CSV_COLUMNS)} columns) for Excel / Numbers / Sheets |
+| `timeline.json` | Drink/add history entries, referenced by original wine ID |
+| `images/` | Original bottle images (filenames match the `image` field in wines.json) |
+
+> **Import note:** `wines.json` is the source of truth. The CSV is informational only
+> and is ignored during import. Missing images are silently skipped on restore.
+
+---
+
+## wines.json — field reference
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | integer | Original DB id — used to link timeline entries; ignored on import |
+| `name` | string | Wine name |
+| `year` | integer | Vintage year |
+| `type` | string | e.g. `Red`, `White`, `Rosé`, `Sparkling`, `Dessert` |
+| `region` | string | Region / appellation |
+| `grape` | string | Grape variety / blend |
+| `quantity` | integer | Bottles currently in cellar |
+| `rating` | number | 0 – 100 personal rating |
+| `price` | number | Purchase price |
+| `purchased_at` | string | Purchase date (ISO 8601) |
+| `drink_from` | integer | Earliest recommended drinking year |
+| `drink_until` | integer | Latest recommended drinking year |
+| `location` | string | Storage location label |
+| `bottle_format` | string | e.g. `Standard (750ml)`, `Magnum (1.5L)` |
+| `notes` | string | Free-text tasting notes |
+| `image` | string | Image filename (file lives in `images/`) |
+| `vivino_id` | string | Vivino wine ID (used for deduplication on import) |
+| `maturity_data` | string | JSON blob with maturity curve data |
+| `taste_profile` | string | JSON blob with taste radar data |
+| `food_pairings` | string | JSON blob with food pairing suggestions |
+| `added` | string | Date first added to the cellar (ISO 8601) |
+
+---
+
+## timeline.json — field reference
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `wine_id` | integer | References `id` in wines.json |
+| `action` | string | `drink`, `add`, or `adjust` |
+| `quantity` | integer | Number of bottles involved |
+| `timestamp` | string | ISO 8601 timestamp |
+
+---
+
+## How to re-import
+
+Open the Wine Tracker app → **Settings → Import** and upload this ZIP file.
+You will see a preview of all wines and can choose to skip or overwrite duplicates.
+Duplicates are detected by `vivino_id` (if present) or by `name` + `year`.
+"""
+
+
 def _wines_to_csv(wines: Iterable[dict]) -> str:
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=CSV_COLUMNS, extrasaction="ignore")
@@ -124,6 +204,7 @@ def build_export_zip(db, upload_dir: str, app_version: str = "") -> bytes:
 
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("README.md", _build_readme(manifest))
         zf.writestr("manifest.json", json.dumps(manifest, indent=2, ensure_ascii=False))
         zf.writestr("wines.json", json.dumps(wines, indent=2, ensure_ascii=False, default=str))
         zf.writestr("timeline.json", json.dumps(timeline, indent=2, ensure_ascii=False, default=str))
