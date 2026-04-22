@@ -357,6 +357,7 @@ This creates a `sensor.wine_stock` entity you can use on dashboards or in automa
 - **Bulk editing** - select multiple wines and change location, type, or category at once
 - **Multiple cellars** - manage separate collections (home, vacation house, office)
 - **Chat history in export** - optional checkbox to include chat sessions, messages and chat images in the backup ZIP
+- **Filter presets in export** - include saved advanced-filter sets in the backup ZIP, with re-import support
 
 ### 📱 Mobile & Sharing
 - **PWA support** - install on your phone's home screen with offline access
