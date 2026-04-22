@@ -327,3 +327,45 @@ class TestMaturityTasteFoodColumns:
         assert json.loads(row["maturity_data"])["peak"] == [2032, 2044]
         assert json.loads(row["taste_profile"])["body"] == 4
         assert "Lamb" in json.loads(row["food_pairings"])
+
+
+class TestFilterPresetsTable:
+    """Tests for filter_presets table (advanced filter)."""
+
+    def test_filter_presets_table_created(self, app):
+        conn = sqlite3.connect(wine_app.DB_PATH)
+        tables = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='filter_presets'"
+        ).fetchone()
+        conn.close()
+        assert tables is not None
+
+    def test_filter_presets_has_all_columns(self, app):
+        conn = sqlite3.connect(wine_app.DB_PATH)
+        cols = {row[1] for row in conn.execute("PRAGMA table_info(filter_presets)")}
+        conn.close()
+        expected = {"id", "name", "conditions", "created", "updated"}
+        assert expected.issubset(cols)
+
+    def test_name_is_unique(self, app, db):
+        db.execute(
+            "INSERT INTO filter_presets (name, conditions, created, updated) VALUES (?, ?, ?, ?)",
+            ("My Preset", "{}", "2026-04-22", "2026-04-22"),
+        )
+        db.commit()
+        with pytest.raises(sqlite3.IntegrityError):
+            db.execute(
+                "INSERT INTO filter_presets (name, conditions, created, updated) VALUES (?, ?, ?, ?)",
+                ("My Preset", "{}", "2026-04-22", "2026-04-22"),
+            )
+            db.commit()
+
+    def test_init_db_is_idempotent(self, app):
+        """Running init_db() twice should not fail."""
+        wine_app.init_db()
+        conn = sqlite3.connect(wine_app.DB_PATH)
+        tables = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='filter_presets'"
+        ).fetchone()
+        conn.close()
+        assert tables is not None

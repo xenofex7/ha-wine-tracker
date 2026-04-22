@@ -53,8 +53,14 @@ def _patch_env(tmp_path, monkeypatch):
 
 
 @pytest.fixture
-def app():
-    """Create a Flask test app with a fresh database."""
+def app(_patch_env):
+    """Create a Flask test app with a fresh database.
+
+    Explicit dependency on _patch_env ensures monkeypatches (DB_PATH, etc.)
+    are applied *before* init_db() runs. Without this, pytest may resolve
+    the autouse fixture after `app`, causing init_db() to run against the
+    real data directory.
+    """
     import app as wine_app
 
     wine_app.app.config["TESTING"] = True

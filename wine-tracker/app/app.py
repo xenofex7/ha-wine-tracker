@@ -547,6 +547,17 @@ def init_db():
         if "image_path" not in chat_cols:
             db.execute("ALTER TABLE chat_messages ADD COLUMN image_path TEXT")
 
+        # ── filter_presets table ──────────────────────────────────────────
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS filter_presets (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                name       TEXT NOT NULL UNIQUE,
+                conditions TEXT NOT NULL,
+                created    TEXT NOT NULL,
+                updated    TEXT NOT NULL
+            )
+        """)
+
         db.commit()
 
 
@@ -2245,6 +2256,112 @@ def api_chat_session_detail(session_id):
     db.execute("DELETE FROM chat_sessions WHERE id = ?", (session_id,))
     db.commit()
     return jsonify(ok=True)
+
+
+# ── Filter Presets ────────────────────────────────────────────────────────────
+
+def _preset_row_to_dict(row):
+    d = dict(row)
+    try:
+        d["conditions"] = json.loads(d["conditions"])
+    except (ValueError, TypeError):
+        d["conditions"] = {}
+    return d
+
+
+@app.route("/api/filter-presets", methods=["GET", "POST"])
+def api_filter_presets_list():
+    """List all filter presets (alphabetical) or create a new one."""
+    db = get_db()
+
+    if request.method == "GET":
+        rows = db.execute(
+            "SELECT id, name, conditions, created, updated FROM filter_presets ORDER BY name COLLATE NOCASE ASC"
+        ).fetchall()
+        return jsonify(ok=True, presets=[_preset_row_to_dict(r) for r in rows])
+
+    if AUTH_ENABLED and session.get("role") == "readonly":
+        return jsonify(ok=False, error="readonly"), 403
+
+    payload = request.get_json(silent=True) or {}
+    name = (payload.get("name") or "").strip()
+    conditions = payload.get("conditions")
+
+    if not name:
+        return jsonify(ok=False, error="name_required"), 400
+    if conditions is None:
+        return jsonify(ok=False, error="conditions_required"), 400
+
+    try:
+        conditions_json = json.dumps(conditions)
+    except (TypeError, ValueError):
+        return jsonify(ok=False, error="invalid_conditions"), 400
+
+    now = datetime.now().isoformat()
+    try:
+        cur = db.execute(
+            "INSERT INTO filter_presets (name, conditions, created, updated) VALUES (?, ?, ?, ?)",
+            (name, conditions_json, now, now),
+        )
+        db.commit()
+    except sqlite3.IntegrityError:
+        return jsonify(ok=False, error="name_exists"), 409
+
+    row = db.execute(
+        "SELECT id, name, conditions, created, updated FROM filter_presets WHERE id = ?",
+        (cur.lastrowid,),
+    ).fetchone()
+    return jsonify(ok=True, preset=_preset_row_to_dict(row))
+
+
+@app.route("/api/filter-presets/<int:preset_id>", methods=["PUT", "DELETE"])
+def api_filter_preset_detail(preset_id):
+    """Update or delete a single filter preset."""
+    db = get_db()
+
+    row = db.execute(
+        "SELECT id FROM filter_presets WHERE id = ?", (preset_id,)
+    ).fetchone()
+    if not row:
+        return jsonify(ok=False, error="not_found"), 404
+
+    if AUTH_ENABLED and session.get("role") == "readonly":
+        return jsonify(ok=False, error="readonly"), 403
+
+    if request.method == "DELETE":
+        db.execute("DELETE FROM filter_presets WHERE id = ?", (preset_id,))
+        db.commit()
+        return jsonify(ok=True)
+
+    payload = request.get_json(silent=True) or {}
+    name = (payload.get("name") or "").strip()
+    conditions = payload.get("conditions")
+
+    if not name:
+        return jsonify(ok=False, error="name_required"), 400
+    if conditions is None:
+        return jsonify(ok=False, error="conditions_required"), 400
+
+    try:
+        conditions_json = json.dumps(conditions)
+    except (TypeError, ValueError):
+        return jsonify(ok=False, error="invalid_conditions"), 400
+
+    now = datetime.now().isoformat()
+    try:
+        db.execute(
+            "UPDATE filter_presets SET name = ?, conditions = ?, updated = ? WHERE id = ?",
+            (name, conditions_json, now, preset_id),
+        )
+        db.commit()
+    except sqlite3.IntegrityError:
+        return jsonify(ok=False, error="name_exists"), 409
+
+    updated = db.execute(
+        "SELECT id, name, conditions, created, updated FROM filter_presets WHERE id = ?",
+        (preset_id,),
+    ).fetchone()
+    return jsonify(ok=True, preset=_preset_row_to_dict(updated))
 
 
 # ── AI Wine Chat ──────────────────────────────────────────────────────────────
