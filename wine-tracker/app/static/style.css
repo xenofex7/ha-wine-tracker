@@ -856,7 +856,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
   display: flex; gap: 6px; z-index: 2;
 }
 .img-action-btn {
-  width: 36px; height: 36px; border-radius: 6px;
+  width: 38px; height: 38px; border-radius: 6px;
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,.55); color: #fff; font-size: 1.1rem;
@@ -869,7 +869,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 /* Submit button */
 .btn-submit {
   background: var(--accent); color: white; border: none;
-  height: 42px; padding: 0 1.5rem; border-radius: 8px; font-size: .95rem;
+  height: 38px; padding: 0 1.5rem; border-radius: 8px; font-size: .95rem;
   font-weight: 700; cursor: pointer; width: 100%; margin-top: .25rem;
   transition: background .2s;
 }
@@ -885,7 +885,7 @@ textarea { resize: vertical; min-height: 70px; font-family: inherit; }
 .reload-popover-wrap { position: relative; }
 .btn-reload-trigger {
   background: var(--surface); color: var(--text); border: 1px solid var(--border);
-  width: 42px; height: 42px; border-radius: 8px; font-size: 1.1rem;
+  width: 38px; height: 38px; border-radius: 8px; font-size: 1.05rem;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; transition: background .2s, border-color .2s;
 }
@@ -1680,7 +1680,8 @@ html.light a.wine-list-link:hover { background: rgba(0,0,0,.04); }
 .theme-dropdown { position: relative; width: 100%; }
 .theme-dropdown-btn {
   display: flex; align-items: center; gap: .6rem; width: 100%;
-  padding: .6rem .8rem; background: var(--surface); border: 1px solid var(--border);
+  height: 38px; box-sizing: border-box;
+  padding: 0 .8rem; background: var(--surface); border: 1px solid var(--border);
   border-radius: 8px; color: var(--text); font-size: .95rem;
   cursor: pointer; transition: border-color .2s;
 }
@@ -2431,8 +2432,11 @@ body.chat-page .grid { display: none; }
 .adv-filter-footer .btn-secondary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: .4rem;
-  padding: .5rem .9rem;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 .9rem;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--bg);
