@@ -1,0 +1,49 @@
+{# Advanced filter modal – rendered on index.html, populated by filter-advanced.js #}
+<div class="modal-overlay" id="advancedFilterModal">
+  <div class="modal adv-filter-modal">
+    <div class="modal-header">
+      <span>{{ t.filter_advanced_title }}</span>
+      <div class="modal-header-actions">
+        <span class="adv-filter-badge" id="advFilterBadge" hidden></span>
+        <button class="modal-close" onclick="AdvancedFilter.closeModal()">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+
+      <!-- Preset section (populated by JS; shown when presets exist) -->
+      <div class="adv-filter-presets" id="advFilterPresetsSection" hidden>
+        <div class="adv-filter-presets-header">
+          <span class="adv-filter-section-title">{{ t.filter_presets_title }}</span>
+        </div>
+        <div class="adv-filter-preset-list" id="advFilterPresetList"></div>
+      </div>
+
+      <!-- Edit-mode banner -->
+      <div class="adv-filter-edit-banner" id="advFilterEditBanner" hidden>
+        <span class="adv-filter-edit-label">{{ t.filter_preset_editing }}</span>
+        <input type="text" class="adv-filter-edit-input" id="advFilterEditName" aria-label="{{ t.filter_preset_editing }}">
+        <button class="adv-filter-edit-cancel" onclick="AdvancedFilter.cancelEdit()" title="{{ t.filter_advanced_cancel }}"><i class="mdi mdi-close"></i></button>
+      </div>
+
+      <!-- Groups (5 accordions, rendered by JS) -->
+      <div class="adv-filter-groups" id="advFilterGroups"></div>
+
+    </div>
+    <div class="modal-footer adv-filter-footer">
+      <button type="button" class="btn-cancel" id="advFilterResetBtn" onclick="AdvancedFilter.reset()">
+        <i class="mdi mdi-refresh"></i> {{ t.filter_advanced_reset }}
+      </button>
+      <div class="adv-filter-footer-right">
+        <button type="button" class="btn-secondary" id="advFilterSaveBtn" onclick="AdvancedFilter.openSaveDialog()" hidden>
+          <i class="mdi mdi-content-save-outline"></i> <span id="advFilterSaveLabel">{{ t.filter_preset_save }}</span>
+        </button>
+        <button type="button" class="btn-secondary" id="advFilterSaveAsNewBtn" onclick="AdvancedFilter.openSaveAsNewDialog()" hidden>
+          <i class="mdi mdi-content-save-plus-outline"></i> {{ t.filter_preset_save_as_new }}
+        </button>
+        <button type="button" class="btn-primary" onclick="AdvancedFilter.apply()">
+          <i class="mdi mdi-check"></i> {{ t.filter_advanced_apply }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

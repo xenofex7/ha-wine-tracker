@@ -40,7 +40,10 @@
   </div>
   {% if used_types|length > 0 %}
   <div class="filter-dropdown-wrap">
-    <button class="filter-btn" onclick="toggleFilterDropdown()" title="Filter"><i class="mdi mdi-filter-variant"></i></button>
+    <button class="filter-btn" onclick="handleFilterBtnClick()" title="Filter">
+      <i class="mdi mdi-filter-variant"></i>
+      <span class="filter-btn-badge" id="advFilterOuterBadge" hidden></span>
+    </button>
     <div class="filter-dropdown" id="filterDropdown">
       <div class="filter-section-title">{{ t.filter_title_type }}</div>
       <div class="filter-list" id="filterTabs">
@@ -75,6 +78,10 @@
       <label class="filter-option toggle-empty-option" id="toggleEmptyBtn" onclick="toggleEmpty()">
         {{ t.toggle_empty_show }}
       </label>
+      <hr class="filter-divider">
+      <button type="button" class="filter-option filter-option-advanced" onclick="openAdvancedFilter()">
+        <i class="mdi mdi-filter-cog-outline"></i> {{ t.filter_advanced_show }}
+      </button>
     </div>
   </div>
   {% endif %}
@@ -227,6 +234,7 @@
 <!-- ═══════════════ SETTINGS MODAL ═══════════════ -->
 {% include '_settings_modal.html' %}
 {% include '_import_preview_modal.html' %}
+{% include '_advanced_filter_modal.html' %}
 
 
 <!-- ═══════════════ LIGHTBOX ═══════════════ -->
@@ -241,6 +249,7 @@ const INGRESS = '{{ ingress }}';
 const CURRENCY = '{{ currency }}';
 const T = {{ t | tojson }};
 const AUTH_READONLY = {{ auth_readonly | tojson }};
+window.T = T;
 
 // ── Hamburger Nav Menu ──────────────────────────────────────────────────────
 function toggleNavMenu(e) {
@@ -457,8 +466,10 @@ function applyFilters() {
     }
     // Empty match
     var emptyOk = showEmpty || parseInt(d.quantity) > 0;
+    // Advanced filter (AND-combined with the popover filter above)
+    var advOk = !window.AdvancedFilter || window.AdvancedFilter.evaluate(d);
 
-    var visible = typeOk && searchOk && dwOk && emptyOk;
+    var visible = typeOk && searchOk && dwOk && emptyOk && advOk;
     card.style.display = visible ? '' : 'none';
     if (visible) bottleVisibleCount += parseInt(d.quantity) || 0;
     if (visible) wineVisibleCount++;
@@ -523,7 +534,8 @@ function updateTabCounts() {
       else if (activeDrinkWindow === 'past') { dwOk = until < year; }
     }
     var emptyOk = showEmpty || parseInt(d.quantity) > 0;
-    if (searchOk && dwOk && emptyOk) {
+    var advOk = !window.AdvancedFilter || window.AdvancedFilter.evaluate(d);
+    if (searchOk && dwOk && emptyOk && advOk) {
       total++;
       var t = d.type || '';
       counts[t] = (counts[t] || 0) + 1;
@@ -564,7 +576,8 @@ function updateTabCounts() {
       (d.notes || '').toLowerCase().indexOf(query) !== -1;
     var typeOk = !activeType || d.type === activeType;
     var emptyOk = showEmpty || parseInt(d.quantity) > 0;
-    if (!(searchOk && typeOk && emptyOk)) return;
+    var advOk = !window.AdvancedFilter || window.AdvancedFilter.evaluate(d);
+    if (!(searchOk && typeOk && emptyOk && advOk)) return;
     dwCounts['']++;
     var until = parseInt(d.drink_until);
     if (!until) return;
@@ -623,6 +636,24 @@ function clearSearch() {
 function toggleFilterDropdown() {
   var dd = document.getElementById('filterDropdown');
   if (dd) dd.classList.toggle('open');
+}
+
+// Called from the filter button: either opens the popover or jumps straight to
+// the advanced filter modal, depending on the user setting.
+function handleFilterBtnClick() {
+  var useAdvancedDefault = localStorage.getItem('wine-advanced-filter-default') === '1';
+  if (useAdvancedDefault) {
+    openAdvancedFilter();
+  } else {
+    toggleFilterDropdown();
+  }
+}
+
+function openAdvancedFilter() {
+  // Close the popover (if open) before opening the modal
+  var dd = document.getElementById('filterDropdown');
+  if (dd) dd.classList.remove('open');
+  if (window.AdvancedFilter) window.AdvancedFilter.openModal();
 }
 document.addEventListener('click', function(e) {
   var wrap = document.querySelector('.filter-dropdown-wrap');
@@ -1416,6 +1447,7 @@ initImageShimmer();
 })();
 
 </script>
+<script src="{{ ingress }}/static/filter-advanced.js"></script>
 
 {% include '_chat_panel.html' %}
 {% if not auth_readonly %}<button class="fab" onclick="openWineModal()" title="{{ t.btn_add_wine }}"><i class="mdi mdi-plus"></i></button>{% endif %}
