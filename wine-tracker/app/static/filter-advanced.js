@@ -69,9 +69,20 @@
   // Rule shape: { op: 'between', value: [min, max] }
   var state = {
     rules: {},        // { [fieldKey]: { op, value } }
+    presets: [],      // [{id, name, conditions: {rules}}, ...]
     editingId: null,  // preset currently being edited (null when not in edit mode)
     editingName: '',  // current editable name in edit banner
   };
+
+  function apiBase() {
+    // INGRESS is declared via `const INGRESS = '{{ ingress }}'` in index.html.
+    // Because const doesn't attach to window, reach it via eval from the outer
+    // script scope — but fall back gracefully if it doesn't exist.
+    var ingress = '';
+    try { ingress = window.INGRESS != null ? window.INGRESS : (typeof INGRESS !== 'undefined' ? INGRESS : ''); }
+    catch (e) { /* ignore */ }
+    return ingress + '/api/filter-presets';
+  }
 
   function tr(key) { return T[key] || key; }
 
@@ -269,6 +280,7 @@
     });
 
     updateBadge();
+    updateSaveButtons();
   }
 
   function renderGroup(group, fields) {
@@ -495,6 +507,7 @@
     if (!m) return;
     m.classList.add('open');
     render();
+    loadPresets();
   }
 
   function closeModal() {
@@ -515,10 +528,107 @@
     if (typeof window.applyFilters === 'function') window.applyFilters();
   }
 
-  // Placeholder stubs for preset / edit functionality (implemented in later commits)
-  function openSaveDialog() { /* commit 5 */ }
-  function openSaveAsNewDialog() { /* commit 6 */ }
+  // ── Presets ───────────────────────────────────────────────────────────
+  function loadPresets() {
+    return fetch(apiBase()).then(function (r) { return r.json(); }).then(function (data) {
+      if (data && data.ok && Array.isArray(data.presets)) {
+        state.presets = data.presets;
+      } else {
+        state.presets = [];
+      }
+      renderPresetList();
+    }).catch(function () {
+      state.presets = [];
+      renderPresetList();
+    });
+  }
+
+  function renderPresetList() {
+    var section = document.getElementById('advFilterPresetsSection');
+    var list = document.getElementById('advFilterPresetList');
+    if (!section || !list) return;
+
+    if (!state.presets.length) {
+      section.hidden = true;
+      list.innerHTML = '';
+      return;
+    }
+    section.hidden = false;
+    list.innerHTML = '';
+    state.presets.forEach(function (p) {
+      list.appendChild(renderPresetRow(p));
+    });
+  }
+
+  function renderPresetRow(preset) {
+    var row = el('div', { class: 'adv-filter-preset-row', dataset: { id: preset.id } });
+    var nameBtn = el('button', {
+      type: 'button', class: 'adv-filter-preset-name',
+      text: preset.name,
+      onclick: function () { loadAndApplyPreset(preset); },
+    });
+    var delBtn = el('button', {
+      type: 'button', class: 'adv-filter-preset-delete',
+      title: tr('filter_preset_delete'),
+      html: '<i class="mdi mdi-trash-can-outline"></i>',
+      onclick: function (e) { e.stopPropagation(); confirmDeletePreset(preset); },
+    });
+    row.appendChild(nameBtn);
+    row.appendChild(delBtn);
+    return row;
+  }
+
+  function loadAndApplyPreset(preset) {
+    state.rules = (preset.conditions && preset.conditions.rules) ? preset.conditions.rules : {};
+    save();
+    if (typeof window.applyFilters === 'function') window.applyFilters();
+    closeModal();
+  }
+
+  function confirmDeletePreset(preset) {
+    if (!window.confirm(tr('filter_preset_delete_confirm'))) return;
+    fetch(apiBase() + '/' + preset.id, { method: 'DELETE' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.ok) { loadPresets(); }
+      });
+  }
+
+  function openSaveDialog() {
+    var name = window.prompt(tr('filter_preset_save_prompt'), '');
+    if (!name) return;
+    createPreset(name.trim());
+  }
+
+  function openSaveAsNewDialog() {
+    var defaultName = state.editingId ? '' : '';
+    var name = window.prompt(tr('filter_preset_save_prompt'), defaultName);
+    if (!name) return;
+    createPreset(name.trim());
+  }
+
+  function createPreset(name) {
+    if (!name) return;
+    fetch(apiBase(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, conditions: { rules: state.rules } }),
+    }).then(function (r) { return r.json().then(function (data) { return { status: r.status, data: data }; }); })
+      .then(function (res) {
+        if (res.status === 409) {
+          window.alert(tr('filter_preset_name_exists'));
+          return;
+        }
+        if (res.data && res.data.ok) { loadPresets(); }
+      });
+  }
+
   function cancelEdit() { /* commit 6 */ }
+
+  function updateSaveButtons() {
+    var saveBtn = document.getElementById('advFilterSaveBtn');
+    if (saveBtn) saveBtn.hidden = activeCount() === 0;
+  }
 
   // ── Init ──────────────────────────────────────────────────────────────
   load();
