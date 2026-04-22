@@ -2190,21 +2190,15 @@ body.chat-page .grid { display: none; }
   box-shadow: 0 0 0 2px var(--surface);
 }
 
-/* The link at the bottom of the popover */
+/* The link at the bottom of the popover — matches .filter-option above */
 .filter-option-advanced {
-  display: flex; align-items: center; gap: .5rem;
   width: 100%;
   background: transparent;
   border: none;
   text-align: left;
-  cursor: pointer;
-  padding: .4rem .6rem;
-  border-radius: 6px;
-  color: var(--text);
-  font-size: .92rem;
   font-family: inherit;
+  white-space: nowrap;
 }
-.filter-option-advanced:hover { background: color-mix(in srgb, var(--accent2) 15%, transparent); }
 .filter-option-advanced i { color: var(--accent); }
 
 /* Modal shell */
