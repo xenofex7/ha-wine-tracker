@@ -21,6 +21,8 @@
 
 A wine cellar tracker for Home Assistant or Docker - manage your entire collection from label photo to tasting notes.
 
+**📖 [Documentation & Demo →](https://xenofex7.github.io/ha-wine-tracker/)**
+
 ## Screenshots
 
 <p align="center">
