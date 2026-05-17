@@ -67,6 +67,8 @@ def load_options():
         "ollama_model": "llava",
         "minimax_api_key": "",
         "minimax_model": "MiniMax-Text-01",
+        "mistral_api_key": "",
+        "mistral_model": "pixtral-large-latest",
     }
     try:
         with open(OPTIONS_PATH, "r") as f:
@@ -90,6 +92,8 @@ def load_options():
         "OLLAMA_MODEL": "ollama_model",
         "MINIMAX_API_KEY": "minimax_api_key",
         "MINIMAX_MODEL": "minimax_model",
+        "MISTRAL_API_KEY": "mistral_api_key",
+        "MISTRAL_MODEL": "mistral_model",
     }
     for env_key, opt_key in env_map.items():
         val = os.environ.get(env_key)
@@ -114,6 +118,8 @@ def _is_ai_configured(opts):
         return bool(opts.get("ollama_host", "").strip())
     elif provider == "minimax":
         return bool(opts.get("minimax_api_key", "").strip())
+    elif provider == "mistral":
+        return bool(opts.get("mistral_api_key", "").strip())
     return False
 
 
@@ -1531,6 +1537,24 @@ def _call_minimax(image_b64, media_type, prompt, opts):
     return response.choices[0].message.content
 
 
+def _call_mistral(image_b64, media_type, prompt, opts):
+    """Call Mistral AI API (OpenAI-compatible, vision via Pixtral models)."""
+    from openai import OpenAI
+    api_key = opts.get("mistral_api_key", "").strip()
+    model = opts.get("mistral_model", "pixtral-large-latest").strip() or "pixtral-large-latest"
+    client = OpenAI(api_key=api_key, base_url="https://api.mistral.ai/v1")
+    content = []
+    if image_b64:
+        content.append({"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}})
+    content.append({"type": "text", "text": prompt})
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": content}],
+        max_tokens=1024,
+    )
+    return response.choices[0].message.content
+
+
 # ── AI Chat Functions ─────────────────────────────────────────────────────────
 
 def _call_chat_anthropic(messages, system_prompt, opts, image_b64=None, media_type=None):
@@ -1644,6 +1668,28 @@ def _call_chat_minimax(messages, system_prompt, opts, image_b64=None, media_type
     return response.choices[0].message.content
 
 
+def _call_chat_mistral(messages, system_prompt, opts, image_b64=None, media_type=None):
+    """Chat via Mistral AI (OpenAI-compatible, multi-turn, with optional image)."""
+    from openai import OpenAI
+    api_key = opts.get("mistral_api_key", "").strip()
+    model = opts.get("mistral_model", "pixtral-large-latest").strip() or "pixtral-large-latest"
+    client = OpenAI(api_key=api_key, base_url="https://api.mistral.ai/v1")
+    if image_b64 and messages:
+        last = messages[-1]
+        if last["role"] == "user":
+            messages = messages[:-1] + [{"role": "user", "content": [
+                {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{image_b64}"}},
+                {"type": "text", "text": last["content"]},
+            ]}]
+    full_messages = [{"role": "system", "content": system_prompt}] + messages
+    response = client.chat.completions.create(
+        model=model,
+        messages=full_messages,
+        max_tokens=2048,
+    )
+    return response.choices[0].message.content
+
+
 def _call_chat(provider, messages, system_prompt, opts, image_b64=None, media_type=None):
     """Dispatch chat to the configured AI provider."""
     dispatch = {
@@ -1652,6 +1698,7 @@ def _call_chat(provider, messages, system_prompt, opts, image_b64=None, media_ty
         "openrouter": _call_chat_openrouter,
         "ollama": _call_chat_ollama,
         "minimax": _call_chat_minimax,
+        "mistral": _call_chat_mistral,
     }
     fn = dispatch.get(provider)
     if not fn:
@@ -1780,6 +1827,7 @@ Rules:
             "openrouter": _call_openrouter,
             "ollama": _call_ollama,
             "minimax": _call_minimax,
+            "mistral": _call_mistral,
         }
         call_fn = dispatch.get(provider)
         if not call_fn:
@@ -2106,6 +2154,7 @@ def _analyze_wine_from_context(opts, image_b64, media_type, wine_context):
         "openrouter": _call_openrouter,
         "ollama": _call_ollama,
         "minimax": _call_minimax,
+        "mistral": _call_mistral,
     }
     call_fn = dispatch.get(provider)
     if not call_fn:

@@ -25,7 +25,7 @@ A sleek, modern wine cellar tracker running directly in your Home Assistant side
 ## Features
 
 - **Wine cards** with photo, vintage, type, region, grape variety, rating & notes
-- **AI wine label recognition** — snap a label photo and let AI fill in all fields, including maturity phases, taste profile and food pairings (Anthropic, OpenAI, OpenRouter, Ollama, MiniMax)
+- **AI wine label recognition** — snap a label photo and let AI fill in all fields, including maturity phases, taste profile and food pairings (Anthropic, OpenAI, OpenRouter, Ollama, MiniMax, Mistral)
 - **AI sommelier chat with full cellar CRUD** — ask questions about your cellar, upload wine label photos, and add / edit / delete wines directly from the conversation; persistent sessions
 - **Vivino wine search** — search by name, see ratings, region & price, and import directly; regional fallback chain surfaces country-specific wines (e.g. Australian labels)
 - **Vivino ID management** — view, edit & test Vivino wine links directly in the edit modal
@@ -65,7 +65,7 @@ Pick one AI provider and configure its API key and model. The AI is used for lab
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `ai_provider` | `none` | `none`, `anthropic`, `openai`, `openrouter`, `ollama`, `minimax` |
+| `ai_provider` | `none` | `none`, `anthropic`, `openai`, `openrouter`, `ollama`, `minimax`, `mistral` |
 | `anthropic_api_key` | _(empty)_ | Claude API key from [console.anthropic.com](https://console.anthropic.com) |
 | `anthropic_model` | `claude-opus-4-6` | Anthropic model identifier |
 | `openai_api_key` | _(empty)_ | OpenAI API key from [platform.openai.com](https://platform.openai.com) |
@@ -76,6 +76,8 @@ Pick one AI provider and configure its API key and model. The AI is used for lab
 | `ollama_model` | `llava` | Local Ollama vision model |
 | `minimax_api_key` | _(empty)_ | MiniMax API key from [api.minimaxi.chat](https://api.minimaxi.chat) |
 | `minimax_model` | `MiniMax-Text-01` | MiniMax model (vision-capable despite the "Text" name) |
+| `mistral_api_key` | _(empty)_ | Mistral API key from [console.mistral.ai](https://console.mistral.ai) |
+| `mistral_model` | `pixtral-large-latest` | Mistral model (use a Pixtral model for label recognition) |
 
 > **Tip:** Ollama runs fully local and requires no API key. Pull a vision model (`ollama pull llava`) and point `ollama_host` at your Ollama server.
 

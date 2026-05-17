@@ -161,6 +161,41 @@ class TestAnalyzeWine:
         assert data["fields"]["name"] == "Penfolds Grange"
         mock_call.assert_called_once()
 
+    @patch("app._call_mistral")
+    @patch("app.load_options")
+    def test_mistral_provider(self, mock_opts, mock_call, client):
+        """Should use Mistral when configured."""
+        mock_opts.return_value = {
+            **wine_app.HA_OPTIONS,
+            "ai_provider": "mistral",
+            "mistral_api_key": "ms-test-key",
+            "mistral_model": "pixtral-large-latest",
+        }
+        mock_call.return_value = json.dumps({
+            "name": "Château Margaux",
+            "wine_type": "Rotwein",
+            "vintage": 2015,
+            "region": "Bordeaux",
+            "grape": "Cabernet Sauvignon",
+            "price": None,
+            "notes": "",
+            "drink_from": None,
+            "drink_until": None,
+            "bottle_format": None,
+        })
+
+        fake_image = (io.BytesIO(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100), "test.jpg")
+        resp = client.post(
+            "/api/analyze-wine",
+            data={"image": fake_image},
+            content_type="multipart/form-data",
+        )
+        assert resp.status_code == 200
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert data["fields"]["name"] == "Château Margaux"
+        mock_call.assert_called_once()
+
     @patch("app._call_anthropic")
     @patch("app.load_options")
     def test_ai_json_parse_error(self, mock_opts, mock_call, client):
@@ -622,6 +657,25 @@ class TestWineChat:
         assert data["ok"] is True
         provider_arg = mock_chat.call_args[0][0]
         assert provider_arg == "minimax"
+
+    @patch("app._call_chat")
+    @patch("app.load_options")
+    def test_chat_mistral_provider(self, mock_opts, mock_chat, client):
+        """Should pass 'mistral' as provider to _call_chat when Mistral is configured."""
+        mock_opts.return_value = {
+            **wine_app.HA_OPTIONS,
+            "ai_provider": "mistral",
+            "mistral_api_key": "ms-test-key",
+            "mistral_model": "pixtral-large-latest",
+        }
+        mock_chat.return_value = "Mistral recommends a Châteauneuf-du-Pape."
+
+        resp = self._post_chat(client, message="Suggest a red wine")
+        data = json.loads(resp.data)
+        assert resp.status_code == 200
+        assert data["ok"] is True
+        provider_arg = mock_chat.call_args[0][0]
+        assert provider_arg == "mistral"
 
     @patch("app._call_chat")
     @patch("app.load_options")

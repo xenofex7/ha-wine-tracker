@@ -53,7 +53,7 @@ A sleek, modern wine cellar tracker. Run it as a **Home Assistant add-on** or as
 
 ### AI & Integrations
 
-- **AI label recognition** - snap a label photo and let AI fill in all fields, including maturity phases, taste profile and food pairings (5 providers: Anthropic, OpenAI, OpenRouter, Ollama, MiniMax)
+- **AI label recognition** - snap a label photo and let AI fill in all fields, including maturity phases, taste profile and food pairings (6 providers: Anthropic, OpenAI, OpenRouter, Ollama, MiniMax, Mistral)
 - **Vivino wine search** - search by name, see ratings, region & price, and import directly — with a regional fallback chain so country-specific wines (e.g. Australian labels) actually show up
 - **Vivino ID management** - view, edit & test Vivino wine links directly in the edit modal
 - **Reload missing data** - re-analyze wines with incomplete fields via AI or Vivino
@@ -177,7 +177,7 @@ docker-compose up -d
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `AI_PROVIDER` | `none` | AI provider: `none`, `anthropic`, `openai`, `openrouter`, `ollama`, `minimax` |
+| `AI_PROVIDER` | `none` | AI provider: `none`, `anthropic`, `openai`, `openrouter`, `ollama`, `minimax`, `mistral` |
 
 **Anthropic (Claude):**
 
@@ -218,6 +218,15 @@ docker-compose up -d
 
 > **Note:** `MiniMax-Text-01` is MiniMax's current vision-capable model — despite the name it accepts image input. The older `MiniMax-VL-01` name is no longer accepted by the API.
 
+**Mistral:**
+
+| Variable | Default |
+|----------|---------|
+| `MISTRAL_API_KEY` | _(empty)_ |
+| `MISTRAL_MODEL` | `pixtral-large-latest` |
+
+> **Note:** For label recognition (vision) use a Pixtral model (`pixtral-large-latest`, `pixtral-12b-latest`). Other Mistral models like `mistral-large-latest` work for the sommelier chat but cannot read labels.
+
 ### Updating
 
 ```bash
@@ -246,7 +255,7 @@ The AI feature lets you snap a photo of a wine label and automatically fills in 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `ai_provider` | dropdown | `none` | AI provider: `none`, `anthropic`, `openai`, `openrouter`, `ollama`, `minimax` |
+| `ai_provider` | dropdown | `none` | AI provider: `none`, `anthropic`, `openai`, `openrouter`, `ollama`, `minimax`, `mistral` |
 | `anthropic_api_key` | string | _(empty)_ | API key for Anthropic (Claude) |
 | `anthropic_model` | string | `claude-opus-4-6` | Anthropic model name |
 | `openai_api_key` | string | _(empty)_ | API key for OpenAI |
@@ -257,6 +266,8 @@ The AI feature lets you snap a photo of a wine label and automatically fills in 
 | `ollama_model` | string | `llava` | Ollama vision model name |
 | `minimax_api_key` | string | _(empty)_ | API key for MiniMax |
 | `minimax_model` | string | `MiniMax-Text-01` | MiniMax model name (vision-capable despite the name) |
+| `mistral_api_key` | string | _(empty)_ | API key for Mistral AI |
+| `mistral_model` | string | `pixtral-large-latest` | Mistral model name (use a Pixtral model for label recognition) |
 
 **Provider notes:**
 - **Anthropic** - uses the Claude API directly. Requires an API key from [console.anthropic.com](https://console.anthropic.com)
@@ -264,6 +275,7 @@ The AI feature lets you snap a photo of a wine label and automatically fills in 
 - **OpenRouter** - a unified API that routes to many models. Requires an API key from [openrouter.ai](https://openrouter.ai). You can choose any vision-capable model.
 - **Ollama** - runs fully local, no API key needed. Install [Ollama](https://ollama.com) and pull a vision model (e.g. `llava`). Set the host to your Ollama server address.
 - **MiniMax** - OpenAI-compatible API from [minimaxi.chat](https://api.minimaxi.chat). The default model `MiniMax-Text-01` supports vision input despite the name; the older `MiniMax-VL-01` name is no longer accepted by the API.
+- **Mistral** - OpenAI-compatible API from [mistral.ai](https://console.mistral.ai). For label recognition use a Pixtral model (e.g. `pixtral-large-latest`); regular Mistral text models work for the sommelier chat but cannot read labels. A free Experiment plan is available for some regions ([details](https://help.mistral.ai/en/articles/455206)).
 
 **Estimated token cost per wine analysis** (~2,500 tokens):
 

@@ -19,7 +19,7 @@ Vivino to import wines with ratings and pricing.
 
 **Key features:**
 
-- 📸 AI wine label recognition with 5 providers (Anthropic, OpenAI, OpenRouter, Ollama, MiniMax)
+- 📸 AI wine label recognition with 6 providers (Anthropic, OpenAI, OpenRouter, Ollama, MiniMax, Mistral)
 - 🔎 Vivino wine search with direct import and a regional fallback chain for country-specific labels
 - 🌍 Interactive 3D globe showing your wine regions
 - 📊 Statistics with donut charts, stock history chart, total liters & value overview

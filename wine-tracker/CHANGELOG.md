@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Mistral AI as a new AI provider** - added Mistral (OpenAI-compatible API) as a sixth AI provider for both label recognition and the sommelier chat. The default model is `pixtral-large-latest` for vision; regular Mistral text models work for chat. Resolves #13.
+
 ## 1.9.2
 
 - **Fix Vivino search** - Vivino redirected all search pages to a client-rendered explore page, breaking wine lookups entirely. The search now calls Vivino's internal JSON API directly, restoring reliable results across all wine regions.
