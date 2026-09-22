@@ -1,3 +1,5 @@
+
+
 # Wine Tracker - Home Assistant Add-on & Docker Standalone
 
 <p align="center">
@@ -303,7 +305,7 @@ MIT
 [languages-badge]: https://img.shields.io/badge/languages-7-blue.svg
 [ha-badge]: https://img.shields.io/badge/Home%20Assistant-Add--on-41BDF5.svg?logo=homeassistant&logoColor=white
 [ai-badge]: https://img.shields.io/badge/AI%20powered-label%20recognition-blueviolet.svg
-[arch-badge]: https://img.shields.io/badge/arch-aarch64-informational.svg
+[arch-badge]: https://img.shields.io/badge/arch-multiarch-informational.svg
 [stars-badge]: https://img.shields.io/github/stars/xenofex7/ha-wine-tracker?style=flat&logo=github
 [issues-badge]: https://img.shields.io/github/issues/xenofex7/ha-wine-tracker?style=flat&logo=github
 [commit-badge]: https://img.shields.io/github/last-commit/xenofex7/ha-wine-tracker?style=flat&logo=github
