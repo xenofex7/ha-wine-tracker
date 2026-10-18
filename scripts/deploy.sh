@@ -116,6 +116,14 @@ if [[ -f "docs/sitemap.xml" ]]; then
   ok "docs/sitemap.xml lastmod stamped with today's date"
 fi
 
+# 4i. Pinned image tags in the docs and compose examples
+for f in README.md docker/docker-compose.yml docs/index.html docs/llms.txt; do
+  if [[ -f "$f" ]]; then
+    sed -i '' "s|wine-tracker:${CURRENT_VERSION}|wine-tracker:${SEMVER}|g" "$f"
+  fi
+done
+ok "pinned image tags bumped to ${SEMVER}"
+
 # ── 5. Read CHANGELOG entry ───────────────────────────────
 # We no longer auto-generate the changelog via claude --print (hangs in
 # practice). Instead the caller must have written a `## X.Y.Z` section into

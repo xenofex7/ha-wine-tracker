@@ -41,9 +41,9 @@
     "url": "https://xenofex7.github.io/ha-wine-tracker/",
     "image": "https://xenofex7.github.io/ha-wine-tracker/assets/og-image.png",
     "screenshot": [
-      "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_main_screen.png",
-      "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_statistics_screen.png",
-      "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/260220_add_wine_screen.png"
+      "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/261018_main_screen.png",
+      "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/261018_statistics_screen.png",
+      "https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/assets/261018_add_wine_screen.png"
     ],
     "author": {
       "@type": "Person",
@@ -711,6 +711,7 @@
     }
 
     .screenshot-secondary {
+      align-self: start;
       border-radius: var(--radius-md);
       overflow: hidden;
       box-shadow: var(--shadow-soft);
@@ -1405,7 +1406,7 @@
         <div class="why-card fade-in fade-in-delay-1">
           <i data-lucide="sparkles" class="why-card-icon"></i>
           <h3>AI - Optional &amp; Affordable</h3>
-          <p>Snap a label photo → AI fills in everything, including maturity phases, taste profile and food pairings. Choose from six providers: Anthropic Claude, OpenAI, OpenRouter, MiniMax, Mistral, or Ollama (free, local) - set up right in the app, no config files. Analyzing 100 wines costs less than $0.10 with GPT-4o-mini.</p>
+          <p>Snap a label photo → AI fills in everything, including maturity phases, taste profile and food pairings. Choose from six providers: Anthropic Claude, OpenAI, OpenRouter, MiniMax, Mistral, or Ollama (free, local) - set up right in the app, no config files. A typical label analysis runs about 2,500 tokens, so a hosted provider costs cents per wine - and Ollama is free.</p>
         </div>
         <div class="why-card fade-in fade-in-delay-2">
           <i data-lucide="users" class="why-card-icon"></i>
@@ -1428,22 +1429,22 @@
       <div class="screenshots-grid">
         <div class="screenshot-main fade-in fade-in-delay-1" data-lightbox>
           <picture>
-            <source srcset="./assets/260220_main_screen.webp" type="image/webp">
-            <img src="./assets/260220_main_screen.png" alt="Wine Tracker - Main Cellar Overview" loading="lazy" width="1600" height="1323">
+            <source srcset="./assets/261018_main_screen.webp" type="image/webp">
+            <img src="./assets/261018_main_screen.png" alt="Wine Tracker - Main Cellar Overview" loading="lazy" width="1760" height="1161">
           </picture>
           <div class="screenshot-label">Wine Cellar Overview</div>
         </div>
         <div class="screenshot-secondary fade-in fade-in-delay-2" data-lightbox>
           <picture>
-            <source srcset="./assets/260220_statistics_screen.webp" type="image/webp">
-            <img src="./assets/260220_statistics_screen.png" alt="Wine Tracker - Statistics with Globe & Charts" loading="lazy" width="1600" height="1323">
+            <source srcset="./assets/261018_statistics_screen.webp" type="image/webp">
+            <img src="./assets/261018_statistics_screen.png" alt="Wine Tracker - Statistics with Globe & Charts" loading="lazy" width="1760" height="1030">
           </picture>
           <div class="screenshot-label">Statistics &amp; 3D Globe</div>
         </div>
         <div class="screenshot-secondary fade-in fade-in-delay-3" data-lightbox>
           <picture>
-            <source srcset="./assets/260220_add_wine_screen.webp" type="image/webp">
-            <img src="./assets/260220_add_wine_screen.png" alt="Wine Tracker - Add Wine Screen" loading="lazy" width="1600" height="1323">
+            <source srcset="./assets/261018_add_wine_screen.webp" type="image/webp">
+            <img src="./assets/261018_add_wine_screen.png" alt="Wine Tracker - Add Wine Screen" loading="lazy" width="1760" height="1161">
           </picture>
           <div class="screenshot-label">Add Wine - AI, Vivino or Manual</div>
         </div>
@@ -1579,7 +1580,7 @@
           <h3>Three simple steps</h3>
           <ol class="docker-steps">
             <li><span>Create a <code>docker-compose.yml</code> file with the configuration shown here</span></li>
-            <li><span>Run <code>docker-compose up -d</code> to start the container</span></li>
+            <li><span>Run <code>docker compose up -d</code> to start the container</span></li>
             <li><span>Open <code>http://localhost:5050</code> in your browser and log in</span></li>
           </ol>
           <p>All data is stored in a Docker volume - your collection survives container updates.</p>
@@ -1596,7 +1597,7 @@
           <div class="code-body">
             <pre><span class="keyword">services</span>:
   <span class="keyword">wine-tracker</span>:
-    <span class="keyword">image</span>: <span class="string">ghcr.io/xenofex7/wine-tracker:latest</span>
+    <span class="keyword">image</span>: <span class="string">ghcr.io/xenofex7/wine-tracker:1.11.0</span>
     <span class="keyword">ports</span>:
       - <span class="string">"5050:5050"</span>
     <span class="keyword">volumes</span>:

@@ -55,7 +55,7 @@ Wine Tracker helps wine enthusiasts manage their personal wine collection with A
   - **Ollama** (`ollama`) - runs fully local, no API key required (e.g. llama3.2-vision)
   - **MiniMax** (`minimax`) - OpenAI-compatible, default model `MiniMax-M3`
   - **Mistral** (`mistral`) - OpenAI-compatible, vision-capable (default model `mistral-medium-latest`)
-- **Cost:** roughly $0.001/wine with GPT-4o-mini, $0.002 with Claude Haiku, free with Ollama
+- **Cost:** a typical label analysis runs about 2,500 tokens - cents per wine with a hosted provider, free with Ollama
 - **In-app AI setup:** provider, models and API key are editable in the settings modal and override the add-on options and environment variables. Keys are write-only - stored but never returned - and a test button runs a minimal call against the provider. Admin only.
 
 ### AI Sommelier Chat
@@ -129,7 +129,7 @@ ha-wine-tracker/
 - **Homepage**: https://xenofex7.github.io/ha-wine-tracker/
 - **GitHub**: https://github.com/xenofex7/ha-wine-tracker
 - **Home Assistant Community**: https://community.home-assistant.io/t/wine-tracker-home-assistant-app-add-on/989021
-- **Docker Image**: ghcr.io/xenofex7/wine-tracker:latest
+- **Docker Image**: ghcr.io/xenofex7/wine-tracker:1.11.0
 
 ## Quick Start
 
@@ -143,7 +143,7 @@ ha-wine-tracker/
 ```yaml
 services:
   wine-tracker:
-    image: ghcr.io/xenofex7/wine-tracker:latest
+    image: ghcr.io/xenofex7/wine-tracker:1.11.0
     ports:
       - "5050:5050"
     volumes:
