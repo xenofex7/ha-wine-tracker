@@ -1483,6 +1483,7 @@ document.getElementById('deleteForm').addEventListener('submit', function(e) {
     refreshPurchasedAtList();
     refreshRegionList();
     closeModal('deleteModal');
+    applyFilters(); // refresh bottle/wine counts and type-tab counts
     // Show empty state if no cards left
     var grid = document.querySelector('.grid');
     if (!grid.querySelector('.card')) {
