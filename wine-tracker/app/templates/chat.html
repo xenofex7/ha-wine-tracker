@@ -468,18 +468,21 @@ function sendChatMessage() {
   appendChatLoading();
 
   var editWines = localStorage.getItem('chatEditWines') === '1';
+  var chatRecOn = localStorage.getItem('chatRecording') !== '0';
   var fetchOpts = {method: 'POST'};
   if (_chatImageFile) {
     var fd = new FormData();
     fd.append('message', text);
     fd.append('image', _chatImageFile);
     if (_chatSessionId) fd.append('session_id', _chatSessionId);
+    if (!chatRecOn) fd.append('save', 'false');
     if (editWines) fd.append('edit_wines', 'true');
     fetchOpts.body = fd;
     removeChatImage();
   } else {
     var payload = {message: text};
     if (_chatSessionId) payload.session_id = _chatSessionId;
+    if (!chatRecOn) payload.save = false;
     if (editWines) payload.edit_wines = true;
     fetchOpts.headers = {'Content-Type': 'application/json'};
     fetchOpts.body = JSON.stringify(payload);
@@ -491,7 +494,7 @@ function sendChatMessage() {
     removeChatLoading();
     if (data.ok) {
       appendChatMessage('assistant', data.response);
-      if (data.session_id) {
+      if (data.session_id && chatRecOn) {
         _chatSessionId = data.session_id;
       }
       // Show wine action confirmation
@@ -554,7 +557,7 @@ document.querySelector('.chat-fullpage').addEventListener('click', function(e) {
   if (requestedSession) {
     loadChatSession(parseInt(requestedSession));
     if (_chatSidebarOpen) loadChatSidebarList();
-  } else {
+  } else if (localStorage.getItem('chatRecording') !== '0') {
     fetch(INGRESS + '/api/chat/sessions')
       .then(function(r) { return r.json(); })
       .then(function(data) {
